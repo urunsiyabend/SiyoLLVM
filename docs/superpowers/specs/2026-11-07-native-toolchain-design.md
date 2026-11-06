@@ -96,7 +96,15 @@ backend copes through runtime classes; the native backend does the same:
   `substring`, `indexOf`, `ord`, comparison order) use UTF-16 code units as
   Java does, with an all-ASCII fast path. Output encodes lone surrogates as
   `?`, as Java's UTF-8 encoder does.
-- String literals keep their v0.1 constant layout behind the same tag word.
+- A string header points at its bytes rather than holding them inline:
+  `{tag, utf16 length, byte length, data pointer, buffer pointer}`. Literal
+  headers point at constant byte arrays and have no buffer. A runtime string's
+  buffer records its capacity and how many bytes are in use; `a + b` appends
+  in place when `a` ends exactly at the buffer's used mark and `b` fits,
+  producing a new header over the same buffer (earlier headers keep their
+  own length, so strings stay immutable), and otherwise copies into a fresh
+  buffer with doubled capacity. `s += x` in a loop is therefore amortised
+  linear in time and memory, which never-free (below) needs.
 
 ### 3. Memory
 
