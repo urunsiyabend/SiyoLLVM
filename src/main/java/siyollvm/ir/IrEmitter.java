@@ -293,6 +293,11 @@ public final class IrEmitter {
         Value left = expression(binary.getLeft());
         Value right = expression(binary.getRight());
 
+        if (op == BoundBinaryOperatorType.Addition && (left.type() == String.class || right.type() == String.class)) {
+            String l = text(left).ref();
+            String r = text(right).ref();
+            return new Value(instruction("call ptr @siyo_rt_str_concat(ptr " + l + ", ptr " + r + ")"), String.class);
+        }
         if (left.type() == String.class || right.type() == String.class) {
             requireType(left, String.class);
             requireType(right, String.class);
@@ -418,6 +423,15 @@ public final class IrEmitter {
             return new Value(null, null);
         }
 
+        if (function == BuiltinFunctions.TO_STRING) {
+            if (call.getArguments().size() != 1) throw unsupported("toString arity");
+            Value value = expression(call.getArguments().get(0));
+            if (value.type() == String.class) {
+                return new Value(instruction("call ptr @siyo_rt_str_of_string(ptr " + value.ref() + ")"), String.class);
+            }
+            return text(value);
+        }
+
         String name = _functionNames.get(function);
         if (name == null) throw unsupported("call to " + function.getName());
         StringBuilder args = new StringBuilder();
@@ -438,6 +452,21 @@ public final class IrEmitter {
     }
 
     // --- helpers -------------------------------------------------------------
+
+    /**
+     * {@code value} as a string operand of {@code +}: Java's decimal form for
+     * int and long, {@code true}/{@code false} for bool. A string is kept as
+     * is, null included; concatenation reads null as {@code "null"}.
+     */
+    private Value text(Value value) {
+        String call = switch (LlvmTypes.of(value.type())) {
+            case "i32" -> "call ptr @siyo_rt_str_from_int(i32 ";
+            case "i64" -> "call ptr @siyo_rt_str_from_long(i64 ";
+            case "i1" -> "call ptr @siyo_rt_str_from_bool(i1 zeroext ";
+            default -> null;
+        };
+        return call == null ? value : new Value(instruction(call + value.ref() + ")"), String.class);
+    }
 
     private Value coerce(Value value, Class<?> to) {
         if (value.type() == to) return value;

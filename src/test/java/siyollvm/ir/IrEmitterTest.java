@@ -86,6 +86,23 @@ class IrEmitterTest {
     }
 
     @Test
+    void concatenationConvertsThenConcatenates() {
+        String ir = emit("fn main() { println(\"a\" + 1) }");
+        int convert = ir.indexOf("call ptr @siyo_rt_str_from_int(i32 1)");
+        int concat = ir.indexOf("call ptr @siyo_rt_str_concat(ptr @siyo.str.0, ptr ");
+        assertTrue(convert > 0 && concat > convert, ir);
+        assertTrue(ir.contains("declare ptr @siyo_rt_str_concat(ptr, ptr)"), ir);
+    }
+
+    @Test
+    void toStringPicksTheConverterByType() {
+        String ir = emit("fn main() { println(toString(2L)) println(toString(false)) println(toString(\"s\")) }");
+        assertTrue(ir.contains("call ptr @siyo_rt_str_from_long(i64 2)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_from_bool(i1 zeroext false)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_of_string(ptr @siyo.str."), ir);
+    }
+
+    @Test
     void divisionIsGuardedAgainstZeroAndOverflow() {
         String ir = emit("fn d(a: int, b: int) -> int { return a / b }\nfn main() { println(d(1, 1)) }");
         assertTrue(ir.contains("icmp eq i32"), ir);

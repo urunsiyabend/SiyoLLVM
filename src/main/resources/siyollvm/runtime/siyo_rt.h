@@ -58,6 +58,19 @@ void siyo_rt_print_newline(void);
 /* String.equals, with null equal only to null. */
 _Bool siyo_rt_str_eq(const SiyoStr *a, const SiyoStr *b);
 
+/*
+ * a + b, as Java's StringBuilder appends: a null operand reads as "null". A
+ * lone high surrogate ending a and a lone low surrogate starting b become one
+ * 4-byte sequence, as their UTF-16 code units would form one code point.
+ */
+SiyoStr *siyo_rt_str_concat(const SiyoStr *a, const SiyoStr *b);
+/* String.valueOf: decimal for int and long, "true"/"false" for bool. */
+SiyoStr *siyo_rt_str_from_int(int32_t value);
+SiyoStr *siyo_rt_str_from_long(int64_t value);
+SiyoStr *siyo_rt_str_from_bool(_Bool value);
+/* toString(string): s itself, or "null" for null. */
+SiyoStr *siyo_rt_str_of_string(const SiyoStr *s);
+
 /* Uncaught Java errors: flush stdout, print the exception line to stderr, exit 1. */
 _Noreturn void siyo_rt_div_by_zero(void);
 _Noreturn void siyo_rt_stack_overflow(void);

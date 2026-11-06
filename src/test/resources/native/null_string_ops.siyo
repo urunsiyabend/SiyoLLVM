@@ -1,0 +1,26 @@
+// A global string read before its initialiser has run is null: + reads it as
+// "null", == compares it with null, toString gives "null".
+mut early = read()
+mut viaPlus = "[" + read() + "]"
+mut viaInterp = "<${read()}>"
+mut viaToString = toString(read())
+mut later = "later"
+fn read() -> string { return later }
+fn main() {
+    println(early + "!")
+    println("!" + early)
+    println(early + early)
+    println(early + 1)
+    println(viaPlus)
+    println(viaInterp)
+    println(viaToString)
+    println(toString(early))
+    println(toString(early) == "null")
+    println(early == "null")
+    println(early + "" == "null")
+    println(early == later)
+    mut s = early
+    s += "x"
+    println(s)
+    println(later + early)
+}

@@ -76,6 +76,89 @@ _Bool siyo_rt_str_eq(const SiyoStr *a, const SiyoStr *b) {
     return memcmp(a->bytes, b->bytes, (size_t)a->len) == 0;
 }
 
+/* A new string of len bytes, to be filled by the caller. Java strings hold
+   fewer than 2^31 UTF-16 code units; a longer one is an OutOfMemoryError. */
+static SiyoStr *siyo_rt_str_new(int64_t len, int64_t utf16_len) {
+    if (utf16_len > INT32_MAX) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+    SiyoStr *s = siyo_rt_alloc(sizeof(SiyoStr) + (size_t)len);
+    s->tag = SIYO_TAG_STR;
+    s->utf16_len = (int32_t)utf16_len;
+    s->len = len;
+    return s;
+}
+
+static SiyoStr *siyo_rt_str_from_bytes(const char *bytes, int64_t len, int64_t utf16_len) {
+    SiyoStr *s = siyo_rt_str_new(len, utf16_len);
+    memcpy(s->bytes, bytes, (size_t)len);
+    return s;
+}
+
+/* UTF-16 length of s: one unit per sequence, two for a 4-byte one. */
+static int64_t siyo_rt_str_utf16_len(const SiyoStr *s) {
+    if (s->utf16_len >= 0) return s->utf16_len;
+    const unsigned char *bytes = (const unsigned char *)s->bytes;
+    int64_t units = 0;
+    for (int64_t i = 0; i < s->len; i++) {
+        if ((bytes[i] & 0xC0) != 0x80) units += bytes[i] >= 0xF0 ? 2 : 1;
+    }
+    return units;
+}
+
+/* The surrogate a 3-byte WTF-8 sequence at p encodes, or 0 if it is none. */
+static unsigned siyo_rt_surrogate_at(const unsigned char *p) {
+    if (p[0] != 0xED || p[1] < 0xA0) return 0;
+    return 0xD000u | ((p[1] & 0x3Fu) << 6) | (p[2] & 0x3Fu);
+}
+
+SiyoStr *siyo_rt_str_concat(const SiyoStr *a, const SiyoStr *b) {
+    static const char null_text[] = "null";
+    const unsigned char *ab = a != NULL ? (const unsigned char *)a->bytes : (const unsigned char *)null_text;
+    const unsigned char *bb = b != NULL ? (const unsigned char *)b->bytes : (const unsigned char *)null_text;
+    int64_t alen = a != NULL ? a->len : 4;
+    int64_t blen = b != NULL ? b->len : 4;
+    int64_t units = (a != NULL ? siyo_rt_str_utf16_len(a) : 4) + (b != NULL ? siyo_rt_str_utf16_len(b) : 4);
+
+    unsigned high = alen >= 3 ? siyo_rt_surrogate_at(ab + alen - 3) : 0;
+    unsigned low = blen >= 3 ? siyo_rt_surrogate_at(bb) : 0;
+    if (high >= 0xD800 && high <= 0xDBFF && low >= 0xDC00 && low <= 0xDFFF) {
+        /* The pair is still two UTF-16 units; it takes 4 bytes instead of 6. */
+        uint32_t cp = 0x10000u + ((high - 0xD800u) << 10) + (low - 0xDC00u);
+        SiyoStr *s = siyo_rt_str_new(alen + blen - 2, units);
+        unsigned char *out = (unsigned char *)s->bytes;
+        memcpy(out, ab, (size_t)(alen - 3));
+        out += alen - 3;
+        out[0] = (unsigned char)(0xF0 | (cp >> 18));
+        out[1] = (unsigned char)(0x80 | ((cp >> 12) & 0x3F));
+        out[2] = (unsigned char)(0x80 | ((cp >> 6) & 0x3F));
+        out[3] = (unsigned char)(0x80 | (cp & 0x3F));
+        memcpy(out + 4, bb + 3, (size_t)(blen - 3));
+        return s;
+    }
+    SiyoStr *s = siyo_rt_str_new(alen + blen, units);
+    memcpy(s->bytes, ab, (size_t)alen);
+    memcpy(s->bytes + alen, bb, (size_t)blen);
+    return s;
+}
+
+SiyoStr *siyo_rt_str_from_int(int32_t value) {
+    return siyo_rt_str_from_long(value);
+}
+
+SiyoStr *siyo_rt_str_from_long(int64_t value) {
+    char buffer[24];
+    int len = snprintf(buffer, sizeof buffer, "%lld", (long long)value);
+    return siyo_rt_str_from_bytes(buffer, len, len);
+}
+
+SiyoStr *siyo_rt_str_from_bool(_Bool value) {
+    return value ? siyo_rt_str_from_bytes("true", 4, 4) : siyo_rt_str_from_bytes("false", 5, 5);
+}
+
+SiyoStr *siyo_rt_str_of_string(const SiyoStr *s) {
+    if (s == NULL) return siyo_rt_str_from_bytes("null", 4, 4);
+    return (SiyoStr *)s;
+}
+
 _Noreturn void siyo_rt_div_by_zero(void) {
     siyo_rt_fail("java.lang.ArithmeticException: / by zero\n");
 }

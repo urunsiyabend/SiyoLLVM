@@ -23,6 +23,11 @@ final class RuntimeIr {
                 declare void @siyo_rt_print_str(ptr)
                 declare void @siyo_rt_print_newline()
                 declare zeroext i1 @siyo_rt_str_eq(ptr, ptr)
+                declare ptr @siyo_rt_str_concat(ptr, ptr)
+                declare ptr @siyo_rt_str_from_int(i32)
+                declare ptr @siyo_rt_str_from_long(i64)
+                declare ptr @siyo_rt_str_from_bool(i1 zeroext)
+                declare ptr @siyo_rt_str_of_string(ptr)
                 declare void @siyo_rt_div_by_zero() noreturn cold
                 declare void @siyo_rt_stack_overflow() noreturn cold
 

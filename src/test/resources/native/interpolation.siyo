@@ -1,0 +1,21 @@
+// "$name", "${expr}" and "\$" become a chain of +.
+mut place = "Dünya"
+fn twice(x: int) -> int { return x * 2 }
+fn main() {
+    mut n = 21
+    mut big = 9223372036854775807L
+    mut flag = false
+    mut word = "a\0b"
+    println("n=$n big=$big flag=$flag word=$word")
+    println("${n + 1} ${twice(n)} ${n > 20} ${big - 1L}")
+    println("Merhaba $place 😀, ${place + place}")
+    println("cost: \$5 and \$n")
+    println("$n$n$n")
+    println("${"inner " + n}")
+    println("$n" + 1)
+    println(1 + "$n")
+    mut s = "x"
+    s += "$s$n"
+    println(s)
+    println("${-2147483647 - 1}|${0L - 9223372036854775807L - 1L}")
+}

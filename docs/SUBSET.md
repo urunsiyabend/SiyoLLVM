@@ -22,11 +22,12 @@ byte.
 | Bitwise | `& \| ^ << >>` and unary `~` on int; `& \| ^` on bool |
 | Comparison | `== != < <= > >=` on int/long (mixed allowed); `== !=` on bool and string |
 | Logic | `&&`, `\|\|` (short-circuit), `!` |
+| Strings | `+` joining a string with an int, long, bool or string (either side, so `1 + 2 + "x"` is `3x`); interpolation `"$x"`, `"${e}"`; `s += v`; `toString(x)` on every accepted type |
 | Unary | `+`, `-` on int |
 | Assignment | `=`, `+= -= *= /=` |
 | Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `break`, `continue`, `return` |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
-| Output | `print(x)`, `println(x)` for every accepted type |
+| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type |
 | Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
 
 ## Rejected
@@ -35,14 +36,14 @@ Each produces `file(line, col): [llvm] <construct> is/are not supported by SiyoL
 and exit status 1, with no output file. This holds anywhere in the file:
 in functions that are never called, and in code after a `return`.
 
-`float` values; string concatenation and interpolation (`"a" + b`, `"$x"`);
+`float` values (also as an operand of `+` on strings or in `"$x"`);
 string ordering (`<` etc. on strings: the JVM compares UTF-16 code units);
 `null`; arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; `try`/`catch`/`throw`;
 casts; `import` and `import java`; scope/spawn/send; every builtin other
-than `print`/`println`; `main`/`init` with parameters or a return value.
+than `print`/`println`/`toString`; `main`/`init` with parameters or a return value.
 
 ## Runtime behaviour
 
@@ -62,7 +63,10 @@ than `print`/`println`; `main`/`init` with parameters or a return value.
   the locale (the JVM reference also writes UTF-8 under `LC_ALL=C`).
 - A global read before its initialiser has run holds the JVM default
   (`0`, `0L`, `false`, or null, which prints as `null`); `==` on strings is
-  value equality with `null == null`.
+  value equality with `null == null`. A null string reads as `null` in
+  `+`, interpolation and `toString`, as on the JVM.
+- `toString` and `+` write int and long in decimal and bool as
+  `true`/`false`, as Java's `String.valueOf` does.
 - `&&` and `||` evaluate their right operand only when needed.
 
 ## Deviations from `siyoc run`

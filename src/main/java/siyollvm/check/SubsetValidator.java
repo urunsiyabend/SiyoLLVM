@@ -212,7 +212,9 @@ public final class SubsetValidator {
         boolean supported;
         if (left == String.class || right == String.class) {
             if (op == BoundBinaryOperatorType.Addition) {
-                report("string concatenation is");
+                // Concatenation joins a string with any value type, either side.
+                boolean operandsClean = validatesCleanly(binary.getLeft()) & validatesCleanly(binary.getRight());
+                if (operandsClean && requireValueType(left, "values")) requireValueType(right, "values");
                 return;
             }
             if (COMPARISON.contains(op) && left == right
@@ -239,6 +241,12 @@ public final class SubsetValidator {
     private void validateCall(BoundCallExpression call) {
         FunctionSymbol function = call.getFunction();
         boolean builtinPrint = function == BuiltinFunctions.PRINT || function == BuiltinFunctions.PRINTLN;
+        if (function == BuiltinFunctions.TO_STRING) {
+            for (BoundExpression argument : call.getArguments()) {
+                if (validatesCleanly(argument)) requireValueType(argument.getClassType(), "values");
+            }
+            return;
+        }
         if (!builtinPrint && !_program.functions().containsKey(function)) {
             report("the builtin " + function.getName() + "() is");
             return;

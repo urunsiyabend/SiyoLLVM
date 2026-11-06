@@ -58,8 +58,9 @@ class SubsetValidatorTest {
     @ParameterizedTest(name = "{1}")
     @CsvSource(delimiter = '|', textBlock = """
             fn main() { mut d = 1.5 println(d) }                            | float values are
-            fn main() { mut s = "a" + "b" println(s) }                      | string concatenation is
-            fn main() { mut n = 3 println("n=$n") }                         | string concatenation is
+            fn main() { println("a" + 1.5) }                                | float values are
+            fn main() { println("d=${1.5}") }                               | float values are
+            fn main() { println(toString(1.5)) }                            | float values are
             fn main() { println("a" < "b") }                                | string ordering comparisons are
             fn main() { mut a = [1, 2] println(a) }                         | arrays are
             fn main() { mut f = fn(x: int) -> int { x } println(f(1)) }     | lambdas are
@@ -69,6 +70,23 @@ class SubsetValidatorTest {
             """)
     void unsupportedConstructIsRejected(String source, String construct) {
         assertRejected(source, construct);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { println("a" + 1) }
+            fn main() { println(1 + "a") }
+            fn main() { println("a" + true) }
+            fn main() { println(false + "a") }
+            fn main() { println("a" + 5L + "b") }
+            fn main() { mut s = "a" println(s + s) }
+            fn main() { mut y = 3 println("x$y") }
+            fn main() { mut y = 3L println("x${y + 1} \\$y") }
+            fn main() { mut s = "a" s += "z" s += 1 println(s) }
+            fn main() { println(toString(1) + toString(2L) + toString(true) + toString("s")) }
+            """)
+    void stringConcatenationIsSupported(String source) {
+        assertEquals(List.of(), validate(source));
     }
 
     @Test
