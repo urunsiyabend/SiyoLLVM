@@ -51,4 +51,25 @@ class CliNativeTest {
         assertEquals("Dünya ✓\n2\n", new String(program.stdout(), StandardCharsets.UTF_8));
         assertEquals(0, program.exitCode());
     }
+
+    @Test
+    void linksByHandFromEmitLlvmAndEmitRuntime() throws Exception {
+        Path work = Files.createDirectories(TestPaths.tempRoot().resolve("cli-manual"));
+        Path source = work.resolve("hello.siyo");
+        Files.writeString(source, "fn main() { println(\"manuel\") }\n", StandardCharsets.UTF_8);
+        Path ll = work.resolve("prog.ll");
+        NativeRunner.Run emitIr = NativeRunner.run(siyollvm("emit-llvm", source.toString(), "-o", ll.toString()), work, Map.of());
+        assertEquals(0, emitIr.exitCode(), emitIr.stderr());
+        Path rt = work.resolve("rt");
+        NativeRunner.Run emitRt = NativeRunner.run(siyollvm("emit-runtime", rt.toString()), work, Map.of());
+        assertEquals(0, emitRt.exitCode(), emitRt.stderr());
+
+        Path exe = work.resolve("prog");
+        NativeRunner.Run link = NativeRunner.run(List.of(clang.executable().toString(), "-O1", "-x", "ir", ll.toString(),
+                "-x", "c", "-std=c11", rt.resolve("siyo_rt.c").toString(), "-pthread", "-o", exe.toString()), work, Map.of());
+        assertEquals(0, link.exitCode(), link.stderr());
+        NativeRunner.Run program = NativeRunner.run(List.of(exe.toString()), work, Map.of());
+        assertEquals("manuel\n", new String(program.stdout(), StandardCharsets.UTF_8));
+        assertEquals(0, program.exitCode());
+    }
 }

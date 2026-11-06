@@ -47,7 +47,17 @@ SIYOLLVM_CLANG=clang-19 mvn verify -Pnative
 ```
 bin/siyollvm emit-llvm <file.siyo> [-o out.ll]
 bin/siyollvm build <file.siyo> [-o exe] [--clang <path>] [--emit-llvm out.ll]
+bin/siyollvm emit-runtime <directory>
 bin/siyollvm --help | --version
+```
+
+`emit-runtime` writes `siyo_rt.c` and `siyo_rt.h` into the directory (created
+if missing; existing copies are overwritten). To link by hand:
+
+```
+bin/siyollvm emit-llvm prog.siyo -o prog.ll
+bin/siyollvm emit-runtime .
+clang -O1 -x ir prog.ll -x c -std=c11 siyo_rt.c -pthread -o prog
 ```
 
 `bin/siyollvm` runs `target/siyollvm-<version>.jar` (built by `mvn package`);

@@ -45,6 +45,44 @@ class MainTest {
     }
 
     @Test
+    void emitRuntimeWritesBothFiles() throws Exception {
+        Path target = dir.resolve("rt/nested");
+        assertEquals(0, run("emit-runtime", target.toString()));
+        assertTrue(Files.readString(target.resolve("siyo_rt.c")).contains("siyo_program"));
+        assertTrue(Files.isRegularFile(target.resolve("siyo_rt.h")));
+        assertEquals("", stderr());
+        Files.writeString(target.resolve("siyo_rt.c"), "stale");
+        assertEquals(0, run("emit-runtime", target.toString()));
+        assertTrue(Files.readString(target.resolve("siyo_rt.c")).contains("siyo_program"));
+    }
+
+    @Test
+    void emitRuntimeWithoutDirectoryIsUsageError() {
+        assertEquals(2, run("emit-runtime"));
+        assertTrue(stderr().contains("emit-runtime needs a directory"), stderr());
+    }
+
+    @Test
+    void emitRuntimeRejectsOptionsAndExtraArguments() {
+        assertEquals(2, run("emit-runtime", "-o"));
+        assertEquals(2, run("emit-runtime", dir.resolve("a").toString(), dir.resolve("b").toString()));
+        assertFalse(Files.exists(dir.resolve("a")));
+    }
+
+    @Test
+    void emitRuntimeOntoARegularFileFails() throws Exception {
+        Path file = source("occupied", "x");
+        assertEquals(1, run("emit-runtime", file.toString()));
+        assertTrue(stderr().startsWith("error:"), stderr());
+    }
+
+    @Test
+    void helpListsEmitRuntime() {
+        assertEquals(0, run("--help"));
+        assertTrue(stdout().contains("emit-runtime <directory>"));
+    }
+
+    @Test
     void emitLlvmWritesIrToStdout() throws Exception {
         Path file = source("hello.siyo", "fn main() { println(\"hi\") }");
         assertEquals(0, run("emit-llvm", file.toString()));

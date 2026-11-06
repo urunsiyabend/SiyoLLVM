@@ -3,6 +3,7 @@ package siyollvm.cli;
 import siyollvm.Compiler;
 import siyollvm.frontend.SourceDiagnostic;
 import siyollvm.toolchain.Clang;
+import siyollvm.toolchain.RuntimeSource;
 import siyollvm.toolchain.ToolchainException;
 
 import java.io.FileDescriptor;
@@ -49,6 +50,10 @@ public final class Main {
               build <file.siyo> [-o <exe>] [--clang <path>] [--emit-llvm <out.ll>]
                   Compile to a native executable with clang (default output: the
                   file name without .siyo, in the current directory).
+              emit-runtime <directory>
+                  Write the C runtime (siyo_rt.c, siyo_rt.h) into <directory>, creating
+                  it and replacing earlier copies. Link by hand with:
+                  clang -O1 -x ir prog.ll -x c -std=c11 siyo_rt.c -pthread -o prog
 
             Options:
               -h, --help       Print this help and exit
@@ -85,6 +90,9 @@ public final class Main {
             case "-v", "--version" -> {
                 out.println("siyollvm " + version());
                 return OK;
+            }
+            case "emit-runtime" -> {
+                return emitRuntime(args, out, err);
             }
             case "emit-llvm", "build" -> { }
             default -> {
@@ -170,6 +178,31 @@ public final class Main {
         } catch (RuntimeException | StackOverflowError e) {
             err.println("internal error: " + e);
             return USAGE;
+        }
+    }
+
+    private static int emitRuntime(String[] args, PrintStream out, PrintStream err) {
+        if (args.length < 2) return usage(err, "emit-runtime needs a directory");
+        if (args.length > 2) {
+            return usage(err, args[1].startsWith("-") || args[2].startsWith("-")
+                    ? "unknown option for emit-runtime"
+                    : "only one directory is accepted");
+        }
+        if (args[1].startsWith("-")) {
+            return usage(err, "unknown option '" + args[1] + "' for emit-runtime (write ./" + args[1]
+                    + " for a directory whose name starts with '-')");
+        }
+        try {
+            Path directory = Path.of(args[1]);
+            Path c = RuntimeSource.writeTo(directory);
+            out.println("wrote " + c + " and " + c.resolveSibling(RuntimeSource.HEADER_FILE));
+            return OK;
+        } catch (IOException e) {
+            err.println("error: " + e.getMessage());
+            return FAILED;
+        } catch (InvalidPathException e) {
+            err.println("error: the directory name '" + e.getInput() + "' cannot be represented in this locale's encoding");
+            return FAILED;
         }
     }
 
@@ -289,7 +322,7 @@ public final class Main {
 
     private static int usage(PrintStream err, String problem) {
         err.println("error: " + problem);
-        err.println("usage: siyollvm emit-llvm <file.siyo> [-o out.ll] | build <file.siyo> [-o exe] (see --help)");
+        err.println("usage: siyollvm emit-llvm <file.siyo> [-o out.ll] | build <file.siyo> [-o exe] | emit-runtime <directory> (see --help)");
         return USAGE;
     }
 
