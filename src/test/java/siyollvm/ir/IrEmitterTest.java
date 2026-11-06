@@ -50,14 +50,18 @@ class IrEmitterTest {
     @Test
     void stringsCarryTheirLengthSoEmbeddedNulSurvives() {
         String ir = emit("fn main() { println(\"a\\0b\") }");
-        assertTrue(ir.contains("constant { i32, i32, i64, [3 x i8] } { i32 1, i32 3, i64 3, [3 x i8] c\"a\\00b\" }, align 8"), ir);
+        assertTrue(ir.contains("@siyo.str.0.bytes = private unnamed_addr constant [3 x i8] c\"a\\00b\"\n"), ir);
+        assertTrue(ir.contains("@siyo.str.0 = private unnamed_addr constant { i32, i32, i64, ptr, ptr } "
+                + "{ i32 1, i32 3, i64 3, ptr @siyo.str.0.bytes, ptr null }, align 8"), ir);
     }
 
-    // Tag 1 (string), UTF-16 length, UTF-8 byte length, bytes: the SiyoStr layout of siyo_rt.h.
+    // Tag 1 (string), UTF-16 length, UTF-8 byte length, data pointer, no buffer:
+    // the SiyoStr layout of siyo_rt.h. The bytes are a constant of their own.
     @Test
     void literalLayout() {
         String ir = emit("fn main() { println(\"é\") }");
-        assertTrue(ir.contains("{ i32 1, i32 1, i64 2, [2 x i8] c\"\\C3\\A9\" }"), ir);
+        assertTrue(ir.contains("@siyo.str.0.bytes = private unnamed_addr constant [2 x i8] c\"\\C3\\A9\"\n"), ir);
+        assertTrue(ir.contains("{ i32 1, i32 1, i64 2, ptr @siyo.str.0.bytes, ptr null }"), ir);
     }
 
     // The runtime is C compiled beside the module; the IR only declares it.
