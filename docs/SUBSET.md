@@ -77,8 +77,8 @@ than `print`/`println`; `main`/`init` with parameters or a return value.
 
 ## Platform
 
-Linux with glibc on x86_64 or aarch64. The IR declares only libc functions
-(`printf`, `fwrite`, `fputc`, `fputs`, `fflush`, `memcmp`, `exit`, and
-`pthread_attr_init`, `pthread_attr_setstacksize`, `pthread_create`,
-`pthread_join`) and leaves the target triple to clang. clang 15 or newer is required
+Linux with glibc on x86_64 or aarch64. The IR declares only functions of the
+SiyoLLVM C runtime (`siyo_rt_*`), which clang compiles from C11 source shipped
+in the jar and links with the program; the runtime uses libc (including
+pthreads) only. The IR leaves the target triple to clang. clang 15 or newer is required
 (opaque pointers); clang 19 is what CI and the native gate use.

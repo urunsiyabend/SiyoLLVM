@@ -43,33 +43,53 @@ class IrEmitterTest {
         String ir = emit("fn printf() -> int { return 1 }\nfn exit() { }\nfn main() { exit() println(printf()) }");
         assertTrue(ir.contains("define internal i32 @siyo.fn.0()"), ir);
         assertTrue(ir.contains("define internal void @siyo.fn.1()"), ir);
-        assertEquals(1, count(ir, "define i32 @main()"));
+        assertEquals(1, count(ir, "define void @siyo_program()"));
+        assertFalse(ir.contains("@main"), ir);
     }
 
     @Test
     void stringsCarryTheirLengthSoEmbeddedNulSurvives() {
         String ir = emit("fn main() { println(\"a\\0b\") }");
-        assertTrue(ir.contains("constant { i64, [3 x i8] } { i64 3, [3 x i8] c\"a\\00b\" }"), ir);
+        assertTrue(ir.contains("constant { i32, i32, i64, [3 x i8] } { i32 1, i32 3, i64 3, [3 x i8] c\"a\\00b\" }, align 8"), ir);
     }
 
+    // Tag 1 (string), UTF-16 length, UTF-8 byte length, bytes: the SiyoStr layout of siyo_rt.h.
     @Test
-    void nonAsciiStringIsEncodedAsUtf8Bytes() {
+    void literalLayout() {
         String ir = emit("fn main() { println(\"é\") }");
-        assertTrue(ir.contains("{ i64 2, [2 x i8] c\"\\C3\\A9\" }"), ir);
+        assertTrue(ir.contains("{ i32 1, i32 1, i64 2, [2 x i8] c\"\\C3\\A9\" }"), ir);
+    }
+
+    // The runtime is C compiled beside the module; the IR only declares it.
+    @Test
+    void noRuntimeBodiesInIr() {
+        String ir = emit("mut g = \"a\"\nfn f(a: int, b: int) -> int { return a / b }\n"
+                + "fn main() { println(g == \"a\") print(f(4, 2)) println(true) }");
+        Matcher define = Pattern.compile("(?m)^define [^@]*(@[A-Za-z0-9_.]+)\\(").matcher(ir);
+        int defines = 0;
+        while (define.find()) {
+            defines++;
+            String name = define.group(1);
+            assertTrue(name.matches("@siyo\\.fn\\.\\d+") || name.equals("@siyo.init_globals")
+                    || name.equals("@siyo_program"), name + " defined in\n" + ir);
+        }
+        assertEquals(4, defines, ir);
+        assertTrue(ir.contains("@siyo_rt_stack_limit = external global i64"), ir);
+        assertTrue(ir.contains("declare void @siyo_rt_print_int(i32)"), ir);
     }
 
     @Test
     void stringGlobalStartsNull() {
         String ir = emit("mut a = r()\nmut b = \"later\"\nfn r() -> string { return b }\nfn main() { println(a == b) }");
         assertTrue(ir.contains("internal global ptr null"), ir);
-        assertTrue(ir.contains("call i1 @siyo.str_eq("), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_str_eq("), ir);
     }
 
     @Test
     void divisionIsGuardedAgainstZeroAndOverflow() {
         String ir = emit("fn d(a: int, b: int) -> int { return a / b }\nfn main() { println(d(1, 1)) }");
         assertTrue(ir.contains("icmp eq i32"), ir);
-        assertTrue(ir.contains("call void @siyo.div_by_zero()"), ir);
+        assertTrue(ir.contains("call void @siyo_rt_div_by_zero()"), ir);
         assertTrue(ir.contains("select i1"), ir);
         assertTrue(Pattern.compile("sdiv i32 %t\\d+, %t\\d+").matcher(ir).find(), ir);
     }
@@ -85,16 +105,17 @@ class IrEmitterTest {
     void mainRunsGlobalsThenInitThenMain() {
         String ir = emit("mut g = 1\nfn init() { g = 2 }\nfn main() { println(g) }");
         int globals = ir.indexOf("call void @siyo.init_globals()");
-        int init = ir.indexOf("call void @siyo.fn.0()", ir.indexOf("define internal ptr @siyo.program("));
-        int main = ir.indexOf("call void @siyo.fn.1()", ir.indexOf("define internal ptr @siyo.program("));
-        assertTrue(globals > 0 && init > globals && main > init, ir);
-        assertTrue(ir.contains("call void @siyo.run_program_thread()"), ir);
+        int program = ir.indexOf("define void @siyo_program() {");
+        int init = ir.indexOf("call void @siyo.fn.0()", program);
+        int main = ir.indexOf("call void @siyo.fn.1()", program);
+        assertTrue(program > 0 && globals > program && init > globals && main > init, ir);
     }
 
     @Test
     void everyUserFunctionChecksTheStack() {
         String ir = emit("fn a() { }\nfn b() { a() }\nfn main() { b() }");
-        assertEquals(3, count(ir, "call void @siyo.stack_overflow()"), ir);
+        assertEquals(3, count(ir, "call void @siyo_rt_stack_overflow()"), ir);
+        assertEquals(3, count(ir, "load i64, ptr @siyo_rt_stack_limit"), ir);
     }
 
     @Test

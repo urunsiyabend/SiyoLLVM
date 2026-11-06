@@ -48,7 +48,7 @@ class MainTest {
     void emitLlvmWritesIrToStdout() throws Exception {
         Path file = source("hello.siyo", "fn main() { println(\"hi\") }");
         assertEquals(0, run("emit-llvm", file.toString()));
-        assertTrue(stdout().contains("define i32 @main()"), stdout());
+        assertTrue(stdout().contains("define void @siyo_program()"), stdout());
         assertEquals("", stderr());
     }
 
@@ -57,7 +57,7 @@ class MainTest {
         Path file = source("hello.siyo", "fn main() { println(\"hi\") }");
         Path ll = dir.resolve("out.ll");
         assertEquals(0, run("emit-llvm", file.toString(), "-o", ll.toString()));
-        assertTrue(Files.readString(ll).contains("define i32 @main()"));
+        assertTrue(Files.readString(ll).contains("define void @siyo_program()"));
         assertEquals("", stdout());
     }
 
@@ -214,7 +214,7 @@ class MainTest {
         Path file = source("ok.siyo", "fn main() { println(1) }");
         Path ll = Files.writeString(dir.resolve("old.ll"), "old");
         assertEquals(0, run("emit-llvm", file.toString(), "-o", ll.toString()));
-        assertTrue(Files.readString(ll).contains("define i32 @main()"));
+        assertTrue(Files.readString(ll).contains("define void @siyo_program()"));
     }
 
     private Path fakeClang(String compileBody) throws Exception {

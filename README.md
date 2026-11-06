@@ -54,7 +54,9 @@ bin/siyollvm --help | --version
 `java -jar target/siyollvm-<version>.jar …` works the same way. clang is
 looked up as `--clang <path>`, then `$SIYOLLVM_CLANG` (a path or a command
 name), then `clang` on `PATH`. SiyoLLVM calls clang as
-`clang -O1 -fverify-intermediate-code -w -x ir <file.ll> -pthread -o <exe>`.
+`clang -O1 -fverify-intermediate-code -w -x ir <file.ll> -x c -std=c11 <dir>/siyo_rt.c -pthread -o <exe>`,
+where `<dir>` is a temporary copy of the C runtime shipped in the jar, created
+next to the executable and removed afterwards.
 
 Exit status: 0 on success, 1 for diagnostics, unreadable input or a clang
 problem, 2 for usage errors, refused outputs and internal errors. Diagnostics use siyoc's
@@ -88,8 +90,9 @@ UTF-8 bytes.
 |---|---|
 | `src/main/java/siyollvm/frontend` | runs the snapshot frontend; rejects imports and type declarations before binding |
 | `src/main/java/siyollvm/check` | `SubsetValidator`: whitelist over every lowered statement and expression |
-| `src/main/java/siyollvm/ir` | `IrEmitter` and the runtime helpers written in IR |
-| `src/main/java/siyollvm/toolchain` | finding and running clang |
+| `src/main/java/siyollvm/ir` | `IrEmitter` and the runtime declarations |
+| `src/main/resources/siyollvm/runtime` | the C11 runtime (`siyo_rt.c`, `siyo_rt.h`): `main`, program thread, stack guard, printing |
+| `src/main/java/siyollvm/toolchain` | finding and running clang; writing out the runtime source |
 | `src/main/java/siyollvm/cli` | the `siyollvm` command |
 | `upstream/siyocompiler` | the frontend snapshot, its provenance and checksums |
 | `examples/` | example programs with expected output |

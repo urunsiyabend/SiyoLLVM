@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -105,18 +106,57 @@ class ClangTest {
         assertTrue(e.getMessage().contains("error: broken IR"), e.getMessage());
     }
 
-    // Release clang skips the IR verifier by default; malformed IR then crashes
-    // or miscompiles instead of being reported.
-    @Test
-    void compileAsksClangToVerifyTheIr() throws Exception {
-        Path args = dir.resolve("args.txt");
+    /** A clang that records its arguments (one per line) and whether the runtime source existed. */
+    private Path recordingClang(String compileBody) throws Exception {
         Path recording = dir.resolve("clang");
         Files.writeString(recording, "#!/bin/sh\n"
                 + "if [ \"$1\" = \"--version\" ]; then echo 'clang version 19.1.7'; exit 0; fi\n"
-                + "echo \"$@\" > '" + args + "'\n");
+                + "for a; do echo \"$a\"; done > '" + dir.resolve("args.txt") + "'\n"
+                + "if [ -f \"${10}\" ] && [ -f \"$(dirname \"${10}\")/siyo_rt.h\" ]; then echo yes; else echo no; fi > '"
+                + dir.resolve("runtime-present.txt") + "'\n"
+                + compileBody);
         Files.setPosixFilePermissions(recording, PosixFilePermissions.fromString("rwxr-xr-x"));
-        Clang.locate(Optional.of(recording), Map.of()).compile(dir.resolve("x.ll"), dir.resolve("x"));
-        assertTrue(Files.readString(args).contains("-fverify-intermediate-code"), Files.readString(args));
+        return recording;
+    }
+
+    private List<String> recordedArgs() throws IOException {
+        return Files.readAllLines(dir.resolve("args.txt"));
+    }
+
+    private List<String> runtimeDirectories(Path parent) throws IOException {
+        try (var entries = Files.list(parent)) {
+            return entries.map(p -> p.getFileName().toString()).filter(n -> n.startsWith(".siyo-rt")).toList();
+        }
+    }
+
+    // Release clang skips the IR verifier by default; malformed IR then crashes
+    // or miscompiles instead of being reported. The C runtime is compiled beside
+    // the program IR from a temporary copy next to the executable.
+    @Test
+    void compileVerifiesTheIrAndLinksTheCRuntime() throws Exception {
+        Path out = Files.createDirectories(dir.resolve("out"));
+        Path ll = dir.resolve("x.ll");
+        Path exe = out.resolve("x");
+        Clang.locate(Optional.of(recordingClang("")), Map.of()).compile(ll, exe);
+        List<String> args = recordedArgs();
+        assertEquals(13, args.size(), args.toString());
+        Path runtime = Path.of(args.get(9));
+        assertEquals("siyo_rt.c", runtime.getFileName().toString());
+        assertEquals(out.toAbsolutePath(), runtime.getParent().getParent());
+        assertTrue(runtime.getParent().getFileName().toString().startsWith(".siyo-rt"), runtime.toString());
+        assertEquals(List.of("-O1", "-fverify-intermediate-code", "-w", "-x", "ir", ll.toString(), "-x", "c",
+                "-std=c11", runtime.toString(), "-pthread", "-o", exe.toString()), args);
+        assertEquals("yes", Files.readString(dir.resolve("runtime-present.txt")).strip());
+        assertEquals(List.of(), runtimeDirectories(out));
+    }
+
+    @Test
+    void failedCompileRemovesTheRuntimeCopy() throws Exception {
+        Path out = Files.createDirectories(dir.resolve("out"));
+        Clang clang = Clang.locate(Optional.of(recordingClang("exit 1\n")), Map.of());
+        assertThrows(ToolchainException.class, () -> clang.compile(dir.resolve("x.ll"), out.resolve("x")));
+        assertEquals("yes", Files.readString(dir.resolve("runtime-present.txt")).strip());
+        assertEquals(List.of(), runtimeDirectories(out));
     }
 
     // Regression (independent CLI review): readAllBytes() blocked until the

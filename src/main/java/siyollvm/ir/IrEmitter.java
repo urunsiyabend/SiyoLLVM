@@ -148,11 +148,11 @@ public final class IrEmitter {
                 + "  %stack.marker = alloca i8\n"
                 + _allocas
                 + "  %stack.here = ptrtoint ptr %stack.marker to i64\n"
-                + "  %stack.limit = load i64, ptr @siyo.stack_limit\n"
+                + "  %stack.limit = load i64, ptr @siyo_rt_stack_limit\n"
                 + "  %stack.low = icmp ult i64 %stack.here, %stack.limit\n"
                 + "  br i1 %stack.low, label %stack.overflow, label %body\n"
                 + "stack.overflow:\n"
-                + "  call void @siyo.stack_overflow()\n"
+                + "  call void @siyo_rt_stack_overflow()\n"
                 + "  unreachable\n"
                 + "body:\n"
                 + _body
@@ -171,14 +171,12 @@ public final class IrEmitter {
     }
 
     /**
-     * {@code main} runs {@code @siyo.program} on a thread of known stack size;
-     * that runs the globals, then the file's {@code init()} and {@code main()}
-     * if declared.
+     * {@code siyo_program}, which the C runtime's {@code main} runs on a thread
+     * of known stack size after setting the stack limit: the globals, then the
+     * file's {@code init()} and {@code main()} if declared.
      */
     private String entryPoint() {
-        StringBuilder program = new StringBuilder("define internal ptr @siyo.program(ptr %unused) {\nentry:\n");
-        program.append("  %stack.marker = alloca i8\n");
-        program.append("  call void @siyo.stack_init(ptr %stack.marker)\n");
+        StringBuilder program = new StringBuilder("define void @siyo_program() {\nentry:\n");
         program.append("  call void @siyo.init_globals()\n");
         for (String name : List.of("init", "main")) {
             for (FunctionSymbol function : _functionNames.keySet()) {
@@ -191,11 +189,7 @@ public final class IrEmitter {
                 }
             }
         }
-        program.append("  ret ptr null\n}\n\n");
-        program.append("define i32 @main() {\nentry:\n");
-        program.append("  call void @siyo.run_program_thread()\n");
-        program.append("  %flushed = call i32 @fflush(ptr null)\n");
-        program.append("  ret i32 0\n}\n");
+        program.append("  ret void\n}\n");
         return program.toString();
     }
 
@@ -302,7 +296,7 @@ public final class IrEmitter {
         if (left.type() == String.class || right.type() == String.class) {
             requireType(left, String.class);
             requireType(right, String.class);
-            String equal = instruction("call i1 @siyo.str_eq(ptr " + left.ref() + ", ptr " + right.ref() + ")");
+            String equal = instruction("call zeroext i1 @siyo_rt_str_eq(ptr " + left.ref() + ", ptr " + right.ref() + ")");
             return switch (op) {
                 case Equals -> new Value(equal, Boolean.class);
                 case NotEquals -> new Value(instruction("xor i1 " + equal + ", true"), Boolean.class);
@@ -378,7 +372,7 @@ public final class IrEmitter {
         String ok = newBlock("div.ok");
         terminate("br i1 " + zero + ", label %" + fail + ", label %" + ok);
         startBlock(fail);
-        instructionNoResult("call void @siyo.div_by_zero()");
+        instructionNoResult("call void @siyo_rt_div_by_zero()");
         terminate("unreachable");
         startBlock(ok);
         String minusOne = instruction("icmp eq " + type + " " + r + ", -1");
@@ -414,13 +408,13 @@ public final class IrEmitter {
             if (call.getArguments().size() != 1) throw unsupported(function.getName() + " arity");
             Value value = expression(call.getArguments().get(0));
             String printer = switch (LlvmTypes.of(value.type())) {
-                case "i32" -> "@siyo.print_int(i32 ";
-                case "i64" -> "@siyo.print_long(i64 ";
-                case "i1" -> "@siyo.print_bool(i1 ";
-                default -> "@siyo.print_str(ptr ";
+                case "i32" -> "@siyo_rt_print_int(i32 ";
+                case "i64" -> "@siyo_rt_print_long(i64 ";
+                case "i1" -> "@siyo_rt_print_bool(i1 zeroext ";
+                default -> "@siyo_rt_print_str(ptr ";
             };
             instructionNoResult("call void " + printer + value.ref() + ")");
-            if (function == BuiltinFunctions.PRINTLN) instructionNoResult("call void @siyo.print_newline()");
+            if (function == BuiltinFunctions.PRINTLN) instructionNoResult("call void @siyo_rt_print_newline()");
             return new Value(null, null);
         }
 
