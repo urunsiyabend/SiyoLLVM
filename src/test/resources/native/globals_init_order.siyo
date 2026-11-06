@@ -1,0 +1,13 @@
+mut counter = 1
+mut doubled = counter * 2
+fn init() {
+    println("init")
+    println(doubled)
+    counter = 10
+}
+fn main() {
+    println("main")
+    println(counter)
+    counter += 1
+    println(counter)
+}

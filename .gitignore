@@ -1,0 +1,6 @@
+target/
+.superpowers/
+*.ll
+!src/test/resources/**/*.ll
+.idea/
+*.iml

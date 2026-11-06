@@ -1,0 +1,28 @@
+// Euclid's algorithm, recursive and iterative, plus least common multiple.
+fn gcd(a: int, b: int) -> int {
+    if b == 0 { return a }
+    return gcd(b, a % b)
+}
+
+fn gcdLoop(a: int, b: int) -> int {
+    mut x = a
+    mut y = b
+    while y != 0 {
+        mut t = x % y
+        x = y
+        y = t
+    }
+    return x
+}
+
+fn lcm(a: int, b: int) -> long {
+    return a / gcd(a, b) * (b + 0L)
+}
+
+fn main() {
+    println(gcd(1071, 462))
+    println(gcdLoop(1071, 462))
+    println(gcd(17, 5) == gcdLoop(17, 5))
+    println(lcm(21, 6))
+    println(lcm(2147483647, 2147483646))
+}

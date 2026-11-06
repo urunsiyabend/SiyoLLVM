@@ -1,0 +1,15 @@
+fn pick(flag: bool, a: string, b: string) -> string { if flag { return a } return b }
+fn main() {
+    mut s = pick(true, "left", "right")
+    println(s)
+    s = pick(false, "left", "right")
+    println(s)
+    println(s == "right")
+    println("" == "")
+    mut b = true
+    b = !b
+    println(b)
+    println(b == false)
+    println(b != true)
+    println(true ^ b)
+}

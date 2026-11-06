@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  java:
+    name: Java tests (no LLVM)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: mvn verify
+        run: mvn -B verify
+      - name: Native gate must fail because clang is missing
+        run: scripts/check-native-gate-requires-clang.sh
+
+  native:
+    name: Native gate (clang 19)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Install clang 19
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-19
+          clang-19 --version
+      - name: mvn verify -Pnative
+        env:
+          SIYOLLVM_CLANG: clang-19
+        run: mvn -B verify -Pnative

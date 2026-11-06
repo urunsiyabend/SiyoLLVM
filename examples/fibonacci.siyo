@@ -1,0 +1,27 @@
+// Recursive and iterative Fibonacci; the iterative one uses long to go past int.
+fn fib(n: int) -> int {
+    if n < 2 { return n }
+    return fib(n - 1) + fib(n - 2)
+}
+
+fn fibLong(n: int) -> long {
+    mut a: long = 0L
+    mut b: long = 1L
+    mut i = 0
+    while i < n {
+        mut next = a + b
+        a = b
+        b = next
+        i += 1
+    }
+    return a
+}
+
+fn main() {
+    for mut i = 0 i <= 15 i = i + 1 {
+        print(fib(i))
+        print(" ")
+    }
+    println("")
+    println(fibLong(90))
+}

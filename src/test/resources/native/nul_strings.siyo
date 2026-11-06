@@ -1,0 +1,10 @@
+fn main() {
+    println("a\0b")
+    println("a\0b" == "a\0c")
+    println("a\0b" == "a\0b")
+    println("a" == "a\0")
+    print("\0")
+    println("")
+    mut s = "x\0"
+    println(s != "x")
+}

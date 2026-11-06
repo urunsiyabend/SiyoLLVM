@@ -1,0 +1,14 @@
+// DEVIATION (hand-written expectation): JVM 0.9.0 fails verification here (VerifyError) for
+// non-int types; SiyoLLVM returns the JVM default of every type (0, 0L, false, null).
+fn n(x: int) -> int { if x > 0 { return 1 } }
+fn b(x: int) -> bool { if x > 0 { return true } }
+fn s(x: int) -> string { if x > 0 { return "yes" } }
+fn l(x: int) -> long { if x > 0 { return 5L } }
+fn main() {
+    println(n(1))
+    println(n(0))
+    println(b(0))
+    println(s(1))
+    println(s(0))
+    println(l(0))
+}

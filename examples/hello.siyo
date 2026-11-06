@@ -1,0 +1,4 @@
+// The smallest SiyoLLVM program.
+fn main() {
+    println("Hello from SiyoLLVM!")
+}

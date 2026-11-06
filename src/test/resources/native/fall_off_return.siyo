@@ -1,0 +1,6 @@
+// Falling off the end of an int function returns 0, as on the JVM.
+fn n(x: int) -> int { if x > 0 { return 1 } }
+fn main() {
+    println(n(1))
+    println(n(0))
+}

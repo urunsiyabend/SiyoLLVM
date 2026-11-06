@@ -1,0 +1,17 @@
+// Code after a return is unreachable but is still compiled; it must give valid IR.
+// Regression: a short-circuit there used to emit a phi naming the wrong block.
+fn f() -> bool { return true return false && true }
+fn g() -> bool { return false return (false && true) || (true && !false) }
+fn h(x: bool) -> int {
+    return 1
+    if x || false { return 2 }
+    while true && x { return 3 }
+    return 4
+}
+fn d(a: int) -> int { return 2 mut b = a / 0 b = b % a return b }
+fn main() {
+    println(f())
+    println(g())
+    println(h(true))
+    println(d(1))
+}

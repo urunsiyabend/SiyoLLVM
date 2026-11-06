@@ -1,0 +1,14 @@
+// Unicode identifiers must not collide once they reach LLVM.
+fn sum(ü: int, ö: int) -> int { return ü + ö }
+fn şehir(adı: string) -> string { return adı }
+fn 合計(甲: int, 乙: int, 丙: int) -> int { return 甲 * 100 + 乙 * 10 + 丙 }
+mut ğlobal = 7
+fn main() {
+    println(sum(2, 3))
+    println(şehir("İstanbul"))
+    println(合計(1, 2, 3))
+    println("héllo wörld 😀 — ✓")
+    mut ı = ğlobal
+    mut i = 1
+    println(ı + i)
+}

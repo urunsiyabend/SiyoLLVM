@@ -1,0 +1,30 @@
+fn main() {
+    mut i = 0
+    mut sum = 0
+    while i < 10 {
+        i += 1
+        if i % 2 == 0 { continue }
+        if i > 7 { break }
+        sum += i
+    }
+    println(sum)
+    for mut j = 0 j < 3 j = j + 1 {
+        for mut k = 0 k < 3 k = k + 1 {
+            if k == j { continue }
+            print(j * 10 + k)
+            print(" ")
+        }
+    }
+    println("")
+    mut n = 3
+    do { println(n) n -= 1 } while n > 0
+    do { println("once") } while false
+    mut total: long = 0L
+    for mut m = 0 m < 100000 m = m + 1 { total = total + m }
+    println(total)
+    mut x = 100
+    x *= 3
+    x /= 7
+    x -= 1
+    println(x)
+}

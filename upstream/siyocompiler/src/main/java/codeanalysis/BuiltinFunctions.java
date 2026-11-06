@@ -1,0 +1,379 @@
+package codeanalysis;
+
+import java.util.List;
+
+/**
+ * Defines the built-in functions available in the Siyo language.
+ */
+public class BuiltinFunctions {
+    public static final FunctionSymbol LEN = new FunctionSymbol(
+            "len",
+            List.of(new ParameterSymbol("s", Object.class)),
+            Integer.class
+    );
+
+    public static final FunctionSymbol TO_STRING = new FunctionSymbol(
+            "toString",
+            List.of(new ParameterSymbol("value", Object.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol PARSE_INT = new FunctionSymbol(
+            "parseInt",
+            List.of(new ParameterSymbol("text", String.class)),
+            Integer.class
+    );
+
+    public static final FunctionSymbol PARSE_FLOAT = new FunctionSymbol(
+            "parseFloat",
+            List.of(new ParameterSymbol("text", String.class)),
+            Double.class
+    );
+
+    public static final FunctionSymbol TO_INT = new FunctionSymbol(
+            "toInt",
+            List.of(new ParameterSymbol("value", Double.class)),
+            Integer.class
+    );
+
+    public static final FunctionSymbol PARSE_LONG = new FunctionSymbol(
+            "parseLong",
+            List.of(new ParameterSymbol("s", String.class)),
+            Long.class
+    );
+
+    public static final FunctionSymbol TO_LONG = new FunctionSymbol(
+            "toLong",
+            List.of(new ParameterSymbol("value", Integer.class)),
+            Long.class
+    );
+
+    public static final FunctionSymbol TO_FLOAT = new FunctionSymbol(
+            "toFloat",
+            List.of(new ParameterSymbol("value", Integer.class)),
+            Double.class
+    );
+
+    public static final FunctionSymbol PRINT = new FunctionSymbol(
+            "print",
+            List.of(new ParameterSymbol("value", Object.class)),
+            null // void
+    );
+
+    public static final FunctionSymbol PRINTLN = new FunctionSymbol(
+            "println",
+            List.of(new ParameterSymbol("value", Object.class)),
+            null // void
+    );
+
+    public static final FunctionSymbol RANGE = new FunctionSymbol(
+            "range",
+            List.of(new ParameterSymbol("start", Integer.class), new ParameterSymbol("end", Integer.class)),
+            SiyoArray.class
+    );
+
+    public static final FunctionSymbol PUSH = new FunctionSymbol(
+            "push",
+            List.of(new ParameterSymbol("arr", SiyoArray.class), new ParameterSymbol("value", Object.class)),
+            null
+    );
+
+    public static final FunctionSymbol SUBSTRING = new FunctionSymbol(
+            "substring",
+            List.of(new ParameterSymbol("s", String.class), new ParameterSymbol("start", Integer.class), new ParameterSymbol("end", Integer.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol CONTAINS = new FunctionSymbol(
+            "contains",
+            List.of(new ParameterSymbol("s", String.class), new ParameterSymbol("sub", String.class)),
+            Boolean.class
+    );
+
+    public static final FunctionSymbol INPUT = new FunctionSymbol(
+            "input",
+            List.of(new ParameterSymbol("prompt", String.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol ERROR = new FunctionSymbol(
+            "error",
+            List.of(new ParameterSymbol("message", String.class)),
+            null
+    );
+
+    public static final FunctionSymbol CHR = new FunctionSymbol(
+            "chr",
+            List.of(new ParameterSymbol("code", Integer.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol ORD = new FunctionSymbol(
+            "ord",
+            List.of(new ParameterSymbol("ch", String.class)),
+            Integer.class
+    );
+
+    public static final FunctionSymbol INDEX_OF = new FunctionSymbol(
+            "indexOf",
+            List.of(new ParameterSymbol("s", String.class), new ParameterSymbol("sub", String.class)),
+            Integer.class
+    );
+
+    public static final FunctionSymbol STARTS_WITH = new FunctionSymbol(
+            "startsWith",
+            List.of(new ParameterSymbol("s", String.class), new ParameterSymbol("prefix", String.class)),
+            Boolean.class
+    );
+
+    public static final FunctionSymbol ENDS_WITH = new FunctionSymbol(
+            "endsWith",
+            List.of(new ParameterSymbol("s", String.class), new ParameterSymbol("suffix", String.class)),
+            Boolean.class
+    );
+
+    public static final FunctionSymbol REPLACE = new FunctionSymbol(
+            "replace",
+            List.of(new ParameterSymbol("s", String.class), new ParameterSymbol("old", String.class), new ParameterSymbol("new_", String.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol TRIM = new FunctionSymbol(
+            "trim",
+            List.of(new ParameterSymbol("s", String.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol TO_UPPER = new FunctionSymbol(
+            "toUpper",
+            List.of(new ParameterSymbol("s", String.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol TO_LOWER = new FunctionSymbol(
+            "toLower",
+            List.of(new ParameterSymbol("s", String.class)),
+            String.class
+    );
+
+    /**
+     * toInt(long) -> int. Every java.lang.System and java.io call returns a
+     * long, so narrowing one used to require a round trip through text.
+     */
+    public static final FunctionSymbol TO_INT_LONG = new FunctionSymbol(
+            "toInt",
+            List.of(new ParameterSymbol("value", Long.class)),
+            Integer.class
+    );
+
+    // toInt(string) -> int — alias for parseInt
+    public static final FunctionSymbol TO_INT_STR = new FunctionSymbol(
+            "toInt",
+            List.of(new ParameterSymbol("value", String.class)),
+            Integer.class
+    );
+
+    // toDouble(int) -> double — alias for toFloat
+    public static final FunctionSymbol TO_DOUBLE = new FunctionSymbol(
+            "toDouble",
+            List.of(new ParameterSymbol("value", Integer.class)),
+            Double.class
+    );
+
+    public static final FunctionSymbol REMOVE_AT = new FunctionSymbol(
+            "removeAt",
+            List.of(new ParameterSymbol("arr", SiyoArray.class), new ParameterSymbol("index", Integer.class)),
+            null
+    );
+
+    public static final FunctionSymbol POP = new FunctionSymbol(
+            "pop",
+            List.of(new ParameterSymbol("arr", SiyoArray.class)),
+            Object.class
+    );
+
+    public static final FunctionSymbol NEW_MAP = new FunctionSymbol(
+            "map",
+            List.of(),
+            SiyoMap.class
+    );
+
+    // Internal builtin: convert map to keys array (used by for-in desugaring)
+    public static final FunctionSymbol MAP_KEYS = new FunctionSymbol(
+            "$mapKeys",
+            List.of(new ParameterSymbol("map", SiyoMap.class)),
+            SiyoArray.class
+    );
+
+    // Internal builtin: convert set to values array (used by for-in desugaring)
+    public static final FunctionSymbol SET_VALUES = new FunctionSymbol(
+            "$setValues",
+            List.of(new ParameterSymbol("set", SiyoSet.class)),
+            SiyoArray.class
+    );
+
+    // Internal builtin: what a for loop over an erased value walks
+    public static final FunctionSymbol ITERABLE = new FunctionSymbol(
+            "$iterable",
+            List.of(new ParameterSymbol("value", Object.class)),
+            Object.class
+    );
+
+    public static final FunctionSymbol NEW_SET = new FunctionSymbol(
+            "set",
+            List.of(),
+            SiyoSet.class
+    );
+
+    public static final FunctionSymbol CHANNEL = new FunctionSymbol(
+            "channel",
+            List.of(),
+            SiyoChannel.class
+    );
+
+    public static final FunctionSymbol CHANNEL_BUFFERED = new FunctionSymbol(
+            "channel",
+            List.of(new ParameterSymbol("capacity", Integer.class)),
+            SiyoChannel.class
+    );
+
+    /** map(arr, fn) — the array of fn applied to every element. */
+    public static final FunctionSymbol MAP_ARRAY = new FunctionSymbol(
+            "map",
+            List.of(new ParameterSymbol("arr", SiyoArray.class), new ParameterSymbol("fn", SiyoClosure.class)),
+            SiyoArray.class
+    );
+
+    /** filter(arr, fn) — the elements fn accepts. */
+    public static final FunctionSymbol FILTER = new FunctionSymbol(
+            "filter",
+            List.of(new ParameterSymbol("arr", SiyoArray.class), new ParameterSymbol("fn", SiyoClosure.class)),
+            SiyoArray.class
+    );
+
+    /** reduce(arr, fn, initial) — the elements folded into one value. */
+    public static final FunctionSymbol REDUCE = new FunctionSymbol(
+            "reduce",
+            List.of(new ParameterSymbol("arr", SiyoArray.class), new ParameterSymbol("fn", SiyoClosure.class),
+                    new ParameterSymbol("initial", Object.class)),
+            Object.class
+    );
+
+    /** forEach(arr, fn) — fn run on every element, for its effects. */
+    public static final FunctionSymbol FOR_EACH = new FunctionSymbol(
+            "forEach",
+            List.of(new ParameterSymbol("arr", SiyoArray.class), new ParameterSymbol("fn", SiyoClosure.class)),
+            null
+    );
+
+    public static final FunctionSymbol SORT = new FunctionSymbol(
+            "sort",
+            List.of(new ParameterSymbol("arr", SiyoArray.class), new ParameterSymbol("comparator", SiyoClosure.class)),
+            null
+    );
+
+    public static final FunctionSymbol SPLIT = new FunctionSymbol(
+            "split",
+            List.of(new ParameterSymbol("s", String.class), new ParameterSymbol("delimiter", String.class)),
+            SiyoArray.class
+    );
+
+    public static final FunctionSymbol RANDOM = new FunctionSymbol(
+            "random",
+            List.of(new ParameterSymbol("max", Integer.class)),
+            Integer.class
+    );
+
+    public static final FunctionSymbol ACTOR_HANDLE = new FunctionSymbol(
+            "actorHandle",
+            List.of(new ParameterSymbol("self", SiyoStruct.class)),
+            Object.class
+    );
+
+    public static final FunctionSymbol CAN_READ = new FunctionSymbol(
+            "canRead",
+            List.of(new ParameterSymbol("reader", Object.class)),
+            Boolean.class
+    );
+
+    public static final FunctionSymbol HTTP_GET = new FunctionSymbol(
+            "httpGet",
+            List.of(new ParameterSymbol("url", String.class)),
+            String.class
+    );
+
+    public static final FunctionSymbol HTTP_POST = new FunctionSymbol(
+            "httpPost",
+            List.of(new ParameterSymbol("url", String.class), new ParameterSymbol("body", String.class)),
+            String.class
+    );
+
+    /**
+     * The names of a struct's fields, in the order it declares them.
+     *
+     * <p>A struct could only be turned into data by naming every field by hand,
+     * which meant a serialiser had to be rewritten for each struct.
+     */
+    public static final FunctionSymbol FIELDS = new FunctionSymbol(
+            "fields",
+            List.of(new ParameterSymbol("value", Object.class)),
+            SiyoArray.class
+    );
+
+    /** The value of one field of a struct, by name. */
+    public static final FunctionSymbol FIELD = new FunctionSymbol(
+            "field",
+            List.of(new ParameterSymbol("value", Object.class),
+                    new ParameterSymbol("name", String.class)),
+            Object.class
+    );
+
+    /** Writes one field of a struct, by name. */
+    public static final FunctionSymbol SET_FIELD = new FunctionSymbol(
+            "setField",
+            List.of(new ParameterSymbol("value", Object.class),
+                    new ParameterSymbol("name", String.class),
+                    new ParameterSymbol("fieldValue", Object.class)),
+            null
+    );
+
+    /** A struct's fields as a map, which is what serialising one needs. */
+    public static final FunctionSymbol TO_MAP = new FunctionSymbol(
+            "toMap",
+            List.of(new ParameterSymbol("value", Object.class)),
+            SiyoMap.class
+    );
+
+    /** The name of the struct a value is, or an empty string when it is not one. */
+    public static final FunctionSymbol TYPE_NAME = new FunctionSymbol(
+            "typeName",
+            List.of(new ParameterSymbol("value", Object.class)),
+            String.class
+    );
+
+    /**
+     * The kind of any value, by its Siyo type name: int, long, float, bool,
+     * string, array, map, set, fn, channel, null, a struct's or sum type's
+     * name, or a Java object's simple class name.
+     */
+    public static final FunctionSymbol TYPE_OF = new FunctionSymbol(
+            "typeOf",
+            List.of(new ParameterSymbol("value", Object.class)),
+            String.class
+    );
+
+    public static List<FunctionSymbol> getAll() {
+        return List.of(LEN, TO_STRING, PARSE_INT, PARSE_LONG, PARSE_FLOAT, TO_INT, TO_INT_LONG, TO_INT_STR, TO_LONG, TO_FLOAT, TO_DOUBLE,
+                PRINT, PRINTLN, RANGE, PUSH, REMOVE_AT, POP, NEW_MAP, NEW_SET, MAP_KEYS, SET_VALUES, ITERABLE, SORT, CHANNEL, CHANNEL_BUFFERED, SUBSTRING, CONTAINS, INPUT, ERROR, RANDOM,
+                CHR, ORD, INDEX_OF, STARTS_WITH, ENDS_WITH, REPLACE, TRIM, TO_UPPER, TO_LOWER, SPLIT, HTTP_GET, HTTP_POST, CAN_READ, ACTOR_HANDLE,
+                MAP_ARRAY, FILTER, REDUCE, FOR_EACH,
+                FIELDS, FIELD, SET_FIELD, TO_MAP, TYPE_NAME, TYPE_OF);
+    }
+
+    public static boolean isBuiltin(FunctionSymbol function) {
+        for (FunctionSymbol builtin : getAll()) {
+            if (builtin == function) return true; // reference equality, not name-based
+        }
+        return false;
+    }
+}

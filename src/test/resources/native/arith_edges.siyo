@@ -1,0 +1,48 @@
+// Integer edge cases: wrapping, MIN / -1, signs of / and %, masked shifts.
+fn main() {
+    mut max = 2147483647
+    mut min = 0 - 2147483647 - 1
+    mut neg1 = 0 - 1
+    println(max + 1)
+    println(min - 1)
+    println(max * 2)
+    println(min * neg1)
+    println(min / neg1)
+    println(min % neg1)
+    println((0 - 7) / 2)
+    println((0 - 7) % 2)
+    println(7 % (0 - 2))
+    println((0 - 7) % (0 - 2))
+    println(1 << 31)
+    println(1 << 32)
+    println(1 << 33)
+    println(1 << neg1)
+    println((0 - 8) >> 1)
+    println((0 - 1) >> 40)
+    println(min >> 31)
+    println(~0)
+    println(~max)
+    println(-max)
+    println(-min)
+    println(+max)
+    println(5 & 3)
+    println(5 | 3)
+    println(5 ^ 3)
+    mut lmax: long = 9223372036854775807L
+    mut lmin: long = 0L - 9223372036854775807L - 1L
+    mut lneg: long = 0L - 1L
+    println(lmax + 1L)
+    println(lmin - 1L)
+    println(lmax * 3L)
+    println(lmin / lneg)
+    println(lmin % lneg)
+    println((0L - 7L) / 2L)
+    println((0L - 7L) % 2L)
+    println(lmax + 1)
+    println(max + 1L)
+    println(max * 2L)
+    println(2147483648)
+    println(max == 2147483647L)
+    println(lmin < min)
+    println(min - 1L)
+}

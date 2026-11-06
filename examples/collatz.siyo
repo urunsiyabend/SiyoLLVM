@@ -1,0 +1,24 @@
+// Longest Collatz chain below a limit; steps are counted in long.
+fn steps(start: long) -> int {
+    mut n = start
+    mut count = 0
+    while n != 1L {
+        if n % 2L == 0L { n = n / 2L } else { n = 3L * n + 1L }
+        count += 1
+    }
+    return count
+}
+
+fn main() {
+    mut best = 0
+    mut bestStart = 0
+    for mut i = 1 i < 100000 i = i + 1 {
+        mut s = steps(i)
+        if s > best {
+            best = s
+            bestStart = i
+        }
+    }
+    println(bestStart)
+    println(best)
+}

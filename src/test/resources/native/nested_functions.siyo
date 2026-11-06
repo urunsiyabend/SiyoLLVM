@@ -1,0 +1,10 @@
+fn outer(x: int) -> int {
+    fn square(y: int) -> int { return y * y }
+    fn twice(y: int) -> int { return square(y) + square(y) }
+    return twice(x) + 1
+}
+fn main() {
+    fn helper() -> string { return "nested" }
+    println(helper())
+    println(outer(3))
+}

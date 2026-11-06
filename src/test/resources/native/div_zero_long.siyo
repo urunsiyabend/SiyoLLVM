@@ -1,0 +1,6 @@
+fn main() {
+    mut a: long = 5L
+    mut zero: long = 0L
+    print("x")
+    println(a / zero)
+}

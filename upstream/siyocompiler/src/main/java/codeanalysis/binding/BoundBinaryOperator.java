@@ -1,0 +1,240 @@
+package codeanalysis.binding;
+
+import codeanalysis.syntax.SyntaxType;
+
+/**
+ * The BoundBinaryOperator class represents a binary operator used in binding expressions.
+ * It encapsulates information about the syntax type, operator type, left operand type, right operand type and result type of the operator.
+ * The class provides methods to bind a binary operator based on the syntax type and operands type, and to retrieve the properties of an operator.
+ *
+ * @see <a href="https://github.com/urunsiyabend">GitHub Profile</a>
+ * @author Siyabend Urun
+ * @version 1.0
+ */
+public class BoundBinaryOperator {
+    private final SyntaxType _syntaxType;
+    private final BoundBinaryOperatorType _type;
+    private final Class<?> _leftType;
+    private final Class<?> _rightType;
+    private final Class<?> _resultType;
+    private final static BoundBinaryOperator[] _operators = {
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Integer.class),
+            new BoundBinaryOperator(SyntaxType.MinusToken, BoundBinaryOperatorType.Subtraction, Integer.class),
+            new BoundBinaryOperator(SyntaxType.AsteriskToken, BoundBinaryOperatorType.Multiplication, Integer.class),
+            new BoundBinaryOperator(SyntaxType.SlashToken, BoundBinaryOperatorType.Division, Integer.class),
+            new BoundBinaryOperator(SyntaxType.PercentToken, BoundBinaryOperatorType.Modulo, Integer.class),
+
+            new BoundBinaryOperator(SyntaxType.AmpersandToken, BoundBinaryOperatorType.BitwiseAnd, Integer.class),
+            new BoundBinaryOperator(SyntaxType.PipeToken, BoundBinaryOperatorType.BitwiseOr, Integer.class),
+            new BoundBinaryOperator(SyntaxType.CaretToken, BoundBinaryOperatorType.BitwiseXor, Integer.class),
+
+            new BoundBinaryOperator(SyntaxType.DoubleLessToken, BoundBinaryOperatorType.LeftShift, Integer.class),
+            new BoundBinaryOperator(SyntaxType.DoubleGreaterToken, BoundBinaryOperatorType.RightShift, Integer.class),
+
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessToken, BoundBinaryOperatorType.LessThan, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessOrEqualsToken, BoundBinaryOperatorType.LessOrEqualsThan, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterToken, BoundBinaryOperatorType.GreaterThan, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterOrEqualsToken, BoundBinaryOperatorType.GreaterOrEqualsThen, Integer.class, Boolean.class),
+
+            // Long operators
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Long.class),
+            new BoundBinaryOperator(SyntaxType.MinusToken, BoundBinaryOperatorType.Subtraction, Long.class),
+            new BoundBinaryOperator(SyntaxType.AsteriskToken, BoundBinaryOperatorType.Multiplication, Long.class),
+            new BoundBinaryOperator(SyntaxType.SlashToken, BoundBinaryOperatorType.Division, Long.class),
+            new BoundBinaryOperator(SyntaxType.PercentToken, BoundBinaryOperatorType.Modulo, Long.class),
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, Long.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, Long.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessToken, BoundBinaryOperatorType.LessThan, Long.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessOrEqualsToken, BoundBinaryOperatorType.LessOrEqualsThan, Long.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterToken, BoundBinaryOperatorType.GreaterThan, Long.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterOrEqualsToken, BoundBinaryOperatorType.GreaterOrEqualsThen, Long.class, Boolean.class),
+            // Long + String and String + Long
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Long.class, String.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, String.class, Long.class, String.class),
+            // Int + Long → Long, Long + Int → Long (mixed arithmetic)
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Integer.class, Long.class, Long.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Long.class, Integer.class, Long.class),
+            new BoundBinaryOperator(SyntaxType.MinusToken, BoundBinaryOperatorType.Subtraction, Long.class, Integer.class, Long.class),
+            new BoundBinaryOperator(SyntaxType.MinusToken, BoundBinaryOperatorType.Subtraction, Integer.class, Long.class, Long.class),
+            // Mixed Long/Int comparisons
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, Long.class, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, Integer.class, Long.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, Long.class, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, Integer.class, Long.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessToken, BoundBinaryOperatorType.LessThan, Long.class, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessOrEqualsToken, BoundBinaryOperatorType.LessOrEqualsThan, Long.class, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterToken, BoundBinaryOperatorType.GreaterThan, Long.class, Integer.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterOrEqualsToken, BoundBinaryOperatorType.GreaterOrEqualsThen, Long.class, Integer.class, Boolean.class),
+
+            new BoundBinaryOperator(SyntaxType.AmpersandToken, BoundBinaryOperatorType.BitwiseAnd, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.PipeToken, BoundBinaryOperatorType.BitwiseOr, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.CaretToken, BoundBinaryOperatorType.BitwiseXor, Boolean.class),
+
+            new BoundBinaryOperator(SyntaxType.DoubleAmpersandToken, BoundBinaryOperatorType.LogicalAnd, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.DoublePipeToken, BoundBinaryOperatorType.LogicalOr, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, Boolean.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, Boolean.class, Boolean.class),
+
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Double.class),
+            new BoundBinaryOperator(SyntaxType.MinusToken, BoundBinaryOperatorType.Subtraction, Double.class),
+            new BoundBinaryOperator(SyntaxType.AsteriskToken, BoundBinaryOperatorType.Multiplication, Double.class),
+            new BoundBinaryOperator(SyntaxType.SlashToken, BoundBinaryOperatorType.Division, Double.class),
+            new BoundBinaryOperator(SyntaxType.PercentToken, BoundBinaryOperatorType.Modulo, Double.class),
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, Double.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, Double.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessToken, BoundBinaryOperatorType.LessThan, Double.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessOrEqualsToken, BoundBinaryOperatorType.LessOrEqualsThan, Double.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterToken, BoundBinaryOperatorType.GreaterThan, Double.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterOrEqualsToken, BoundBinaryOperatorType.GreaterOrEqualsThen, Double.class, Boolean.class),
+
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, String.class, Integer.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, String.class, Boolean.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, String.class, Double.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, String.class, Object.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Integer.class, String.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Boolean.class, String.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Double.class, String.class, String.class),
+            new BoundBinaryOperator(SyntaxType.PlusToken, BoundBinaryOperatorType.Addition, Object.class, String.class, String.class),
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, String.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, String.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessToken, BoundBinaryOperatorType.LessThan, String.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.LessOrEqualsToken, BoundBinaryOperatorType.LessOrEqualsThan, String.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterToken, BoundBinaryOperatorType.GreaterThan, String.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.GreaterOrEqualsToken, BoundBinaryOperatorType.GreaterOrEqualsThen, String.class, Boolean.class),
+
+            new BoundBinaryOperator(SyntaxType.EqualsEqualsToken, BoundBinaryOperatorType.Equals, Object.class, Boolean.class),
+            new BoundBinaryOperator(SyntaxType.BangEqualsToken, BoundBinaryOperatorType.NotEquals, Object.class, Boolean.class),
+    };
+
+    /**
+     * Constructs a BoundBinaryOperator with the specified syntax type, operator type, and left type.
+     *
+     * @param syntaxType The syntax type associated with the operator.
+     * @param type The operator type.
+     * @param leftType The left operand type.
+     */
+    private BoundBinaryOperator(SyntaxType syntaxType, BoundBinaryOperatorType type, Class<?> leftType) {
+
+        _syntaxType = syntaxType;
+        _type = type;
+        _leftType = leftType;
+        _rightType = leftType;
+        _resultType = leftType;
+    }
+
+    /**
+     * Constructs a BoundBinaryOperator with the specified syntax type, operator type, left type, and result type.
+     *
+     * @param syntaxType The syntax type associated with the operator.
+     * @param type The operator type.
+     * @param leftType The left operand type.
+     * @param resultType The result type of the operation.
+     */
+    private BoundBinaryOperator(SyntaxType syntaxType, BoundBinaryOperatorType type, Class<?> leftType, Class<?> resultType) {
+        _syntaxType = syntaxType;
+        _type = type;
+        _leftType = leftType;
+        _rightType = leftType;
+        _resultType = resultType;
+    }
+
+    /**
+     * Constructs a BoundBinaryOperator with the specified syntax type, operator type, left type, right type, and result type.
+     *
+     * @param syntaxType The syntax type associated with the operator.
+     * @param type The operator type.
+     * @param leftType The left operand type.
+     * @param rightType The right operand type.
+     * @param resultType The result type of the operation.
+     */
+    private BoundBinaryOperator(SyntaxType syntaxType, BoundBinaryOperatorType type, Class<?> leftType, Class<?> rightType, Class<?> resultType) {
+        _syntaxType = syntaxType;
+        _type = type;
+        _leftType = leftType;
+        _rightType = rightType;
+        _resultType = resultType;
+    }
+
+    /**
+     * Binds a binary operator based on the syntax type, left type, and right type.
+     *
+     * @param syntaxType The syntax type of the operator.
+     * @param leftType The left operand type.
+     * @param rightType The right operand type.
+     * @return The bound binary operator, or {@code null} if no matching operator is found.
+     */
+    public static BoundBinaryOperator bind(SyntaxType syntaxType, Class<?> leftType, Class<?> rightType) {
+        for (var op: _operators) {
+            if (op.getSyntaxType() == syntaxType && op.getLeftType() == leftType && op.getRightType() == rightType) {
+                return op;
+            }
+        }
+        // Equality against an erased operand — which is what `null` is — works
+        // for every type. Without this a `map` could not be compared to null
+        // even though null is documented to work with any type.
+        if (syntaxType == SyntaxType.EqualsEqualsToken || syntaxType == SyntaxType.BangEqualsToken) {
+            // A sum type value compares by variant and payload, so equality is
+            // defined for it the same way it is for an erased operand.
+            boolean erased = leftType == Object.class || rightType == Object.class;
+            boolean sumType = leftType == codeanalysis.SiyoUnion.class || rightType == codeanalysis.SiyoUnion.class;
+            if (erased || sumType) {
+                for (var op : _operators) {
+                    if (op.getSyntaxType() == syntaxType
+                            && op.getLeftType() == Object.class
+                            && op.getRightType() == Object.class) {
+                        return op;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets the syntax type associated with the operator.
+     *
+     * @return The syntax type.
+     */
+    public SyntaxType getSyntaxType() {
+        return _syntaxType;
+    }
+
+    /**
+     * Gets the operator type.
+     *
+     * @return The operator type.
+     */
+    public BoundBinaryOperatorType getType() {
+        return _type;
+    }
+
+    /**
+     * Gets the left operand type.
+     *
+     * @return The left operand type.
+     */
+    public Class<?> getLeftType() {
+        return _leftType;
+    }
+
+    /**
+     * Gets the right operand type.
+     *
+     * @return The right operand type.
+     */
+    public Class<?> getRightType() {
+        return _rightType;
+    }
+
+    /**
+     * Gets the result type of the operation.
+     *
+     * @return The result type.
+     */
+    public Class<?> getResultType() {
+        return _resultType;
+    }
+}

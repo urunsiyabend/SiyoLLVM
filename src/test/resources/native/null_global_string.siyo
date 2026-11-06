@@ -1,0 +1,22 @@
+// A global read before its initialiser has run holds the JVM default.
+mut early = read()
+mut alsoEarly = read()
+mut flagEarly = readFlag()
+mut numEarly = readNum()
+mut later = "later"
+mut flag = true
+mut num = 42
+fn read() -> string { return later }
+fn readFlag() -> bool { return flag }
+fn readNum() -> int { return num }
+fn main() {
+    println(early)
+    print(early)
+    println("")
+    println(early == later)
+    println(early == alsoEarly)
+    println(early != later)
+    println(flagEarly)
+    println(numEarly)
+    println(later)
+}

@@ -1,0 +1,14 @@
+fn t(label: string) -> bool { println(label) return true }
+fn f(label: string) -> bool { println(label) return false }
+fn main() {
+    println(f("a") && t("not evaluated"))
+    println(t("b") || t("not evaluated"))
+    println(t("c") && f("d"))
+    println(f("e") || t("g"))
+    println(t("h") & f("i"))
+    println(f("j") | t("k"))
+    mut n = 0
+    while n < 5 && t("loop") { n = n + 2 }
+    println(n)
+    println(!(f("l") || f("m")))
+}

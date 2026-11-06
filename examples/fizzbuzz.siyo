@@ -1,0 +1,16 @@
+// FizzBuzz with short-circuit logic and no string building.
+fn main() {
+    for mut i = 1 i <= 15 i = i + 1 {
+        mut fizz = i % 3 == 0
+        mut buzz = i % 5 == 0
+        if fizz && buzz {
+            println("FizzBuzz")
+        } else if fizz {
+            println("Fizz")
+        } else if buzz {
+            println("Buzz")
+        } else {
+            println(i)
+        }
+    }
+}

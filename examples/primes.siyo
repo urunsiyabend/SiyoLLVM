@@ -1,0 +1,29 @@
+// Prime counting by trial division.
+fn isPrime(n: int) -> bool {
+    if n < 2 { return false }
+    mut d = 2
+    while d * d <= n {
+        if n % d == 0 { return false }
+        d += 1
+    }
+    return true
+}
+
+fn main() {
+    mut count = 0
+    mut n = 2
+    while count < 20 {
+        if isPrime(n) {
+            print(n)
+            print(" ")
+            count += 1
+        }
+        n += 1
+    }
+    println("")
+    mut below = 0
+    for mut k = 0 k < 100000 k = k + 1 {
+        if isPrime(k) { below += 1 }
+    }
+    println(below)
+}

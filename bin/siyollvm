@@ -1,0 +1,28 @@
+#!/bin/sh
+# SiyoLLVM launcher: runs the shaded JAR built by 'mvn package'.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SIYOLLVM_HOME="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+SIYOLLVM_JAR=""
+for candidate in "$SIYOLLVM_HOME"/target/siyollvm-*.jar; do
+    case "$candidate" in
+        */original-*) continue ;;
+    esac
+    [ -f "$candidate" ] && SIYOLLVM_JAR="$candidate"
+done
+
+if [ -z "$SIYOLLVM_JAR" ]; then
+    echo "error: siyollvm JAR not found; run 'mvn package' in $SIYOLLVM_HOME" >&2
+    exit 2
+fi
+
+# The JVM decodes file-name arguments with the locale's charset; under a
+# non-UTF-8 locale such as LC_ALL=C a non-ASCII name would be mangled. This
+# only affects the compiler process: compiled programs write UTF-8 bytes
+# whatever the locale.
+case "$(locale charmap 2>/dev/null)" in
+    UTF-8 | utf8) ;;
+    *) LC_ALL=C.UTF-8; export LC_ALL ;;
+esac
+
+exec "${JAVA:-java}" -jar "$SIYOLLVM_JAR" "$@"

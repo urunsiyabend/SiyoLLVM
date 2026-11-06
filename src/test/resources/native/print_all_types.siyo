@@ -1,0 +1,18 @@
+fn main() {
+    print(1)
+    print(" ")
+    print(-2147483647 - 1)
+    print(" ")
+    print(9223372036854775807L)
+    print(" ")
+    print(true)
+    print(" ")
+    print(false)
+    println("")
+    println("")
+    println("tab\there")
+    println("quote \" backslash \\ dollar \$")
+    println("line1\nline2")
+    println(0L)
+    println(1 == 1)
+}
