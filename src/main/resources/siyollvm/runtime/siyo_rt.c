@@ -1761,6 +1761,8 @@ static size_t siyo_rt_utf8_step(const unsigned char *p, size_t n, uint32_t *cp) 
     if (b1 >= 0xF0 && b1 <= 0xF7) {
         if (n < 4) {
             unsigned b2 = n > 1 ? p[1] : 0;
+            /* As the JVM does: a lead past F4 is malformed alone, however short the input. */
+            if (b1 > 0xF4) return 1;
             if (n > 1 && ((b1 == 0xF0 && (b2 < 0x90 || b2 > 0xBF)) || (b1 == 0xF4 && (b2 & 0xF0) != 0x80)
                           || !siyo_rt_continuation(p[1]))) {
                 return 1;
@@ -1827,7 +1829,8 @@ static SiyoStr *siyo_rt_from_os(const char *bytes) {
 
 /* Appends s's WTF-8 bytes as Java encodes the string for the operating
    system: UTF-8 with each lone surrogate as '?', or US-ASCII with each
-   UTF-16 unit past 0x7F as '?' (a 4-byte sequence is two units). */
+   code point past 0x7F as one '?' (a supplementary character, a surrogate
+   pair in Java, is one '?' too: the JVM's encoder replaces the pair once). */
 static void siyo_rt_to_os(SiyoBytes *out, const unsigned char *p, size_t n) {
     _Bool utf8 = siyo_rt_jnu_utf8();
     for (size_t i = 0; i < n;) {
@@ -1835,7 +1838,7 @@ static void siyo_rt_to_os(SiyoBytes *out, const unsigned char *p, size_t n) {
         if (len == 1) {
             siyo_rt_bytes_byte(out, p[i]);
         } else if (!utf8) {
-            siyo_rt_bytes_put(out, len == 4 ? "??" : "?", len == 4 ? 2 : 1);
+            siyo_rt_bytes_byte(out, '?');
         } else if (len == 3 && siyo_rt_surrogate_at(p + i) != 0) {
             siyo_rt_bytes_byte(out, '?');
         } else {

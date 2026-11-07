@@ -9,7 +9,7 @@ fn main() {
     try { io.appendFile("no/such/dir.txt", "x") } catch e { println("6 " + e) }
     try { io.writeFile("sub", "x") } catch e { println("7 " + e) }
     try { io.appendFile("sub", "x") } catch e { println("8 " + e) }
-    try { io.writeFile("/proc/version", "x") } catch e { println("9 " + e) }
+    try { io.writeFile("sub/f.txt/x", "x") } catch e { println("9 " + e) }
     try { io.readFile("") } catch e { println("10 " + e) }
     try { io.readFile("sub//f.txt/") } catch e { println("11 " + e) }
     try { io.readFile("sub//nope///") } catch e { println("12 " + e) }

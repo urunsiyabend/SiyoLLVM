@@ -6,7 +6,7 @@
 6 no/such/dir.txt (No such file or directory)
 7 sub (Is a directory)
 8 sub (Is a directory)
-9 /proc/version (Permission denied)
+9 sub/f.txt/x (Not a directory)
 10  (No such file or directory)
 12 sub/nope (No such file or directory)
 13 Invalid file path

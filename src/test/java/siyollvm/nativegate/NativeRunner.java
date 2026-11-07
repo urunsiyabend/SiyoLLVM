@@ -51,7 +51,8 @@ final class NativeRunner {
     }
 
     /**
-     * Builds and runs {@code source} under {@code LC_ALL=C}, then compares with its expectation files.
+     * Builds and runs {@code source} under {@code LC_ALL=C}, or the locale named in
+     * {@code <name>.locale} beside it, then compares with its expectation files.
      * The program runs in a fresh directory holding a copy of {@code files/} beside the source, if
      * any, with the lines of {@code <name>.args} beside it, if any, as its arguments.
      */
@@ -93,7 +94,9 @@ final class NativeRunner {
                         + "while IFS= read -r l || [ -n \"$l\" ]; do set -- \"$@\" \"$l\"; done < \"$f\"; "
                         + "exec \"$exe\" \"$@\"", "sh", argsFile.toAbsolutePath().toString(), exe.toString())
                 : List.of(exe.toString());
-        Run run = run(command, runDir, work, Map.of("LC_ALL", "C"));
+        Path localeFile = sibling(source, ".locale");
+        String locale = Files.isRegularFile(localeFile) ? Files.readString(localeFile).strip() : "C";
+        Run run = run(command, runDir, work, Map.of("LC_ALL", locale));
         assertArrayEquals(expectedStdout, run.stdout(),
                 name + " stdout:\n" + new String(run.stdout(), StandardCharsets.UTF_8));
         assertEquals(expectedStderr, run.stderr(), name + " stderr");

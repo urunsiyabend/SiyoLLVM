@@ -17,6 +17,14 @@ fn main() {
     println(len(io.readLines("empty.txt")))
     // Invalid UTF-8 decodes to U+FFFD, as Java's decoder replaces it.
     show("bad", io.readFile("bad.txt"))
+    // Sequences cut short by the end of the file: E0 A0, F0 90 80, F5 80,
+    // F5 80 80, 41 F5 80, F7 BF (a lead past F4 is one malformed byte).
+    show("eof1", io.readFile("eof1.bin"))
+    show("eof2", io.readFile("eof2.bin"))
+    show("eof3", io.readFile("eof3.bin"))
+    show("eof4", io.readFile("eof4.bin"))
+    show("eof5", io.readFile("eof5.bin"))
+    show("eof6", io.readFile("eof6.bin"))
 
     // writeFile creates and overwrites; appendFile appends, creating the file.
     io.writeFile("out.txt", "first version, long")
@@ -30,12 +38,18 @@ fn main() {
     println(io.readLines("text.txt"))
     show("text", io.readFile("text.txt"))
 
-    // A Unicode file name (under LC_ALL=C, Java writes each non-ASCII unit as '?').
+    // A Unicode file name (under LC_ALL=C, Java writes each non-ASCII code point as '?').
     io.mkdir("names")
     io.writeFile("names/ç ü.txt", "unicode name")
     println(io.exists("names/ç ü.txt"))
     show("uname", io.readFile("names/ç ü.txt"))
     println(io.listDir("names"))
+    // A supplementary character is one '?' too.
+    io.mkdir("emoji")
+    io.writeFile("emoji/😀x.txt", "emoji name")
+    println(io.exists("emoji/😀x.txt") + " " + io.exists("emoji/?x.txt") + " " + io.exists("emoji/??x.txt"))
+    show("ename", io.readFile("emoji/😀x.txt"))
+    println(io.listDir("emoji"))
 
     // Queries.
     println(io.exists("lf.txt") + " " + io.exists("nope.txt") + " " + io.exists("sub") + " " + io.exists(""))

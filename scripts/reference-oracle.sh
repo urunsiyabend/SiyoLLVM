@@ -7,7 +7,8 @@
 #
 # `run` writes <case>.expected (stdout), <case>.expected-stderr (first line of
 # stderr, as SiyoLLVM prints no Java stack trace; omitted when empty) and
-# <case>.expected-exit (omitted when 0), running under LC_ALL=C (see below).
+# <case>.expected-exit (omitted when 0), running under LC_ALL=C, or under
+# LC_ALL=<the first line of <case>.locale> when that file exists (see below).
 # Review every generated file before committing it.
 # A multi-file case is a directory: `run <dir>/main.siyo` writes
 # <dir>/main.expected(-stderr|-exit).
@@ -48,13 +49,15 @@ run)
     if [ $# -eq 0 ] && [ -f "$base.args" ]; then
         while IFS= read -r line || [ -n "$line" ]; do set -- "$@" "$line"; done < "$base.args"
     fi
+    locale=C
+    if [ -f "$base.locale" ]; then IFS= read -r locale < "$base.locale" || [ -n "$locale" ]; fi
     scratch=$(mktemp -d)
     trap 'rm -rf "$scratch"' EXIT
     mkdir "$scratch/program" "$scratch/run"
     cp -R "$dir"/. "$scratch/program"/
     if [ -d "$dir/files" ]; then cp -R "$dir/files"/. "$scratch/run"/; fi
     set +e
-    (cd "$scratch/run" && env -u LANG LC_ALL=C java -jar "$JAR" run "$scratch/program/$(basename "$source")" "$@") \
+    (cd "$scratch/run" && env -u LANG LC_ALL="$locale" java -jar "$JAR" run "$scratch/program/$(basename "$source")" "$@") \
         > "$scratch/stdout" 2> "$scratch/stderr" < /dev/null
     status=$?
     set -e

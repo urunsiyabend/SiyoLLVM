@@ -11,6 +11,12 @@ blank [
 empty [] 0
 0
 bad [A�B�(C�D�E�F����G��H😀I﻿J�] 26
+eof1 [�] 1
+eof2 [�] 1
+eof3 [��] 2
+eof4 [���] 3
+eof5 [A��] 3
+eof6 [��] 2
 out [abcd] 4
 new [made by append] 14
 [héllo wörld 😀, lone ? end]
@@ -19,6 +25,9 @@ lone ? end] 25
 true
 uname [unicode name] 12
 [? ?.txt]
+true true false
+ename [emoji name] 10
+[?x.txt]
 true false true false
 true false false
 false true false true

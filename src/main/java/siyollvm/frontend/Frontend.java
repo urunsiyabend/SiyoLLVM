@@ -219,11 +219,14 @@ public final class Frontend {
         return path.toString();
     }
 
-    /** A module's source, from its file or, for {@code classpath:…}, the resource beside the binder's classes. */
+    /**
+     * A module's source, from its file or, for {@code classpath:…}, the resource from the class loader
+     * {@link #moduleIdentity} compares against (SiyoLLVM's jar, which also holds the binder).
+     */
     private static String readModule(String filePath) throws IOException {
         if (!filePath.startsWith(CLASSPATH)) return Files.readString(Path.of(filePath));
         String resource = filePath.substring(CLASSPATH.length());
-        try (InputStream in = Binder.class.getClassLoader().getResourceAsStream(resource)) {
+        try (InputStream in = Frontend.class.getClassLoader().getResourceAsStream(resource)) {
             if (in == null) throw new IOException("no resource " + resource);
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         }
@@ -413,7 +416,10 @@ public final class Frontend {
             return moduleName;
         }
 
-        /** siyoc's {@code ModuleHandler.moduleClassName} (package-private there). */
+        /**
+         * siyoc's {@code ModuleHandler.moduleClassName} (package-private there), copied: it must be
+         * checked again whenever upstream/siyocompiler is updated.
+         */
         static String moduleClassName(String moduleName) {
             boolean isStd = moduleName.startsWith("std/") || moduleName.startsWith("std.");
             StringBuilder name = new StringBuilder(isStd ? "Siyo" : "");

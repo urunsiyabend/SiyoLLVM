@@ -9,7 +9,7 @@ accepts.
 The reference semantics are those of `siyoc run` (the JVM backend) at
 SiyoCompiler `02c226298296fb4379f7251a9dfba19b7e887f3d`. Every program in
 `examples/` and `src/test/resources/native/`, and every multi-file program in
-`src/test/resources/modules/` (a directory per case, run from its `main.siyo` in a fresh directory holding a copy of the case's `files/`, with the lines of `main.args` as its arguments), is checked against it byte for
+`src/test/resources/modules/` (a directory per case, run from its `main.siyo` in a fresh directory holding a copy of the case's `files/`, with the lines of `main.args` as its arguments, under `LC_ALL=C` or the locale named in `main.locale`), is checked against it byte for
 byte.
 
 ## Accepted
@@ -302,7 +302,12 @@ finds them as `classpath:std/<name>.siyo`. They have the public signatures of
 SiyoCompiler 0.9.0's std modules, but SiyoLLVM's own bodies:
 
 - `std/strings` is plain Siyo, compiled like any module, written to give the
-  reference's results (`builder()`, a Java `StringBuilder`, is rejected).
+  reference's results (`builder()`, a Java `StringBuilder`, is rejected). Its
+  bodies follow the algorithms of the reference std's `strings` (SiyoCompiler
+  0.9.0's `src/main/resources/std/strings.siyo` and its Java helpers), with
+  string `+` in place of `StringBuilder`; they must be checked again when the
+  reference is updated, as must `Frontend`'s copy of siyoc's
+  `moduleClassName`.
 - In `std/io` and `std/os` every body is a stub. A call to one is a call into
   the C runtime (`siyo_rt_io_*`, `siyo_rt_os_*`), chosen by the module's
   identity, the function's name and its arity (`siyollvm.ir.Intrinsics`); a
@@ -358,8 +363,10 @@ exception).
 **Encodings.** File names, arguments, the environment and the working
 directory cross to the operating system as the JVM's `sun.jnu.encoding` does:
 UTF-8 when the locale's codeset is UTF-8, otherwise US-ASCII as in the C and
-POSIX locales, where each non-ASCII UTF-16 unit of a name is written as `?`
-(`writeFile("ç.txt", …)` creates `?.txt`, under `LC_ALL=C` as on the JVM) and
+POSIX locales, where each non-ASCII character of a name is written as one
+`?`, a supplementary character such as an emoji too (`writeFile("ç.txt", …)`
+creates `?.txt` and `writeFile("😀x.txt", …)` creates `?x.txt`, under
+`LC_ALL=C` as on the JVM) and
 each non-ASCII byte read (an argument, a listed name) becomes U+FFFD. File
 contents are always UTF-8.
 

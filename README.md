@@ -128,6 +128,13 @@ Siyabend Ürün. Why each file is there and how to update the snapshot is in
 snapshot drifts from its checksum manifest. SiyoLLVM adds no licence terms
 for these files.
 
+Two pieces of SiyoLLVM's own code follow the reference and must be checked
+when the snapshot is updated: `Frontend.Imports.moduleClassName` copies
+siyoc's package-private `ModuleHandler.moduleClassName` (how it names a
+module's JVM class), and `src/main/resources/std/strings.siyo` reimplements
+the reference std's `strings` functions with the same algorithms (see
+[docs/SUBSET.md](docs/SUBSET.md#standard-library)).
+
 ## Status
 
 Experimental. No releases. The design is in
