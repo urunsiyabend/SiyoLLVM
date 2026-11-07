@@ -267,6 +267,117 @@ class IrEmitterTest {
         assertTrue(ir.contains("call ptr @siyo_rt_str_concat(ptr @siyo.str.0, ptr "), ir);
     }
 
+    // A raise sets the runtime's pending flag and returns; each call that can
+    // raise is followed by a check that branches to the innermost catch block.
+    @Test
+    void callInsideTryBranchesToTheCatchBlock() {
+        String ir = emit("fn g() -> int { return 1 }\n"
+                + "fn main() { try { println(g()) } catch e { println(e) } }");
+        String main = function(ir, "@siyo.fn.1");
+        Matcher check = Pattern.compile("notail call i32 @siyo\\.fn\\.0\\(\\)\n"
+                + "  (%t\\d+) = load i8, ptr @siyo_rt_pending_flag\n"
+                + "  (%t\\d+) = icmp ne i8 \\1, 0\n"
+                + "  br i1 \\2, label %(catch\\.\\d+), label %").matcher(main);
+        assertTrue(check.find(), main);
+        assertTrue(main.contains("\n" + check.group(3) + ":\n  %t"), main);
+        assertTrue(Pattern.compile("\n" + Pattern.quote(check.group(3)) + ":\n  %t\\d+ = call ptr @siyo_rt_catch\\(\\)")
+                .matcher(main).find(), main);
+        assertFalse(main.contains("label %unwind"), main);
+    }
+
+    @Test
+    void callOutsideTryReturnsTheDefaultToTheCaller() {
+        String ir = emit("fn g() -> int { return 1 }\nfn f() -> long { return g() }\nfn main() { println(f()) }");
+        String f = function(ir, "@siyo.fn.1");
+        assertTrue(f.contains(", label %unwind, label %"), f);
+        assertTrue(f.contains("\nunwind:\n  ret i64 0\n"), f);
+        // A function with no raising call has no unwind block.
+        assertFalse(function(ir, "@siyo.fn.0").contains("unwind"), ir);
+    }
+
+    @Test
+    void theProgramReportsAnExceptionLeftPendingByAnEntryPoint() {
+        String ir = emit("mut g = 1\nfn init() { g = 2 }\nfn main() { println(g) }");
+        String program = function(ir, "@siyo_program");
+        assertEquals(3, count(program, "load i8, ptr @siyo_rt_pending_flag"), program);
+        assertTrue(program.contains("call void @siyo_rt_uncaught()\n  unreachable"), program);
+        assertTrue(ir.contains("declare void @siyo_rt_uncaught() noreturn cold"), ir);
+        assertTrue(ir.contains("@siyo_rt_pending_flag = external thread_local global i8"), ir);
+    }
+
+    @Test
+    void throwBoxesThePayloadAndBranchesToTheHandler() {
+        String ir = emit("fn f() { throw 5 }\nfn main() { try { f() } catch e { println(e) } }");
+        String f = function(ir, "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_box_int\\(i32 5\\)\n"
+                + "  call void @siyo_rt_throw\\(ptr \\1\\)\n  br label %unwind\n").matcher(f).find(), f);
+    }
+
+    @Test
+    void errorThrowsItsArgument() {
+        String ir = emit("fn main() { error(\"E1\") }");
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(main.contains("call void @siyo_rt_throw(ptr @siyo.str.0)\n  br label %unwind\n"), main);
+    }
+
+    @Test
+    void onlyRaisingRuntimeCallsAreChecked() {
+        String ir = emit("fn main() { mut s = \"abc\" println(s + substring(s, 0, 1)) println(parseInt(s)) }");
+        String main = function(ir, "@siyo.fn.0");
+        // substring raises; concatenation, parseInt and printing do not.
+        assertEquals(1, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void divisionByZeroRaisesAndBranchesToTheHandler() {
+        String ir = emit("fn d(a: int, b: int) -> int { try { return a / b } catch e { return -1 } }\n"
+                + "fn main() { println(d(1, 0)) }");
+        String d = function(ir, "@siyo.fn.0");
+        assertTrue(Pattern.compile("call void @siyo_rt_div_by_zero\\(\\)\n  br label %catch\\.\\d+\n").matcher(d).find(), d);
+        assertTrue(ir.contains("declare void @siyo_rt_div_by_zero() cold\n"), ir);
+    }
+
+    @Test
+    void catchVariableIsCastToItsDeclaredTypeWithACheck() {
+        String ir = emit("fn main() { try { throw 1 } catch e: int { println(e) } }");
+        String main = function(ir, "@siyo.fn.0");
+        Matcher cast = Pattern.compile("(%t\\d+) = call ptr @siyo_rt_catch\\(\\)\n"
+                + "  %t\\d+ = call i32 @siyo_rt_unbox_int\\(ptr \\1\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n").matcher(main);
+        assertTrue(cast.find(), main);
+    }
+
+    @Test
+    void nullLiteralUnboxedToIntOrBoolRaisesTheJvmMessage() {
+        String ir = emit("fn g(b: bool) { println(b) }\nfn main() { imut n: int = null println(n) g(null) }");
+        String main = function(ir, "@siyo.fn.1");
+        assertTrue(main.contains("call void @siyo_rt_unbox_null_literal(i32 2)\n  br label %unwind\n"), main);
+        assertTrue(main.contains("call void @siyo_rt_unbox_null_literal(i32 4)\n  br label %unwind\n"), main);
+    }
+
+    @Test
+    void jumpsOutOfTryAndCatchAreWellFormed() {
+        emit("""
+                fn f(n: int) -> int {
+                  mut total = 0
+                  for mut i = 0 i < n i = i + 1 {
+                    try {
+                      if i == 1 { continue }
+                      if i == 5 { break }
+                      if i == 3 { throw i }
+                      if i == 4 { return total }
+                      total += i
+                    } catch e: int {
+                      if e == 3 { continue }
+                      return -1
+                    }
+                  }
+                  return total
+                }
+                fn main() { println(f(9)) }
+                """);
+    }
+
     @Test
     void refusesNodesItDoesNotKnow() {
         FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut a = [1] }");
@@ -296,6 +407,13 @@ class IrEmitterTest {
                 assertThrows(java.lang.reflect.InvocationTargetException.class, () -> text.invoke(emitter, value));
         assertTrue(e.getCause() instanceof IllegalStateException, String.valueOf(e.getCause()));
         assertTrue(e.getCause().getMessage().contains("conversion of " + Object[].class), e.getCause().getMessage());
+    }
+
+    /** The definition of {@code name}, from {@code define} to its closing brace. */
+    private static String function(String ir, String name) {
+        Matcher define = Pattern.compile("(?m)^define [^\\n]* " + Pattern.quote(name) + "\\(").matcher(ir);
+        assertTrue(define.find(), name + " not defined in\n" + ir);
+        return ir.substring(define.start(), ir.indexOf("\n}\n", define.start()) + 2);
     }
 
     private static int count(String haystack, String needle) {

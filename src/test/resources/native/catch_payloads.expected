@@ -1,0 +1,24 @@
+11
+three levels: deep
+/ by zero
+/ by zero
+Range [2, 9) out of bounds for length 3
+For input string: ""
+For input string: "12x"
+Index 0 out of bounds for length 0
+Not a valid Unicode code point: 0xFFFFFFFF
+class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+Cannot invoke "java.lang.Long.longValue()" because "value" is null
+E1
+43
+10
+false
+null
+true
+in2
+inner caught inner
+between
+outer caught outer
+nested in catch: 1 second
+class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+done

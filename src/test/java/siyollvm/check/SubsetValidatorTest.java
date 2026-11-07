@@ -119,9 +119,40 @@ class SubsetValidatorTest {
         assertRejected("fn main() { println(contains(\"a\", toString(1.5))) }", "float values are");
     }
 
-    @Test
-    void tryCatchIsRejected() {
-        assertRejected("fn main() { try { println(1) } catch e { println(2) } }", "try/catch is");
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { try { println(1) } catch e { println(e) } }
+            fn main() { try { throw "s" } catch e: string { println(e) } }
+            fn main() { try { throw 1 } catch e: int { println(e + 1) } }
+            fn main() { try { throw 2L } catch e: long { println(e) } }
+            fn main() { try { throw true } catch e: bool { println(!e) } }
+            fn main() { try { throw null } catch e: any { println(e) } }
+            fn main() { mut a: any = 3 throw a }
+            fn main() { error("E1") }
+            fn main() { try { error("E1") } catch e { try { throw e + "2" } catch f { println(f) } } }
+            fn main() { for mut i = 0 i < 3 i = i + 1 { try { if i == 1 { continue } if i == 2 { break } } catch e { continue } } }
+            fn f() -> int { try { return 1 } catch e { return 2 } } fn main() { println(f()) }
+            fn f() -> int { try { 1 } catch e { 2 } } fn main() { println(f()) }
+            fn f() -> int { error("x") } fn main() { println(f()) }
+            fn main() { try { mut i = 0 while i < 3 { i += 1 if i == 2 { throw i } } } catch e { println(e) } }
+            """)
+    void exceptionsAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            fn main() { try { mut a = [1] } catch e { println(e) } }               | arrays are
+            fn main() { try { println(1) } catch e { mut a = [1] } }               | arrays are
+            fn main() { try { try { println(1) } catch e { mut d = 1.5 } } catch e { } } | float values are
+            fn main() { throw 1.5 }                                                | float values are
+            fn main() { throw [1] }                                                | arrays are
+            fn main() { error(toString(1.5)) }                                     | float values are
+            fn main() { try { println(1) } catch e: int[] { println(1) } }         | catch variables of type array are
+            fn main() { imut x = try { 1 } catch e { 2 } println(x) }              | try expressions are
+            """)
+    void unsupportedExceptionConstructsAreRejected(String source, String construct) {
+        assertRejected(source, construct);
     }
 
     @ParameterizedTest(name = "{0}")

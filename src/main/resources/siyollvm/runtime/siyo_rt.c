@@ -196,8 +196,9 @@ SiyoStr *siyo_rt_str_of_string(const SiyoStr *s) {
 
 /* --- string builtins ------------------------------------------------------ */
 
-/* Raising is fatal in F1; callers still return a dummy value afterwards, so
-   they stay correct once a raise can be caught. */
+/* A raise only records the exception (see siyo_rt_raise_java), so every
+   raising function returns a dummy value afterwards, which the caller's
+   pending check discards. */
 static void siyo_rt_null_pointer(void) {
     siyo_rt_raise_java("java.lang.NullPointerException", NULL);
 }
@@ -901,23 +902,74 @@ void siyo_rt_print_any(const void *value) {
     }
 }
 
-_Noreturn void siyo_rt_div_by_zero(void) {
-    siyo_rt_fail("java.lang.ArithmeticException: / by zero\n");
+/* --- exceptions ------------------------------------------------------------ */
+
+_Thread_local _Bool siyo_rt_pending_flag;
+
+/* The pending exception: a Siyo throw's payload (java_class NULL), or a Java
+   exception's class and message (NULL for none). */
+static _Thread_local const char *siyo_rt_pending_class;
+static _Thread_local const SiyoStr *siyo_rt_pending_message;
+static _Thread_local void *siyo_rt_pending_payload;
+
+void siyo_rt_throw(void *payload) {
+    siyo_rt_pending_class = NULL;
+    siyo_rt_pending_message = NULL;
+    siyo_rt_pending_payload = payload;
+    siyo_rt_pending_flag = 1;
+}
+
+void siyo_rt_raise_java(const char *java_class, const SiyoStr *message) {
+    siyo_rt_pending_class = java_class;
+    siyo_rt_pending_message = message;
+    siyo_rt_pending_payload = NULL;
+    siyo_rt_pending_flag = 1;
+}
+
+_Bool siyo_rt_pending(void) {
+    return siyo_rt_pending_flag;
+}
+
+void *siyo_rt_catch(void) {
+    siyo_rt_pending_flag = 0;
+    if (siyo_rt_pending_class == NULL) return siyo_rt_pending_payload;
+    const SiyoStr *message = siyo_rt_pending_message;
+    if (message != NULL && message->len > 0) return (void *)message;
+    /* getSimpleName(): what follows the last '.' of the class name. */
+    const char *simple = strrchr(siyo_rt_pending_class, '.');
+    simple = simple != NULL ? simple + 1 : siyo_rt_pending_class;
+    size_t len = strlen(simple);
+    return siyo_rt_str_from_bytes(simple, (int64_t)len, (int64_t)len);
+}
+
+_Noreturn void siyo_rt_uncaught(void) {
+    fflush(NULL);
+    if (siyo_rt_pending_class == NULL) {
+        /* SiyoThrow's message is String.valueOf(payload). */
+        fputs("codeanalysis.SiyoThrow: ", stderr);
+        siyo_rt_write_str(siyo_rt_any_to_string(siyo_rt_pending_payload), stderr);
+    } else {
+        fputs(siyo_rt_pending_class, stderr);
+        if (siyo_rt_pending_message != NULL) {
+            fputs(": ", stderr);
+            siyo_rt_write_str(siyo_rt_pending_message, stderr);
+        }
+    }
+    fputc('\n', stderr);
+    exit(1);
+}
+
+void siyo_rt_div_by_zero(void) {
+    siyo_rt_raise_java("java.lang.ArithmeticException", siyo_rt_str_from_bytes("/ by zero", 9, 9));
+}
+
+void siyo_rt_unbox_null_literal(int32_t tag) {
+    siyo_rt_raise_format("java.lang.NullPointerException", "Cannot invoke \"%s\" because \"null\" is null",
+            tag == SIYO_TAG_BOOL ? "java.lang.Boolean.booleanValue()" : "java.lang.Integer.intValue()");
 }
 
 _Noreturn void siyo_rt_stack_overflow(void) {
     siyo_rt_fail("java.lang.StackOverflowError\n");
-}
-
-_Noreturn void siyo_rt_raise_java(const char *java_class, const SiyoStr *message) {
-    fflush(NULL);
-    fputs(java_class, stderr);
-    if (message != NULL) {
-        fputs(": ", stderr);
-        siyo_rt_write_str(message, stderr);
-    }
-    fputc('\n', stderr);
-    exit(1);
 }
 
 void *siyo_rt_alloc(size_t size) {
@@ -936,7 +988,7 @@ static void *siyo_rt_program_thread(void *unused) {
 }
 
 /* Runs the program on a thread with a known stack size and waits for it. The
-   program ends the process itself on a runtime error. */
+   program ends the process itself on an uncaught exception or fatal error. */
 int main(int argc, char **argv) {
     siyo_rt_argc = argc;
     siyo_rt_argv = argv;

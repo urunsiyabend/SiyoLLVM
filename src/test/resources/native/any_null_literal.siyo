@@ -1,0 +1,8 @@
+// The null literal read into an int or bool: the JVM's NullPointerException
+// names the literal ("null"), so its message is known at compile time.
+fn g(b: bool) -> bool { return b }
+
+fn main() {
+    try { imut n: int = null println(n) } catch e { println(e) }
+    println(g(null))
+}

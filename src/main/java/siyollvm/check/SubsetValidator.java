@@ -19,6 +19,8 @@ import codeanalysis.binding.BoundNode;
 import codeanalysis.binding.BoundNodeType;
 import codeanalysis.binding.BoundReturnStatement;
 import codeanalysis.binding.BoundStatement;
+import codeanalysis.binding.BoundThrowStatement;
+import codeanalysis.binding.BoundTryCatchStatement;
 import codeanalysis.binding.BoundUnaryExpression;
 import codeanalysis.binding.BoundUnaryOperatorType;
 import codeanalysis.binding.BoundVariableDeclaration;
@@ -50,6 +52,11 @@ import java.util.Set;
  * lets an any reach arithmetic, ordering, logic, conditions and the string
  * builtins, where the JVM backend unboxes it to the other operand's type; those
  * are rejected.
+ *
+ * <p>{@code try}/{@code catch} statements, {@code throw} and {@code error()}
+ * are accepted with values of the types above. The lowerer leaves a try
+ * statement structured, so both of its bodies (with their nested blocks,
+ * labels and gotos) are checked like any other statements.
  */
 public final class SubsetValidator {
 
@@ -105,9 +112,7 @@ public final class SubsetValidator {
             Map.entry(BoundNodeType.MemberAssignmentExpression, "member assignment is"),
             Map.entry(BoundNodeType.StructLiteralExpression, "structs are"),
             Map.entry(BoundNodeType.UnionLiteralExpression, "sum types are"),
-            Map.entry(BoundNodeType.TryCatchStatement, "try/catch is"),
             Map.entry(BoundNodeType.TryExpression, "try expressions are"),
-            Map.entry(BoundNodeType.ThrowStatement, "throw is"),
             Map.entry(BoundNodeType.JavaMethodCallExpression, "Java interop is"),
             Map.entry(BoundNodeType.JavaStaticFieldExpression, "Java interop is"),
             Map.entry(BoundNodeType.CastExpression, "casts are"),
@@ -199,6 +204,16 @@ public final class SubsetValidator {
                     if (_function != null && _function.getReturnType() == Object.class && PRIMITIVES.contains(type)) {
                         report("returning " + typeName(type) + " from a function returning any is");
                     }
+                }
+            }
+            case BoundTryCatchStatement tryCatch -> {
+                validateStatement(tryCatch.getTryBody());
+                requireValueType(tryCatch.getErrorVariable().getType(), "catch variables");
+                validateStatement(tryCatch.getCatchBody());
+            }
+            case BoundThrowStatement raise -> {
+                if (validatesCleanly(raise.getExpression())) {
+                    requireValueType(raise.getExpression().getClassType(), "values");
                 }
             }
             default -> reportNode(statement);
@@ -296,6 +311,13 @@ public final class SubsetValidator {
         FunctionSymbol function = call.getFunction();
         boolean builtinPrint = function == BuiltinFunctions.PRINT || function == BuiltinFunctions.PRINTLN;
         if (function == BuiltinFunctions.TO_STRING) {
+            for (BoundExpression argument : call.getArguments()) {
+                if (validatesCleanly(argument)) requireValueType(argument.getClassType(), "values");
+            }
+            return;
+        }
+        if (function == BuiltinFunctions.ERROR) {
+            // Throws its argument as it is, as throw does.
             for (BoundExpression argument : call.getArguments()) {
                 if (validatesCleanly(argument)) requireValueType(argument.getClassType(), "values");
             }

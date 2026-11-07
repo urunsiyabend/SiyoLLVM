@@ -19,11 +19,15 @@ import codeanalysis.binding.BoundLabelStatement;
 import codeanalysis.binding.BoundLiteralExpression;
 import codeanalysis.binding.BoundReturnStatement;
 import codeanalysis.binding.BoundStatement;
+import codeanalysis.binding.BoundThrowStatement;
+import codeanalysis.binding.BoundTryCatchStatement;
 import codeanalysis.binding.BoundUnaryExpression;
 import codeanalysis.binding.BoundVariableDeclaration;
 import codeanalysis.binding.BoundVariableExpression;
 import siyollvm.frontend.LoweredProgram;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +54,17 @@ import java.util.Map;
  * (declaration, assignment, argument, return) the value is boxed, or unboxed
  * and cast with the runtime's check, as the JVM backend's checkcast does.
  *
+ * <p>Exceptions never unwind the native stack. A raise (a Siyo {@code throw}
+ * or {@code error()}, or a runtime error) records a pending exception in the
+ * runtime and returns normally; after every call that can raise (a Siyo
+ * function, or a runtime function in {@link RuntimeIr#RAISING}) the code
+ * branches on the pending flag to its handler: the innermost enclosing catch
+ * block of the function, or else a block returning the type's default to the
+ * caller, which checks in turn. {@code siyo_program} reports an exception
+ * still pending after the globals, {@code init()} or {@code main()} as
+ * uncaught. A try body is emitted in place, so its jumps (break, continue,
+ * return) need no unwinding: the handler is a property of where code is.
+ *
  * <p>Nodes outside the subset throw {@link IllegalStateException}: the
  * emitter never guesses.
  */
@@ -69,6 +84,10 @@ public final class IrEmitter {
     private int _blocks;
     private String _block;
     private boolean _terminated;
+    /** Catch blocks of the try statements being emitted, innermost first. */
+    private Deque<String> _handlers;
+    /** Whether the function's default-return handler ({@code unwind}) is used. */
+    private boolean _unwindUsed;
 
     private record Value(String ref, Class<?> type) {}
 
@@ -124,6 +143,8 @@ public final class IrEmitter {
         _blocks = 0;
         _terminated = false;
         _block = "body";
+        _handlers = new ArrayDeque<>();
+        _unwindUsed = false;
     }
 
     private String function(FunctionSymbol function, BoundBlockStatement body) {
@@ -142,10 +163,14 @@ public final class IrEmitter {
         for (BoundStatement statement : body.getStatements()) {
             statement(statement);
         }
-        if (!_terminated) {
-            Class<?> returnType = function.getReturnType();
-            terminate(returnType == null ? "ret void"
-                    : "ret " + LlvmTypes.of(returnType) + " " + LlvmTypes.zero(returnType));
+        Class<?> resultType = function.getReturnType();
+        String defaultReturn = resultType == null ? "ret void"
+                : "ret " + LlvmTypes.of(resultType) + " " + LlvmTypes.zero(resultType);
+        if (!_terminated) terminate(defaultReturn);
+        if (_unwindUsed) {
+            // The value is never read: the caller sees the pending exception first.
+            startBlock("unwind");
+            terminate(defaultReturn);
         }
 
         String returnType = function.getReturnType() == null ? "void" : LlvmTypes.of(function.getReturnType());
@@ -172,6 +197,10 @@ public final class IrEmitter {
             statement(statement);
         }
         if (!_terminated) terminate("ret void");
+        if (_unwindUsed) {
+            startBlock("unwind");
+            terminate("ret void");
+        }
         return "define internal void @siyo.init_globals() {\nentry:\n" + _allocas
                 + "  br label %body\nbody:\n" + _body + "}\n";
     }
@@ -179,11 +208,13 @@ public final class IrEmitter {
     /**
      * {@code siyo_program}, which the C runtime's {@code main} runs on a thread
      * of known stack size after setting the stack limit: the globals, then the
-     * file's {@code init()} and {@code main()} if declared.
+     * file's {@code init()} and {@code main()} if declared. An exception still
+     * pending after any of them is uncaught: the runtime reports it and exits.
      */
     private String entryPoint() {
         StringBuilder program = new StringBuilder("define void @siyo_program() {\nentry:\n");
-        program.append("  call void @siyo.init_globals()\n");
+        List<String> calls = new java.util.ArrayList<>();
+        calls.add("@siyo.init_globals");
         for (String name : List.of("init", "main")) {
             for (FunctionSymbol function : _functionNames.keySet()) {
                 if (function.getModuleName() == null && function.getName().equals(name)
@@ -191,11 +222,21 @@ public final class IrEmitter {
                     if (function.getReturnType() != null) {
                         throw new IllegalStateException("entry point " + name + " returns a value");
                     }
-                    program.append("  call void ").append(_functionNames.get(function)).append("()\n");
+                    calls.add(_functionNames.get(function));
                 }
             }
         }
-        program.append("  ret void\n}\n");
+        for (int i = 0; i < calls.size(); i++) {
+            program.append("  call void ").append(calls.get(i)).append("()\n")
+                    .append("  %pending.").append(i).append(" = load i8, ptr @siyo_rt_pending_flag\n")
+                    .append("  %raised.").append(i).append(" = icmp ne i8 %pending.").append(i).append(", 0\n")
+                    .append("  br i1 %raised.").append(i).append(", label %uncaught, label %ran.").append(i).append('\n')
+                    .append("ran.").append(i).append(":\n");
+        }
+        program.append("  ret void\n")
+                .append("uncaught:\n")
+                .append("  call void @siyo_rt_uncaught()\n")
+                .append("  unreachable\n}\n");
         return program.toString();
     }
 
@@ -239,8 +280,60 @@ public final class IrEmitter {
                     terminate("ret " + LlvmTypes.of(value.type()) + " " + value.ref());
                 }
             }
+            case BoundTryCatchStatement tryCatch -> tryCatch(tryCatch);
+            case BoundThrowStatement raise -> {
+                Value payload = coerce(expression(raise.getExpression()), Object.class);
+                instructionNoResult("call void @siyo_rt_throw(ptr " + payload.ref() + ")");
+                terminate("br label %" + handler());
+            }
             default -> throw unsupported(statement.getType().toString());
         }
+    }
+
+    /**
+     * The try body runs with the catch block as its handler. The catch block
+     * takes the payload from the runtime (clearing the pending exception) and
+     * narrows it to the catch variable's type; a failing cast raises to the
+     * enclosing handler, as the JVM's handler code is outside its own range.
+     */
+    private void tryCatch(BoundTryCatchStatement tryCatch) {
+        String catchBlock = newBlock("catch");
+        String end = newBlock("try.end");
+        _handlers.push(catchBlock);
+        statement(tryCatch.getTryBody());
+        _handlers.pop();
+        if (!_terminated) terminate("br label %" + end);
+
+        startBlock(catchBlock);
+        VariableSymbol variable = tryCatch.getErrorVariable();
+        Value payload = new Value(instruction("call ptr @siyo_rt_catch()"), Object.class);
+        store(coerce(payload, variable.getType()), slotFor(variable));
+        statement(tryCatch.getCatchBody());
+        if (!_terminated) terminate("br label %" + end);
+        startBlock(end);
+    }
+
+    /** The block a pending exception goes to from here. */
+    private String handler() {
+        if (!_handlers.isEmpty()) return _handlers.peek();
+        _unwindUsed = true;
+        return "unwind";
+    }
+
+    /** After a call that can raise: goes to the handler if an exception is pending. */
+    private void checkPending() {
+        String flag = instruction("load i8, ptr @siyo_rt_pending_flag");
+        String raised = instruction("icmp ne i8 " + flag + ", 0");
+        String next = newBlock("ok");
+        terminate("br i1 " + raised + ", label %" + handler() + ", label %" + next);
+        startBlock(next);
+    }
+
+    /** A call instruction to a runtime function that may raise, followed by the check. */
+    private String raisingCall(String text) {
+        String result = instruction(text);
+        checkPending();
+        return result;
     }
 
     // --- expressions ---------------------------------------------------------
@@ -331,7 +424,7 @@ public final class IrEmitter {
                 default -> throw unsupported("string operator " + op);
             };
             // compareTo's sign, over UTF-16 code units.
-            String order = instruction("call i32 @siyo_rt_str_compare(ptr " + left.ref() + ", ptr " + right.ref() + ")");
+            String order = raisingCall("call i32 @siyo_rt_str_compare(ptr " + left.ref() + ", ptr " + right.ref() + ")");
             return compare(predicate, "i32", order, "0");
         }
         if (left.type() == Boolean.class || right.type() == Boolean.class) {
@@ -392,7 +485,7 @@ public final class IrEmitter {
     }
 
     /**
-     * Java's {@code /} and {@code %}: zero divisor raises ArithmeticException;
+     * Java's {@code /} and {@code %}: a zero divisor raises ArithmeticException;
      * {@code MIN / -1} is {@code MIN} and {@code MIN % -1} is 0. LLVM's
      * {@code sdiv}/{@code srem} are undefined for both, so the divisor is
      * replaced by 1 when it is -1 and the quotient negated instead.
@@ -404,7 +497,7 @@ public final class IrEmitter {
         terminate("br i1 " + zero + ", label %" + fail + ", label %" + ok);
         startBlock(fail);
         instructionNoResult("call void @siyo_rt_div_by_zero()");
-        terminate("unreachable");
+        terminate("br label %" + handler());
         startBlock(ok);
         String minusOne = instruction("icmp eq " + type + " " + r + ", -1");
         String divisor = instruction("select i1 " + minusOne + ", " + type + " 1, " + type + " " + r);
@@ -451,6 +544,15 @@ public final class IrEmitter {
             return new Value(null, null);
         }
 
+        if (function == BuiltinFunctions.ERROR) {
+            // error(x) throws x itself, as the JVM backend does: boxed, not cast to string.
+            if (call.getArguments().size() != 1) throw unsupported("error arity");
+            Value payload = coerce(expression(call.getArguments().get(0)), Object.class);
+            instructionNoResult("call void @siyo_rt_throw(ptr " + payload.ref() + ")");
+            terminate("br label %" + handler());
+            return new Value(null, null);
+        }
+
         if (function == BuiltinFunctions.TO_STRING) {
             if (call.getArguments().size() != 1) throw unsupported("toString arity");
             Value value = expression(call.getArguments().get(0));
@@ -483,9 +585,10 @@ public final class IrEmitter {
         // the stack guard as it overflows the JVM's stack, instead of becoming a loop.
         if (function.getReturnType() == null) {
             instructionNoResult("notail call void " + name + "(" + args + ")");
+            checkPending();
             return new Value(null, null);
         }
-        String t = instruction("notail call " + LlvmTypes.of(function.getReturnType()) + " " + name + "(" + args + ")");
+        String t = raisingCall("notail call " + LlvmTypes.of(function.getReturnType()) + " " + name + "(" + args + ")");
         return new Value(t, function.getReturnType());
     }
 
@@ -530,7 +633,8 @@ public final class IrEmitter {
             args.append(abiType(argument.type())).append(' ').append(argument.ref());
         }
         Class<?> result = function.getReturnType();
-        return new Value(instruction("call " + abiType(result) + " " + runtime + "(" + args + ")"), result);
+        String text = "call " + abiType(result) + " " + runtime + "(" + args + ")";
+        return new Value(RuntimeIr.RAISING.contains(runtime) ? raisingCall(text) : instruction(text), result);
     }
 
     /** The type as it crosses into C: {@code _Bool} is {@code zeroext i1}. */
@@ -584,14 +688,24 @@ public final class IrEmitter {
             if (box != null) return new Value(instruction(box + value.ref() + ")"), Object.class);
         }
         if (from == Object.class) {
-            // The null literal is a string already; anything else is checked.
-            if (to == String.class && value.ref().equals("null")) return new Value("null", String.class);
+            // The null literal is a string already; unboxed, it raises the JVM's
+            // NullPointerException, whose message names the literal. Anything
+            // else is checked at run time.
+            if (value.ref().equals("null")) {
+                if (to == String.class) return new Value("null", String.class);
+                if (to == Integer.class || to == Boolean.class) {
+                    int tag = to == Integer.class ? 2 : 4; // SIYO_TAG_INT, SIYO_TAG_BOOL
+                    instructionNoResult("call void @siyo_rt_unbox_null_literal(i32 " + tag + ")");
+                    terminate("br label %" + handler());
+                    return new Value(LlvmTypes.zero(to), to);
+                }
+            }
             String cast = to == Integer.class ? "call i32 @siyo_rt_unbox_int(ptr "
                     : to == Long.class ? "call i64 @siyo_rt_unbox_long(ptr "
                     : to == Boolean.class ? "call zeroext i1 @siyo_rt_unbox_bool(ptr "
                     : to == String.class ? "call ptr @siyo_rt_cast_str(ptr "
                     : null;
-            if (cast != null) return new Value(instruction(cast + value.ref() + ")"), to);
+            if (cast != null) return new Value(raisingCall(cast + value.ref() + ")"), to);
         }
         throw unsupported("conversion from " + from + " to " + to);
     }

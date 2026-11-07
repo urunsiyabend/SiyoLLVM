@@ -26,6 +26,7 @@ byte.
 | Unary | `+`, `-` on int |
 | Assignment | `=`, `+= -= *= /=` |
 | Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `break`, `continue`, `return` |
+| Exceptions | `throw v` of any accepted value (an int, long or bool is boxed); `error(msg)`, which throws its argument; `try { … } catch e { … }` statements, nested anywhere (in loops, in other try and catch bodies), with `break`, `continue` and `return` inside both bodies; the catch variable untyped (`any`) or typed `catch e: int` / `long` / `bool` / `string` / `any` (a checked cast, as for an `any` read) |
 | `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
 | Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` included); on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
@@ -41,8 +42,9 @@ in functions that are never called, and in code after a `return`.
 arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
-functions that capture locals; generic functions; `try`/`catch`/`throw`;
-casts; `import` and `import java`; scope/spawn/send; `len` of anything but
+functions that capture locals; generic functions; `try` used as an
+expression (`imut x = try { … } catch e { … }`); a catch variable of a type
+outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
 a string; every builtin not listed above, `split` included (it returns an
 array); `main`/`init` with parameters or a return value.
 
@@ -57,11 +59,29 @@ returning one from a function returning `any` (the reference fails with
 - `int`/`long` arithmetic wraps (two's complement), as on the JVM.
 - `MIN / -1` is `MIN` and `MIN % -1` is `0`, as on the JVM.
 - Shift counts are masked to the low 5 bits; `>>` is arithmetic.
-- Division or remainder by zero prints
-  `java.lang.ArithmeticException: / by zero` to stderr and exits with
-  status 1, after flushing stdout.
+- Division or remainder by zero raises
+  `java.lang.ArithmeticException: / by zero`.
+- Exceptions: `throw v` and `error(v)` raise `v` itself; runtime errors raise
+  the Java exception the JVM would (the messages are listed below). A raise
+  goes to the innermost enclosing `catch` in the function, or else leaves the
+  function and the next caller's, up to `main`; the rest of the expression
+  being evaluated is skipped (later arguments, the right operand, the call
+  itself). The catch variable receives the thrown value itself, or for a
+  runtime error its message (`/ by zero`, `Range [2, 9) out of bounds for
+  length 3`, `For input string: ""`, …), or the exception's simple class name
+  when it has no message (`NullPointerException`), as the JVM's
+  `SiyoRuntime.errorPayload` does. A typed catch variable that does not match
+  the payload raises `ClassCastException` (or `NullPointerException`) from
+  the catch block, to the enclosing handler. An exception that leaves a
+  global initialiser, `init()` or `main()` is uncaught: stdout is flushed,
+  stderr gets `codeanalysis.SiyoThrow: <value>` (the value as
+  `String.valueOf` writes it, `null` for null) for a throw or `error()`, or
+  `<java class>: <message>` for a runtime error, and the program exits with
+  status 1; no later global, `init()` or `main()` runs. There is no
+  `setjmp`/`longjmp`: a raise records a pending exception and returns, and
+  the code checks for it after every call that can raise.
 - Stack exhaustion prints `java.lang.StackOverflowError` to stderr and exits
-  with status 1. The program runs on a thread whose stack SiyoLLVM sizes
+  with status 1; it cannot be caught (see Deviations). The program runs on a thread whose stack SiyoLLVM sizes
   itself (16 MiB), and every function checks the stack pointer against a
   limit 256 KiB above the bottom of that stack, so the check does not depend
   on argv, the environment or `ulimit -s`.
@@ -94,7 +114,10 @@ returning one from a function returning `any` (the reference fails with
   `java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')`
   (with the classes involved). Null reads into a `string` as null and into an
   `int`, `long` or `bool` raises `java.lang.NullPointerException` (for `long`:
-  `Cannot invoke "java.lang.Long.longValue()" because "value" is null`).
+  `Cannot invoke "java.lang.Long.longValue()" because "value" is null`; for
+  the literal `null` read into an `int`, as in `imut n: int = null` or
+  `g(null)`: `Cannot invoke "java.lang.Integer.intValue()" because "null" is null`,
+  `Boolean.booleanValue()` for `bool`).
 - String lengths and indexes count UTF-16 code units, as on the JVM:
   `len("çağ😀x")` is 6. `substring` may split a surrogate pair; each half is
   then a lone surrogate (printed as `?`), and joining the halves again, with
@@ -136,13 +159,14 @@ returning one from a function returning `any` (the reference fails with
 
 | Situation | `siyoc run` (0.9.0) | SiyoLLVM |
 |---|---|---|
-| Uncaught `ArithmeticException` / `StackOverflowError` | exception line plus a Java stack trace | exception line only; same exit status (1) |
+| Uncaught exception (`throw`, `error()`, any runtime error) | exception line plus a Java stack trace | exception line only; same exit status (1) |
+| `StackOverflowError` inside `try` | caught; the catch variable is `"StackOverflowError"` | not catchable: the program stops as for an uncaught one |
 | Recursion depth at which stack overflow is reported | depends on the JVM thread stack (about 10 000–100 000 frames) | fixed 16 MiB program stack; usually deeper |
 | stdout closed early (e.g. piped into `head`) | keeps running, exit 0 | killed by SIGPIPE (exit 141 from the shell), as C programs are |
 | A `bool`/`long`/`string` function falling off its end without `return` | `VerifyError` at class load (`int` functions return 0) | returns the type's default (`false`, `0L`, null) |
 | `fn main() -> int` | crashes with `NoSuchMethodError` | rejected at compile time |
-| Null `any` read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part |
-| String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException` |
+| Null `any` (other than the literal `null`) read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part; a catch variable receives that shorter message |
+| String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` instead of the helpful message |
 | `toUpper` of characters whose Java upper case is several characters, other than `ß` | one-to-many mapping from Unicode SpecialCasing | the character is kept, or mapped to a single character (see below) |
 | `toLower` of `Σ` ending a word | final `ς` | `σ` |
 | `toUpper`/`toLower` of characters added after Unicode 15.0 | unchanged (Java 21 knows Unicode 15.0) | mapped by glibc's newer tables (glibc 2.43 measured) |

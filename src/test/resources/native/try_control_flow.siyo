@@ -1,0 +1,73 @@
+// break, continue and return inside try and catch, and try inside loops.
+fn find(limit: int) -> int {
+    mut i = 0
+    while true {
+        try {
+            i += 1
+            if i == limit { return i * 100 }
+            if i % 2 == 0 { throw i }
+            if i > 20 { break }
+        } catch e: int {
+            if e == 4 { continue }
+            if e == 8 { return -e }
+        }
+    }
+    return -1
+}
+
+fn tail(fail: bool) -> string {
+    try {
+        if fail { throw "x" }
+        "ok"
+    } catch e {
+        "caught " + e
+    }
+}
+
+fn fromCatch() -> int {
+    try { throw 3 } catch e: int { return e * 2 }
+    return 0
+}
+
+fn main() {
+    println(find(3))
+    println(find(10))
+    println(find(5))
+    println(tail(false))
+    println(tail(true))
+    println(fromCatch())
+
+    mut total = 0
+    for mut i = 0 i < 6 i = i + 1 {
+        try {
+            if i == 1 { continue }
+            if i == 3 { throw "three" }
+            if i == 5 { break }
+            total += i
+        } catch e {
+            println("caught " + e + " at " + i)
+            continue
+        }
+        println("after try " + i)
+    }
+    println(total)
+
+    // A loop inside a try, broken out of by an error.
+    try {
+        mut j = 0
+        while j < 100 {
+            j += 1
+            if j == 3 { throw j }
+        }
+    } catch e {
+        println("loop stopped at " + e)
+    }
+
+    // A break from inside a catch in a nested loop.
+    for mut a = 0 a < 3 a = a + 1 {
+        for mut b = 0 b < 3 b = b + 1 {
+            try { if b == 1 { throw b } print(a * 10 + b) print(" ") } catch e { break }
+        }
+    }
+    println("")
+}

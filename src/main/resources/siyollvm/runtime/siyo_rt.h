@@ -162,11 +162,35 @@ _Bool siyo_rt_any_equals(const void *a, const void *b);
 /* PrintStream.print(Object). */
 void siyo_rt_print_any(const void *value);
 
-/* Uncaught Java errors: flush stdout, print the exception line to stderr, exit 1. */
-_Noreturn void siyo_rt_div_by_zero(void);
+/*
+ * Exceptions. A raise records a pending exception and returns; the raising
+ * function then returns a dummy value, and the program checks
+ * siyo_rt_pending_flag after every call that can raise, branching to the
+ * innermost catch or returning to its own caller. No setjmp/longjmp.
+ */
+extern _Thread_local _Bool siyo_rt_pending_flag;
+/* Siyo throw / error(): raises payload (any value, NULL for null) as a SiyoThrow. */
+void siyo_rt_throw(void *payload);
+/* Raises the Java exception java_class (e.g. "java.lang.ArithmeticException")
+   with message, NULL for none. */
+void siyo_rt_raise_java(const char *java_class, const SiyoStr *message);
+_Bool siyo_rt_pending(void);
+/*
+ * Clears the pending exception and returns what a catch variable receives
+ * (SiyoRuntime.errorPayload): a SiyoThrow's payload; otherwise the message,
+ * or the class's simple name when the message is null or empty.
+ */
+void *siyo_rt_catch(void);
+/* Flushes stdout, prints "codeanalysis.SiyoThrow: <String.valueOf(payload)>"
+   or "<java_class>[: <message>]" to stderr and exits with status 1. */
+_Noreturn void siyo_rt_uncaught(void);
+/* Raises java.lang.ArithmeticException: / by zero. */
+void siyo_rt_div_by_zero(void);
+/* The null literal unboxed to int (tag SIYO_TAG_INT) or bool (SIYO_TAG_BOOL):
+   the JVM's NullPointerException, whose message names the literal. */
+void siyo_rt_unbox_null_literal(int32_t tag);
+/* Fatal and not catchable: prints java.lang.StackOverflowError, exits 1. */
 _Noreturn void siyo_rt_stack_overflow(void);
-/* Prints "<java_class>: <message>" or, for a null message, "<java_class>". */
-_Noreturn void siyo_rt_raise_java(const char *java_class, const SiyoStr *message);
 
 /* malloc that never returns NULL: failure is java.lang.OutOfMemoryError. Never freed. */
 void *siyo_rt_alloc(size_t size);
