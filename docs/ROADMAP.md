@@ -74,6 +74,11 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
+- Next step (2026-11-07, after F3b publish at 0b04773): F3c maps — write plan
+  `docs/superpowers/plans/2026-11-07-f3c-maps.md`, then SDD per task (implement → task review →
+  final review → one fix wave → `final-gates.sh` → evidence → push → exact-head CI). Then F4 modules.
+  Gate helper used by the controller: `~/.hermes/cache/scratch/siyollvm-probes/tools/final-gates.sh <label>`.
+
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
