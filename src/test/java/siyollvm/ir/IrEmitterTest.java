@@ -320,6 +320,61 @@ class IrEmitterTest {
         assertTrue(main.contains("call void @siyo_rt_throw(ptr @siyo.str.0)\n  br label %unwind\n"), main);
     }
 
+    // An array is a pointer to the runtime's SiyoArray; its items are any
+    // values, so elements are boxed going in and narrowed with a check coming out.
+    @Test
+    void arrayLiteralAllocatesThenPushesBoxedElements() {
+        String ir = emit("mut g = [1]\nfn main() { mut xs = [7, 8] println(xs) println(g) }");
+        assertTrue(ir.contains("@siyo.g.0 = internal global ptr null"), ir);
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_array_new\\(i32 2\\)\n"
+                + "  (%t\\d+) = call ptr @siyo_rt_box_int\\(i32 7\\)\n"
+                + "  call void @siyo_rt_array_push\\(ptr \\1, ptr \\2\\)\n").matcher(main).find(), main);
+        assertEquals(2, count(main, "call void @siyo_rt_print_any(ptr "), main);
+    }
+
+    @Test
+    void indexReadIsBoundsCheckedThenNarrowed() {
+        String main = function(emit("fn main() { mut xs = [1] println(xs[0] + 1) }"), "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_array_get\\(ptr %t\\d+, i32 0\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n").matcher(main).find(), main);
+        assertTrue(main.contains("call i32 @siyo_rt_unbox_int(ptr "), main);
+    }
+
+    @Test
+    void indexAssignmentBoxesAndNarrowsTheReplacedElement() {
+        String main = function(emit("fn main() { mut xs = [\"a\"] xs[0] = \"b\" }"), "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_array_set\\(ptr %t\\d+, i32 0, ptr @siyo.str.1\\)\n"
+                + "(?:.*\n){4}  %t\\d+ = call ptr @siyo_rt_cast_str\\(ptr \\1\\)").matcher(main).find(), main);
+    }
+
+    @Test
+    void arrayBuiltinsCallTheRuntime() {
+        String ir = emit("fn main() { mut xs: long[] = [] push(xs, 1) println(len(xs)) println(pop(xs)) removeAt(xs, 0) }");
+        String main = function(ir, "@siyo.fn.0");
+        // push widens the int to the long element type before boxing it.
+        assertTrue(Pattern.compile("(%t\\d+) = sext i32 1 to i64\n  %t\\d+ = call ptr @siyo_rt_box_long\\(i64 \\1\\)")
+                .matcher(main).find(), main);
+        assertTrue(main.contains("call void @siyo_rt_array_push(ptr "), main);
+        assertTrue(main.contains("call i32 @siyo_rt_array_len(ptr "), main);
+        assertTrue(main.contains("call ptr @siyo_rt_array_pop(ptr "), main);
+        assertTrue(main.contains("call i64 @siyo_rt_unbox_long(ptr "), main);
+        assertTrue(main.contains("call void @siyo_rt_array_remove_at(ptr "), main);
+        // Every one of them can raise (a null array, an index out of range).
+        assertEquals(5, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void arrayBecomesAnAnyAsItIsAndComesBackThroughACheckedCast() {
+        String ir = emit("fn f(x: any) -> any { return x }\n"
+                + "fn main() { imut xs: int[] = f([1]) println(\"v\" + f(xs)) println(toString(xs)) }");
+        String main = function(ir, "@siyo.fn.1");
+        assertTrue(main.contains("call ptr @siyo_rt_cast_array(ptr "), main);
+        assertEquals(2, count(main, "call ptr @siyo_rt_any_to_string(ptr "), main);
+        // Only the element 1 is boxed; the array itself is the any.
+        assertEquals(1, count(main, "@siyo_rt_box_"), main);
+    }
+
     @Test
     void onlyRaisingRuntimeCallsAreChecked() {
         String ir = emit("fn main() { mut s = \"abc\" println(s + substring(s, 0, 1)) println(parseInt(s)) }");
@@ -439,14 +494,14 @@ class IrEmitterTest {
 
     @Test
     void refusesNodesItDoesNotKnow() {
-        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut a = [1] }");
+        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut m = {\"a\": 1} }");
         assertThrows(IllegalStateException.class, () -> IrEmitter.emit(result.program()));
     }
 
     /**
-     * No valid source reaches text() with a non-string reference type (the
-     * binder rejects {@code "a" + [1]} and the emitter refuses the array
-     * literal first), so this calls the private method by reflection with a
+     * No valid source reaches text() with a reference type outside the subset
+     * (the binder rejects {@code "a" + {"k": 1}} and the validator rejects the
+     * map literal first), so this calls the private method by reflection with a
      * value of an unsupported type to pin its contract: refuse, naming the type.
      */
     @Test

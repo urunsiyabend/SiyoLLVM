@@ -778,7 +778,19 @@ static void *siyo_rt_box(uint32_t tag, int64_t value) {
     return box;
 }
 
+/* Integer.valueOf's cache: one box per value in -128..127, each filled the
+   first time it is asked for (only the program thread boxes). */
+static SiyoBox siyo_rt_small_ints[256];
+
 void *siyo_rt_box_int(int32_t value) {
+    if (value >= -128 && value <= 127) {
+        SiyoBox *box = &siyo_rt_small_ints[value + 128];
+        if (box->tag == 0) {
+            box->value = value;
+            box->tag = SIYO_TAG_INT;
+        }
+        return box;
+    }
     return siyo_rt_box(SIYO_TAG_INT, value);
 }
 
@@ -805,13 +817,23 @@ static const char *siyo_rt_java_class_of(const void *value) {
     case SIYO_TAG_INT: return "java.lang.Integer";
     case SIYO_TAG_LONG: return "java.lang.Long";
     case SIYO_TAG_BOOL: return "java.lang.Boolean";
+    case SIYO_TAG_ARRAY: return "codeanalysis.SiyoArray";
     default: siyo_rt_fail("SiyoLLVM runtime: a value has an unknown type tag\n");
     }
 }
 
-/* checkcast failing between two java.base classes, worded as HotSpot does. */
+/* checkcast failing, worded as HotSpot does: every target is a java.base
+   class, and so is every value's class but SiyoArray, which the reference
+   loads from the class path. */
 static void siyo_rt_class_cast(const void *value, const char *target) {
     const char *from = siyo_rt_java_class_of(value);
+    if (siyo_rt_tag_of(value) == SIYO_TAG_ARRAY) {
+        siyo_rt_raise_format("java.lang.ClassCastException",
+                "class %s cannot be cast to class %s (%s is in unnamed module of loader 'app'; "
+                "%s is in module java.base of loader 'bootstrap')",
+                from, target, from, target);
+        return;
+    }
     siyo_rt_raise_format("java.lang.ClassCastException",
             "class %s cannot be cast to class %s (%s and %s are in module java.base of loader 'bootstrap')",
             from, target, from, target);
@@ -871,6 +893,33 @@ const SiyoStr *siyo_rt_cast_str(const void *value) {
     return value;
 }
 
+SiyoArray *siyo_rt_cast_array(const void *value) {
+    if (value != NULL && siyo_rt_tag_of(value) != SIYO_TAG_ARRAY) {
+        siyo_rt_class_cast(value, "java.util.List");
+        return NULL;
+    }
+    return (SiyoArray *)value;
+}
+
+/* Recursion through nested arrays checks the stack as Siyo functions do, so
+   an array that contains itself ends as StackOverflowError, not SIGSEGV. */
+static void siyo_rt_check_stack(void) {
+    if ((uint64_t)(uintptr_t)__builtin_frame_address(0) < siyo_rt_stack_limit) siyo_rt_stack_overflow();
+}
+
+/* SiyoArray.toString: appended into one growing buffer (see siyo_rt_str_concat). */
+static SiyoStr *siyo_rt_array_to_string(const SiyoArray *array) {
+    SIYO_RT_STATIC_STR(separator, ", ");
+    SIYO_RT_STATIC_STR(close, "]");
+    siyo_rt_check_stack();
+    SiyoStr *text = siyo_rt_str_from_bytes("[", 1, 1);
+    for (int32_t i = 0; i < array->len; i++) {
+        if (i > 0) text = siyo_rt_str_concat(text, &separator);
+        text = siyo_rt_str_concat(text, siyo_rt_any_to_string(array->items[i]));
+    }
+    return siyo_rt_str_concat(text, &close);
+}
+
 SiyoStr *siyo_rt_any_to_string(const void *value) {
     if (value == NULL) return siyo_rt_str_from_bytes("null", 4, 4);
     switch (siyo_rt_tag_of(value)) {
@@ -878,8 +927,19 @@ SiyoStr *siyo_rt_any_to_string(const void *value) {
     case SIYO_TAG_INT:
     case SIYO_TAG_LONG: return siyo_rt_str_from_long(siyo_rt_box_value(value));
     case SIYO_TAG_BOOL: return siyo_rt_str_from_bool(siyo_rt_box_value(value) != 0);
+    case SIYO_TAG_ARRAY: return siyo_rt_array_to_string(value);
     default: siyo_rt_java_class_of(value); return NULL;
     }
+}
+
+/* List.equals between two arrays: the same length and equal elements in order. */
+static _Bool siyo_rt_array_equals(const SiyoArray *a, const SiyoArray *b) {
+    siyo_rt_check_stack();
+    if (a->len != b->len) return 0;
+    for (int32_t i = 0; i < a->len; i++) {
+        if (!siyo_rt_any_equals(a->items[i], b->items[i])) return 0;
+    }
+    return 1;
 }
 
 _Bool siyo_rt_any_equals(const void *a, const void *b) {
@@ -892,11 +952,14 @@ _Bool siyo_rt_any_equals(const void *a, const void *b) {
     case SIYO_TAG_INT:
     case SIYO_TAG_LONG:
     case SIYO_TAG_BOOL: return siyo_rt_box_value(a) == siyo_rt_box_value(b);
+    case SIYO_TAG_ARRAY: return siyo_rt_array_equals(a, b);
     default: siyo_rt_java_class_of(a); return 0;
     }
 }
 
-/* Prints without allocating, so printing in a loop does not grow memory. */
+/* Prints a string or a boxed value without allocating, so printing those in a
+   loop does not grow memory; an array is built into one string first, as
+   PrintStream.print(Object) does, so a failure prints nothing of it. */
 void siyo_rt_print_any(const void *value) {
     if (value == NULL) {
         fputs("null", stdout);
@@ -907,8 +970,105 @@ void siyo_rt_print_any(const void *value) {
     case SIYO_TAG_INT:
     case SIYO_TAG_LONG: siyo_rt_print_long(siyo_rt_box_value(value)); return;
     case SIYO_TAG_BOOL: siyo_rt_print_bool(siyo_rt_box_value(value) != 0); return;
+    case SIYO_TAG_ARRAY: siyo_rt_print_str(siyo_rt_array_to_string(value)); return;
     default: siyo_rt_java_class_of(value); return;
     }
+}
+
+/* --- arrays ---------------------------------------------------------------- */
+
+static void siyo_rt_index_out_of_bounds(int32_t index, int32_t len) {
+    siyo_rt_raise_format("java.lang.IndexOutOfBoundsException", "Index %d out of bounds for length %d",
+            (int)index, (int)len);
+}
+
+SiyoArray *siyo_rt_array_new(int32_t capacity) {
+    SiyoArray *array = siyo_rt_alloc(sizeof(SiyoArray));
+    array->tag = SIYO_TAG_ARRAY;
+    array->len = 0;
+    array->cap = capacity > 0 ? capacity : 0;
+    array->items = array->cap > 0 ? siyo_rt_alloc((size_t)array->cap * sizeof(void *)) : NULL;
+    return array;
+}
+
+void siyo_rt_array_push(SiyoArray *array, void *value) {
+    if (array == NULL) {
+        siyo_rt_null_pointer();
+        return;
+    }
+    if (array->len == array->cap) {
+        /* Only this array points at its items, so the block may move. */
+        if (array->cap == INT32_MAX) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+        int64_t cap = array->cap < 4 ? 4 : (int64_t)array->cap * 2;
+        if (cap > INT32_MAX) cap = INT32_MAX;
+        void **items = realloc(array->items, (size_t)cap * sizeof(void *));
+        if (items == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+        array->items = items;
+        array->cap = (int32_t)cap;
+    }
+    array->items[array->len++] = value;
+}
+
+void *siyo_rt_array_get(SiyoArray *array, int32_t index) {
+    if (array == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    if (index < 0 || index >= array->len) {
+        siyo_rt_index_out_of_bounds(index, array->len);
+        return NULL;
+    }
+    return array->items[index];
+}
+
+void *siyo_rt_array_set(SiyoArray *array, int32_t index, void *value) {
+    if (array == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    if (index < 0 || index >= array->len) {
+        siyo_rt_index_out_of_bounds(index, array->len);
+        return NULL;
+    }
+    void *old = array->items[index];
+    array->items[index] = value;
+    return old;
+}
+
+/* List.remove(index) on a non-null array: the removed element. */
+static void *siyo_rt_array_remove(SiyoArray *array, int32_t index) {
+    if (index < 0 || index >= array->len) {
+        siyo_rt_index_out_of_bounds(index, array->len);
+        return NULL;
+    }
+    void *old = array->items[index];
+    memmove(array->items + index, array->items + index + 1, (size_t)(array->len - index - 1) * sizeof(void *));
+    array->len--;
+    return old;
+}
+
+void *siyo_rt_array_pop(SiyoArray *array) {
+    if (array == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    return siyo_rt_array_remove(array, array->len - 1);
+}
+
+void siyo_rt_array_remove_at(SiyoArray *array, int32_t index) {
+    if (array == NULL) {
+        siyo_rt_null_pointer();
+        return;
+    }
+    siyo_rt_array_remove(array, index);
+}
+
+int32_t siyo_rt_array_len(SiyoArray *array) {
+    if (array == NULL) {
+        siyo_rt_null_pointer();
+        return 0;
+    }
+    return array->len;
 }
 
 /* --- exceptions ------------------------------------------------------------ */

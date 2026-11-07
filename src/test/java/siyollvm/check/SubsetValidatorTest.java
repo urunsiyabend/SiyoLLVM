@@ -61,7 +61,8 @@ class SubsetValidatorTest {
             fn main() { println("a" + 1.5) }                                | float values are
             fn main() { println("d=${1.5}") }                               | float values are
             fn main() { println(toString(1.5)) }                            | float values are
-            fn main() { mut a = [1, 2] println(a) }                         | arrays are
+            fn main() { mut a = [1.5, 2.5] println(a) }                     | float values are
+            fn main() { mut m = {"a": 1} println(m) }                       | maps are
             fn main() { mut f = fn(x: int) -> int { x } println(f(1)) }     | lambdas are
             fn main() { println(range(0, 3)) }                              | the builtin range() is
             fn main() { println(split("a,b", ",")) }                        | the builtin split() is
@@ -142,14 +143,14 @@ class SubsetValidatorTest {
 
     @ParameterizedTest(name = "{1}")
     @CsvSource(delimiter = '|', textBlock = """
-            fn main() { try { mut a = [1] } catch e { println(e) } }               | arrays are
-            fn main() { try { println(1) } catch e { mut a = [1] } }               | arrays are
+            fn main() { try { mut a = {"a": 1} } catch e { println(e) } }          | maps are
+            fn main() { try { println(1) } catch e { mut a = {"a": 1} } }          | maps are
             fn main() { try { try { println(1) } catch e { mut d = 1.5 } } catch e { } } | float values are
             fn main() { throw 1.5 }                                                | float values are
-            fn main() { throw [1] }                                                | arrays are
+            fn main() { throw [1.5] }                                              | float values are
             fn main() { error(toString(1.5)) }                                     | float values are
-            fn main() { try { println(1) } catch e: int[] { println(1) } }         | catch variables of type array are
-            fn main() { imut x = try { 1 } catch e: int[] { 2 } println(x) }      | catch variables of type array are
+            fn main() { try { println(1) } catch e: float { println(1) } }         | float values are
+            fn main() { imut x = try { 1 } catch e: float { 2 } println(x) }      | float values are
             fn main() { imut x = try { 1.5 } catch e { 2.5 } println(x) }          | float values are
             """)
     void unsupportedExceptionConstructsAreRejected(String source, String construct) {
@@ -264,6 +265,66 @@ class SubsetValidatorTest {
         assertRejected(source, construct);
     }
 
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { mut a = [1, 2] println(a) }
+            fn main() { mut xs: int[] = [] push(xs, 1) xs.push(2) println(len(xs)) }
+            fn main() { mut ys: Array<string> = [] ys.push("a") println(ys[0]) }
+            fn main() { mut xs = [1L] xs[0] = 2 xs[0] += 3L println(xs) }
+            fn main() { mut xs = [true] println(xs[0] = false) }
+            fn main() { mut xs = [1] println(pop(xs)) removeAt(xs, 0) xs.removeAt(0) println(xs.pop()) }
+            fn main() { mut n = [[1], [2]] println(n[0][0]) n[1].push(3) n[0][0] = 4 }
+            fn main() { mut a: any[] = [] push(a, 1) push(a, null) imut x: int = a[0] println(x) }
+            fn f(xs: int[]) -> int[] { return xs } fn main() { println(f([1])) }
+            fn f(xs: any) -> any { return xs } fn main() { imut xs: int[] = f([1]) println(xs) }
+            fn main() { imut a: any = [1] imut xs: int[] = a println(a == xs) println("v=" + a) }
+            fn main() { imut a: any = [[1]] println(a[0]) }
+            fn main() { mut a: any = 1 a = [2] println(a) }
+            fn main() { mut xs = ["a"] println("${xs}" + toString(xs)) print(xs) }
+            fn main() { try { throw [1] } catch e: int[] { println(e) } }
+            fn main() { imut x = try { [1] } catch e { [2] } println(x) }
+            fn main() { mut xs = [[1]] push(xs, xs) println(len(xs)) }
+            mut g = [1, 2]
+            """)
+    void arraysAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            fn main() { mut xs = [3, 1] sort(xs, fn(a: int, b: int) -> int { return a - b }) }        | the builtin sort() is
+            fn main() { mut xs = [3, 1] println(map(xs, fn(a: int) -> int { return a })) }           | the builtin map() is
+            fn main() { mut xs = [3, 1] println(filter(xs, fn(a: int) -> bool { return a > 1 })) }   | the builtin filter() is
+            fn main() { mut xs = [3, 1] println(reduce(xs, fn(a: int, b: int) -> int { return a + b }, 0)) } | the builtin reduce() is
+            fn main() { mut xs = [3, 1] forEach(xs, fn(a: int) { println(a) }) }                     | the builtin forEach() is
+            fn main() { imut a: any = [1] for x in a { println(x) } }                               | for … in over any values is
+            fn main() { imut s = "abc" println(s[0]) }                                              | indexing strings is
+            fn main() { mut xs = [1] println(xs[0] + len(xs[0])) }                                  | len() on int is
+            fn main() { mut f = [1.5] println(len(f)) }                                             | float values are
+            fn main() { mut xs: float[] = [] push(xs, 1.5) }                                        | float values are
+            fn main() { mut xs: float[] = [] println(pop(xs)) }                                     | float values are
+            fn main() { mut xs: float[] = [] println(xs[0]) }                                       | float values are
+            fn main() { mut a: any = [1] println(len(a)) }                                          | len() on any is
+            """)
+    void unsupportedArrayConstructsAreRejected(String source, String construct) {
+        assertRejected(source, construct);
+    }
+
+    // The reference writes through an erased receiver with invokeinterface,
+    // which raises IncompatibleClassChangeError for a non-list; SiyoLLVM does
+    // not reproduce that error, so only reads (a checkcast to List) are
+    // accepted. (a[0].push(2) on an any element binds as a Java method call.)
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            fn main() { imut a: any[] = [] push(a, [1]) a[0][0] = 2 }       | index assignment on any values is
+            fn main() { imut a: any[] = [] push(a, [1]) push(a[0], 2) }     | push() on any values is
+            fn main() { imut a: any[] = [] push(a, [1]) println(pop(a[0])) } | pop() on any values is
+            fn main() { imut a: any[] = [] push(a, [1]) removeAt(a[0], 0) } | removeAt() on any values is
+            """)
+    void writesThroughAnErasedReceiverAreRejected(String source, String construct) {
+        assertRejected(source, construct);
+    }
+
     @Test
     void structDeclarationIsRejectedEvenWhenUnused() {
         assertRejected("struct P { x: int }\nfn main() { println(1) }", "struct declarations are");
@@ -277,12 +338,12 @@ class SubsetValidatorTest {
 
     @Test
     void unsupportedCodeInUncalledFunctionIsRejected() {
-        assertRejected("fn never() { mut a = [1] }\nfn main() { println(1) }", "arrays are");
+        assertRejected("fn never() { mut a = {\"a\": 1} }\nfn main() { println(1) }", "maps are");
     }
 
     @Test
     void unsupportedCodeInDeadBranchIsRejected() {
-        assertRejected("fn main() { if false { mut a = [1] } println(1) }", "arrays are");
+        assertRejected("fn main() { if false { mut a = {\"a\": 1} } println(1) }", "maps are");
     }
 
     @Test
@@ -297,7 +358,7 @@ class SubsetValidatorTest {
 
     @Test
     void everyViolationIsReportedWithItsLine() {
-        List<SourceDiagnostic> diagnostics = validate("fn main() {\n  mut a = 1.5\n  mut b = [1]\n}");
+        List<SourceDiagnostic> diagnostics = validate("fn main() {\n  mut a = 1.5\n  mut b = {\"a\": 1}\n}");
         assertEquals(2, diagnostics.size(), diagnostics.toString());
         assertEquals(2, diagnostics.get(0).line());
         assertEquals(3, diagnostics.get(1).line());

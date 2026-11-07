@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* First word of every heap object. Tags 5-8 are reserved for later features. */
+/* First word of every heap object. Tags 6-8 are reserved for later features. */
 enum {
     SIYO_TAG_STR = 1,
     SIYO_TAG_INT = 2,
@@ -67,6 +67,23 @@ typedef struct SiyoBox {
 } SiyoBox;
 
 _Static_assert(offsetof(SiyoBox, value) == 8, "SiyoBox layout");
+
+/*
+ * A Siyo array (tag SIYO_TAG_ARRAY), as the JVM's SiyoArray over an
+ * ArrayList<Object>: len items, each an any value (a primitive boxed), in a
+ * block of cap slots that doubles when full. Arrays are shared by
+ * reference and mutated in place; they are never freed.
+ */
+typedef struct SiyoArray {
+    uint32_t tag;
+    int32_t len;
+    int32_t cap;
+    void **items;
+} SiyoArray;
+
+_Static_assert(offsetof(SiyoArray, len) == 4, "SiyoArray layout must match the IR");
+_Static_assert(offsetof(SiyoArray, cap) == 8, "SiyoArray layout must match the IR");
+_Static_assert(offsetof(SiyoArray, items) == 16, "SiyoArray layout must match the IR");
 
 /* Lowest stack address a Siyo function may start at; set on the program thread. */
 extern uint64_t siyo_rt_stack_limit;
@@ -137,9 +154,11 @@ int32_t siyo_rt_parse_int(const SiyoStr *s);
 int64_t siyo_rt_parse_long(const SiyoStr *s);
 
 /*
- * any values. An any is a pointer to a tagged heap object (a SiyoStr or a
- * SiyoBox) or NULL for null. Boxing allocates; values are never shared or
- * mutated, so identity is never observable (== is Objects.equals).
+ * any values. An any is a pointer to a tagged heap object (a SiyoStr, a
+ * SiyoBox or a SiyoArray) or NULL for null. Boxes are never mutated, so their
+ * identity is never observable (== is Objects.equals): box_int returns one
+ * static box per value in -128..127, as Integer.valueOf does, and allocates
+ * a new one otherwise.
  */
 void *siyo_rt_box_int(int32_t value);
 void *siyo_rt_box_long(int64_t value);
@@ -155,12 +174,41 @@ int64_t siyo_rt_unbox_long(const void *value);
 _Bool siyo_rt_unbox_bool(const void *value);
 /* checkcast java/lang/String: the string itself, null passes. */
 const SiyoStr *siyo_rt_cast_str(const void *value);
-/* String.valueOf(Object): "null" for null, a string itself. */
+/* checkcast java/util/List: the array itself, null passes. */
+SiyoArray *siyo_rt_cast_array(const void *value);
+/*
+ * String.valueOf(Object): "null" for null, a string itself, an array as
+ * SiyoArray.toString writes it ("[a, b]", each element by String.valueOf,
+ * nested arrays recursively). An array that contains itself recurses until
+ * the stack runs out, which is java.lang.StackOverflowError (fatal, as for
+ * Siyo functions).
+ */
 SiyoStr *siyo_rt_any_to_string(const void *value);
-/* Objects.equals: same type and value, so a boxed 5L is not equal to a boxed 5. */
+/* Objects.equals: same type and value, so a boxed 5L is not equal to a boxed 5;
+   arrays are equal when their elements are, in order (List.equals). */
 _Bool siyo_rt_any_equals(const void *a, const void *b);
 /* PrintStream.print(Object). */
 void siyo_rt_print_any(const void *value);
+
+/*
+ * Arrays. A null array raises java.lang.NullPointerException; an index
+ * outside 0..len-1 raises java.lang.IndexOutOfBoundsException:
+ * "Index i out of bounds for length n", as ArrayList does.
+ */
+/* An empty array with room for capacity items. */
+SiyoArray *siyo_rt_array_new(int32_t capacity);
+/* List.add: appends value, doubling the room when it is full. */
+void siyo_rt_array_push(SiyoArray *array, void *value);
+/* List.get. */
+void *siyo_rt_array_get(SiyoArray *array, int32_t index);
+/* List.set: stores value and returns the element it replaced. */
+void *siyo_rt_array_set(SiyoArray *array, int32_t index, void *value);
+/* List.remove(size() - 1): an empty array is index -1 out of bounds for length 0. */
+void *siyo_rt_array_pop(SiyoArray *array);
+/* List.remove(index): later elements move down one place. */
+void siyo_rt_array_remove_at(SiyoArray *array, int32_t index);
+/* List.size. */
+int32_t siyo_rt_array_len(SiyoArray *array);
 
 /*
  * Exceptions. A raise records a pending exception and returns; the raising

@@ -1,0 +1,9 @@
+// An array containing itself prints by recursing until the stack runs out,
+// as SiyoArray.toString does on the JVM.
+fn main() {
+    mut a: any[] = []
+    push(a, 1)
+    push(a, a)
+    println(len(a))
+    println(a)
+}

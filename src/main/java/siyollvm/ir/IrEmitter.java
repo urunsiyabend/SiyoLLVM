@@ -4,7 +4,9 @@ import codeanalysis.BuiltinFunctions;
 import codeanalysis.FunctionSymbol;
 import codeanalysis.LabelSymbol;
 import codeanalysis.ParameterSymbol;
+import codeanalysis.SiyoArray;
 import codeanalysis.VariableSymbol;
+import codeanalysis.binding.BoundArrayLiteralExpression;
 import codeanalysis.binding.BoundAssignmentExpression;
 import codeanalysis.binding.BoundBinaryExpression;
 import codeanalysis.binding.BoundBinaryOperatorType;
@@ -15,6 +17,8 @@ import codeanalysis.binding.BoundConversionExpression;
 import codeanalysis.binding.BoundExpression;
 import codeanalysis.binding.BoundExpressionStatement;
 import codeanalysis.binding.BoundGotoStatement;
+import codeanalysis.binding.BoundIndexAssignmentExpression;
+import codeanalysis.binding.BoundIndexExpression;
 import codeanalysis.binding.BoundLabelStatement;
 import codeanalysis.binding.BoundLiteralExpression;
 import codeanalysis.binding.BoundReturnStatement;
@@ -54,6 +58,12 @@ import java.util.Map;
  * by the runtime. Where the binder lets an {@code any} meet a declared type
  * (declaration, assignment, argument, return) the value is boxed, or unboxed
  * and cast with the runtime's check, as the JVM backend's checkcast does.
+ *
+ * <p>An array is a {@code ptr} to the runtime's {@code SiyoArray}, whose items
+ * are any values, as the JVM backend's arrays are lists of objects: an
+ * element is boxed going in, and narrowed coming out to the type the binder
+ * gives the read (an element type it tracks, else {@code any}) with the same
+ * checked cast. Index errors and a null array raise in the runtime.
  *
  * <p>Exceptions never unwind the native stack. A raise (a Siyo {@code throw}
  * or {@code error()}, or a runtime error) records a pending exception in the
@@ -420,8 +430,48 @@ public final class IrEmitter {
                     coerce(expression(conversion.getExpression()), conversion.getClassType());
             case BoundCallExpression call -> call(call);
             case BoundTryExpression tryExpression -> tryExpression(tryExpression);
+            case BoundArrayLiteralExpression array -> arrayLiteral(array);
+            case BoundIndexExpression index -> {
+                // An erased target is checkcast to List first, as the JVM backend does.
+                Value target = coerce(expression(index.getTarget()), SiyoArray.class);
+                Value position = requireType(expression(index.getIndex()), Integer.class);
+                String item = raisingCall("call ptr @siyo_rt_array_get(ptr " + target.ref() + ", i32 " + position.ref() + ")");
+                yield coerce(new Value(item, Object.class), index.getClassType());
+            }
+            case BoundIndexAssignmentExpression assignment -> indexAssignment(assignment);
             default -> throw unsupported(expression.getType().toString());
         };
+    }
+
+    /** A new array with room for the elements, then each element boxed and appended in order. */
+    private Value arrayLiteral(BoundArrayLiteralExpression node) {
+        List<BoundExpression> elements = node.getElements();
+        String array = instruction("call ptr @siyo_rt_array_new(i32 " + elements.size() + ")");
+        for (BoundExpression element : elements) {
+            Value item = coerce(expression(element), Object.class);
+            instructionNoResult("call void @siyo_rt_array_push(ptr " + array + ", ptr " + item.ref() + ")");
+            checkPending();
+        }
+        return new Value(array, SiyoArray.class);
+    }
+
+    /**
+     * {@code a[i] = v} is {@code List.set}, whose result, the element replaced,
+     * the JVM backend narrows to the type of {@code v}, even when the value is
+     * discarded: replacing a string with an int in an {@code any[]} raises
+     * ClassCastException after the store. That element is the expression's
+     * value.
+     */
+    private Value indexAssignment(BoundIndexAssignmentExpression node) {
+        Value target = requireType(expression(node.getTarget()), SiyoArray.class);
+        Value position = requireType(expression(node.getIndex()), Integer.class);
+        Value value = expression(node.getValue());
+        Class<?> type = value.type();
+        Value item = coerce(value, Object.class);
+        String old = raisingCall("call ptr @siyo_rt_array_set(ptr " + target.ref() + ", i32 " + position.ref()
+                + ", ptr " + item.ref() + ")");
+        Value replaced = new Value(old, Object.class);
+        return type == Object.class ? replaced : checkedCast(replaced, type);
     }
 
     private Value literal(Object value) {
@@ -598,7 +648,7 @@ public final class IrEmitter {
                     : type == Long.class ? "@siyo_rt_print_long(i64 "
                     : type == Boolean.class ? "@siyo_rt_print_bool(i1 zeroext "
                     : type == String.class ? "@siyo_rt_print_str(ptr "
-                    : type == Object.class ? "@siyo_rt_print_any(ptr "
+                    : type == Object.class || type == SiyoArray.class ? "@siyo_rt_print_any(ptr "
                     : null;
             if (printer == null) throw unsupported("printing " + type);
             instructionNoResult("call void " + printer + value.ref() + ")");
@@ -631,6 +681,8 @@ public final class IrEmitter {
             Value value = requireType(expression(call.getArguments().get(0)), Long.class);
             return new Value(instruction("trunc i64 " + value.ref() + " to i32"), Integer.class);
         }
+        Value arrayResult = arrayBuiltin(call);
+        if (arrayResult != null) return arrayResult;
         String runtime = RUNTIME_BUILTINS.get(function);
         if (runtime != null) return runtimeCall(runtime, function, call.getArguments());
 
@@ -652,6 +704,40 @@ public final class IrEmitter {
         }
         String t = raisingCall("notail call " + LlvmTypes.of(function.getReturnType()) + " " + name + "(" + args + ")");
         return new Value(t, function.getReturnType());
+    }
+
+    /**
+     * len of an array, push, pop and removeAt; null for any other call. A
+     * pushed value is boxed; pop's element is narrowed to the call's type,
+     * which the binder sets to the element type it tracks for the array.
+     */
+    private Value arrayBuiltin(BoundCallExpression call) {
+        FunctionSymbol function = call.getFunction();
+        List<BoundExpression> arguments = call.getArguments();
+        boolean arrayLen = function == BuiltinFunctions.LEN && arguments.size() == 1
+                && arguments.get(0).getClassType() == SiyoArray.class;
+        if (!arrayLen && function != BuiltinFunctions.PUSH && function != BuiltinFunctions.POP
+                && function != BuiltinFunctions.REMOVE_AT) {
+            return null;
+        }
+        if (arguments.size() != function.getParameters().size()) throw unsupported(function.getName() + " arity");
+        String array = requireType(expression(arguments.get(0)), SiyoArray.class).ref();
+        if (arrayLen) {
+            return new Value(raisingCall("call i32 @siyo_rt_array_len(ptr " + array + ")"), Integer.class);
+        }
+        if (function == BuiltinFunctions.POP) {
+            String item = raisingCall("call ptr @siyo_rt_array_pop(ptr " + array + ")");
+            return coerce(new Value(item, Object.class), call.getClassType());
+        }
+        if (function == BuiltinFunctions.PUSH) {
+            Value item = coerce(expression(arguments.get(1)), Object.class);
+            instructionNoResult("call void @siyo_rt_array_push(ptr " + array + ", ptr " + item.ref() + ")");
+        } else {
+            Value index = requireType(expression(arguments.get(1)), Integer.class);
+            instructionNoResult("call void @siyo_rt_array_remove_at(ptr " + array + ", i32 " + index.ref() + ")");
+        }
+        checkPending();
+        return new Value(null, null);
     }
 
     /**
@@ -710,7 +796,7 @@ public final class IrEmitter {
     /**
      * {@code value} as a string operand of {@code +}: Java's decimal form for
      * int and long, {@code true}/{@code false} for bool, {@code String.valueOf}
-     * for an any. A string is kept as is, null included; concatenation reads
+     * for an any or an array. A string is kept as is, null included; concatenation reads
      * null as {@code "null"}. Any other type is refused.
      */
     private Value text(Value value) {
@@ -722,7 +808,7 @@ public final class IrEmitter {
             call = "call ptr @siyo_rt_str_from_long(i64 ";
         } else if (value.type() == Boolean.class) {
             call = "call ptr @siyo_rt_str_from_bool(i1 zeroext ";
-        } else if (value.type() == Object.class) {
+        } else if (value.type() == Object.class || value.type() == SiyoArray.class) {
             call = "call ptr @siyo_rt_any_to_string(ptr ";
         } else {
             throw unsupported("conversion of " + value.type() + " to text");
@@ -746,7 +832,7 @@ public final class IrEmitter {
                     : from == Long.class ? "call ptr @siyo_rt_box_long(i64 "
                     : from == Boolean.class ? "call ptr @siyo_rt_box_bool(i1 zeroext "
                     : null;
-            if (from == String.class) return new Value(value.ref(), Object.class);
+            if (from == String.class || from == SiyoArray.class) return new Value(value.ref(), Object.class);
             if (box != null) return new Value(instruction(box + value.ref() + ")"), Object.class);
         }
         if (from == Object.class) {
@@ -754,7 +840,7 @@ public final class IrEmitter {
             // NullPointerException, whose message names the literal. Anything
             // else is checked at run time.
             if (value.ref().equals("null")) {
-                if (to == String.class) return new Value("null", String.class);
+                if (to == String.class || to == SiyoArray.class) return new Value("null", to);
                 if (to == Integer.class || to == Boolean.class) {
                     int tag = to == Integer.class ? 2 : 4; // SIYO_TAG_INT, SIYO_TAG_BOOL
                     instructionNoResult("call void @siyo_rt_unbox_null_literal(i32 " + tag + ")");
@@ -774,6 +860,7 @@ public final class IrEmitter {
                 : to == Long.class ? "call i64 @siyo_rt_unbox_long(ptr "
                 : to == Boolean.class ? "call zeroext i1 @siyo_rt_unbox_bool(ptr "
                 : to == String.class ? "call ptr @siyo_rt_cast_str(ptr "
+                : to == SiyoArray.class ? "call ptr @siyo_rt_cast_array(ptr "
                 : null;
         if (cast == null) throw unsupported("conversion from " + value.type() + " to " + to);
         return new Value(raisingCall(cast + value.ref() + ")"), to);

@@ -3,6 +3,8 @@ package siyollvm.check;
 import codeanalysis.BuiltinFunctions;
 import codeanalysis.FunctionSymbol;
 import codeanalysis.ParameterSymbol;
+import codeanalysis.SiyoArray;
+import codeanalysis.binding.BoundArrayLiteralExpression;
 import codeanalysis.binding.BoundAssignmentExpression;
 import codeanalysis.binding.BoundBinaryExpression;
 import codeanalysis.binding.BoundBinaryOperatorType;
@@ -13,6 +15,8 @@ import codeanalysis.binding.BoundConversionExpression;
 import codeanalysis.binding.BoundExpression;
 import codeanalysis.binding.BoundExpressionStatement;
 import codeanalysis.binding.BoundGotoStatement;
+import codeanalysis.binding.BoundIndexAssignmentExpression;
+import codeanalysis.binding.BoundIndexExpression;
 import codeanalysis.binding.BoundLabelStatement;
 import codeanalysis.binding.BoundLiteralExpression;
 import codeanalysis.binding.BoundNode;
@@ -70,11 +74,21 @@ import java.util.Set;
  * string builtin's first argument and {@code error()}'s argument work on the
  * reference but are rejected here for now, conservatively. Its bodies end in
  * a value, in no expression at all (the value is null), or in {@code error()}.
+ *
+ * <p>Arrays ({@code SiyoArray}) are accepted as values of every kind above
+ * (variables, parameters, returns, elements, any values, thrown values, catch
+ * variables), with literals, indexing, index assignment, {@code len},
+ * {@code push}, {@code pop} and {@code removeAt}. The binder also lets an
+ * {@code any} be indexed or passed as the array of those builtins; the JVM
+ * backend reads it through a checkcast to List, which is accepted, but writes
+ * to it with invokeinterface, which fails with IncompatibleClassChangeError
+ * for a non-list, so those are rejected. A try expression is never an
+ * element, an index or a pushed value: the operand stack is not empty there.
  */
 public final class SubsetValidator {
 
     private static final Set<Class<?>> VALUE_TYPES =
-            Set.of(Integer.class, Long.class, Boolean.class, String.class, Object.class);
+            Set.of(Integer.class, Long.class, Boolean.class, String.class, Object.class, SiyoArray.class);
 
     /**
      * Types an any holds boxed. The JVM backend boxes them when declaring an
@@ -114,11 +128,21 @@ public final class SubsetValidator {
                 BuiltinFunctions.TO_LONG, BuiltinFunctions.TO_INT_LONG, BuiltinFunctions.TO_INT_STR));
     }
 
+    /** Array builtins taking the array first; len is checked on its own. */
+    private static final Set<FunctionSymbol> ARRAY_BUILTINS = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    static {
+        ARRAY_BUILTINS.addAll(List.of(BuiltinFunctions.PUSH, BuiltinFunctions.POP, BuiltinFunctions.REMOVE_AT));
+    }
+
+    /** What the binder's for-in desugaring calls over values that are not arrays. */
+    private static final Map<FunctionSymbol, String> FOR_IN_HELPERS = new IdentityHashMap<>(Map.of(
+            BuiltinFunctions.ITERABLE, "for … in over any values is",
+            BuiltinFunctions.MAP_KEYS, "for … in over maps is",
+            BuiltinFunctions.SET_VALUES, "for … in over sets is"));
+
     /** What to call a node kind outside the subset; the default is the kind's own name. */
     private static final Map<BoundNodeType, String> CONSTRUCTS = Map.ofEntries(
-            Map.entry(BoundNodeType.ArrayLiteralExpression, "arrays are"),
-            Map.entry(BoundNodeType.IndexExpression, "indexing is"),
-            Map.entry(BoundNodeType.IndexAssignmentExpression, "indexing is"),
             Map.entry(BoundNodeType.MapLiteralExpression, "maps are"),
             Map.entry(BoundNodeType.SetLiteralExpression, "sets are"),
             Map.entry(BoundNodeType.MemberAccessExpression, "member access is"),
@@ -276,11 +300,46 @@ public final class SubsetValidator {
             }
             case BoundCallExpression call -> validateCall(call, emptyStack);
             case BoundTryExpression tryExpression -> validateTry(tryExpression, emptyStack);
+            case BoundArrayLiteralExpression array -> {
+                for (BoundExpression element : array.getElements()) {
+                    if (validatesCleanly(element)) requireValueType(element.getClassType(), "array elements");
+                }
+            }
+            case BoundIndexExpression index -> validateIndex(index);
+            case BoundIndexAssignmentExpression assignment -> validateIndexAssignment(assignment);
             default -> reportNode(expression);
         }
         // Set for a first argument that was not there (a call with none).
         _emptyStack = false;
         _offset = saved;
+    }
+
+    /** An array element read; an any target is checkcast to an array first. */
+    private void validateIndex(BoundIndexExpression index) {
+        Class<?> target = index.getTarget().getClassType();
+        boolean clean = validatesCleanly(index.getTarget()) & validatesCleanly(index.getIndex());
+        if (!clean) return;
+        if (target == String.class) {
+            report("indexing strings is");
+        } else if (target != SiyoArray.class && target != Object.class) {
+            report("indexing values of type " + typeName(target) + " is");
+        } else {
+            requireValueType(index.getClassType(), "values");
+        }
+    }
+
+    private void validateIndexAssignment(BoundIndexAssignmentExpression assignment) {
+        Class<?> target = assignment.getTarget().getClassType();
+        boolean clean = validatesCleanly(assignment.getTarget()) & validatesCleanly(assignment.getIndex())
+                & validatesCleanly(assignment.getValue());
+        if (!clean) return;
+        if (target == Object.class) {
+            report("index assignment on any values is");
+        } else if (target != SiyoArray.class) {
+            report("index assignment on values of type " + typeName(target) + " is");
+        } else {
+            requireValueType(assignment.getValue().getClassType(), "values");
+        }
     }
 
     private void validateLiteral(BoundLiteralExpression literal) {
@@ -360,12 +419,32 @@ public final class SubsetValidator {
             return;
         }
         if (function == BuiltinFunctions.LEN) {
-            // len(x) takes any value; only strings are in the subset.
+            // len(x) takes any value; strings and arrays are in the subset.
             BoundExpression argument = call.getArguments().get(0);
-            if (validatesCleanly(argument) && requireValueType(argument.getClassType(), "values")
-                    && argument.getClassType() != String.class) {
-                report("len() on " + typeName(argument.getClassType()) + " is");
+            Class<?> type = argument.getClassType();
+            if (validatesCleanly(argument) && requireValueType(type, "values")
+                    && type != String.class && type != SiyoArray.class) {
+                report("len() on " + typeName(type) + " is");
             }
+            return;
+        }
+        if (ARRAY_BUILTINS.contains(function)) {
+            boolean clean = true;
+            for (BoundExpression argument : call.getArguments()) {
+                clean &= validatesCleanly(argument) && requireValueType(argument.getClassType(), "values");
+            }
+            if (!clean) return;
+            Class<?> array = call.getArguments().get(0).getClassType();
+            if (array != SiyoArray.class) {
+                report(function.getName() + "() on " + typeName(array) + " values is");
+            } else if (function == BuiltinFunctions.POP) {
+                // The binder types pop as the array's tracked element type.
+                requireValueType(call.getClassType(), "values");
+            }
+            return;
+        }
+        if (FOR_IN_HELPERS.containsKey(function)) {
+            report(FOR_IN_HELPERS.get(function));
             return;
         }
         if (!builtinPrint && !STRING_BUILTINS.contains(function) && !_program.functions().containsKey(function)) {

@@ -15,7 +15,7 @@ byte.
 
 | Area | Accepted |
 |---|---|
-| Types | `int` (32-bit), `long` (64-bit), `bool`, `string`, `any` (`object`) holding one of those or null |
+| Types | `int` (32-bit), `long` (64-bit), `bool`, `string`, arrays of these (`int[]`, `Array<string>`, `any[]`, and nested arrays written as unannotated literals such as `[[1, 2], [3]]`), `any` (`object`) holding one of those or null |
 | Literals | int, long (`5L`, or an int literal too large for `int`), `true`/`false`, strings (escapes `\n \t \r \\ \" \0 \$ \{ \}`, triple-quoted strings), `null` |
 | Variables | `mut`/`imut` locals and parameters; file-level globals |
 | Arithmetic | `+ - * / %` on int and long, and on an int mixed with a long (the int widens) |
@@ -27,9 +27,10 @@ byte.
 | Assignment | `=`, `+= -= *= /=` |
 | Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `break`, `continue`, `return` |
 | Exceptions | `throw v` of any accepted value (an int, long or bool is boxed); `error(msg)`, which throws its argument; `try { … } catch e { … }` statements, nested anywhere (in loops, in other try and catch bodies), with `break`, `continue` and `return` inside both bodies; the catch variable untyped (`any`) or typed `catch e: int` / `long` / `bool` / `string` / `any` (a checked cast, as for an `any` read); `try` expressions (`imut v = try { parseLong(s) } catch e { 0L - 1L }`) as a statement, a declaration's or assignment's value, a condition, a returned or thrown value, or the first argument of a function or `toString` (also nested: `imut s = f(g(try { … } catch e { … }))`) |
+| Arrays | literals (`[1, 2]`, `["a"]`, `[[1], [2]]`; an empty literal `[]` typed by its declaration, `mut xs: int[] = []`); as variables, globals, parameters, return values, elements of other arrays, `any` values, thrown values, catch variables (`catch e: int[]`) and `try` expression values; `xs[i]` (also on an `any` holding an array, as the JVM backend's checkcast to `List`), `xs[i] = v` and `xs[i] += v`; `len(xs)`, `push(xs, v)`, `pop(xs)`, `removeAt(xs, i)` and their method forms (`xs.push(v)`); printing, `toString`, interpolation (`"$xs"`), `+` with a string when the array is held in an `any`; `==`/`!=` between an `any` holding an array and any value (`List.equals`); `for x in xs` over an array (the binder's desugaring into `len` and indexing; its corpus coverage comes with `for … in` in F3a Task 2) |
 | `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
-| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` included); on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
+| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` and arrays included); `len`, `push`, `pop`, `removeAt` on arrays; on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
 | Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
 
 ## Rejected
@@ -39,7 +40,12 @@ and exit status 1, with no output file. This holds anywhere in the file:
 in functions that are never called, and in code after a `return`.
 
 `float` values (also as an operand of `+` on strings or in `"$x"`);
-arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
+maps, sets; indexing a string (`s[i]`); index assignment, `push`, `pop`
+and `removeAt` through an `any` value (`push(a[0], 1)` where `a` is
+`any[]`: the reference uses `invokeinterface`, which raises
+`IncompatibleClassChangeError` for a non-list; SiyoLLVM does not reproduce
+that error); `sort`, `map`, `filter`, `reduce` and `forEach` (they take
+lambdas); `range`; `for … in` over an `any`, a map or a set; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; a `try` expression
@@ -53,8 +59,10 @@ first. Some other positions work on the reference: a left operand, the
 right operand of `&&`/`||`, a string builtin's first argument and
 `error()`'s argument. SiyoLLVM rejects those too, for now. Also rejected:
 a catch variable of a type outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
-a string; every builtin not listed above, `split` included (it returns an
-array); `main`/`init` with parameters or a return value.
+a string or an array; every builtin not listed above, `split` included;
+`main`/`init` with parameters or a return value. A `try` expression is
+rejected as an array element, an index, an assigned element or a pushed
+value (the reference's operand stack is not empty there).
 
 An `any` value as an operand of arithmetic, ordering, `&&`/`||`, `!`, as a
 condition (`if a`), or as an argument of a string builtin or `len`; assigning
@@ -114,6 +122,12 @@ returning one from a function returning `any` (the reference fails with
   scan non-ASCII strings from the start on every call (ASCII strings are
   indexed directly), so a per-character loop over a long non-ASCII string is
   quadratic.
+- Arrays are never freed either. An array's items are one block that
+  doubles when full (at least 4), so `push` is amortised constant time; an
+  array literal starts with room for exactly its elements. Boxing an int in
+  -128..127 returns a shared static box, as `Integer.valueOf` does, so
+  storing small ints in arrays allocates nothing per element; other ints,
+  longs and bools are boxed into a new 16-byte object each time.
 - A global read before its initialiser has run holds the JVM default
   (`0`, `0L`, `false`, or null, which prints as `null`); `==` on strings is
   value equality with `null == null`. A null string reads as `null` in
@@ -134,6 +148,33 @@ returning one from a function returning `any` (the reference fails with
   the literal `null` read into an `int`, as in `imut n: int = null` or
   `g(null)`: `Cannot invoke "java.lang.Integer.intValue()" because "null" is null`,
   `Boolean.booleanValue()` for `bool`).
+- An array is a reference, as on the JVM: two variables, a parameter, a
+  returned array and an element of another array can all name one array,
+  and a change through any of them is seen through the others. Its items
+  are `any` values (an int, long or bool boxed), like the `ArrayList<Object>`
+  inside the JVM's `SiyoArray`; a read is narrowed to the type the binder
+  gives it (an `int[]` element is an `int`; an element of an `any[]`, or of
+  a row of a nested literal, is an `any`) with the checked cast of an `any`
+  read, so a wrong type raises `ClassCastException` (an array is
+  `class codeanalysis.SiyoArray … (codeanalysis.SiyoArray is in unnamed module of loader 'app'; …)`,
+  and a non-array read as an array is `… cannot be cast to class java.util.List …`).
+- `xs[i] = v` is `List.set`: its value is the element it replaced, narrowed
+  to the type of `v` even when the value is not used, as the JVM backend
+  does, so `a[0] = 5` on an `any[]` whose element 0 is a string stores 5
+  and then raises `ClassCastException`.
+- An index outside `0..len-1` (in `xs[i]`, `xs[i] = v`, `removeAt`), and
+  `pop` of an empty array, raise
+  `java.lang.IndexOutOfBoundsException: Index 5 out of bounds for length 3`
+  (`Index -1 out of bounds for length 0` for `pop`); a catch variable gets
+  `Index 5 out of bounds for length 3`. A null array (read from an `any`
+  holding null, or a global before its initialiser) raises
+  `java.lang.NullPointerException` (see Deviations).
+- Arrays print as `SiyoArray.toString` writes them: `[1, x, null, [2, 3]]`,
+  each element by `String.valueOf`, nested arrays recursively. An array that
+  contains itself recurses until the stack runs out, as on the JVM, and the
+  program stops with `java.lang.StackOverflowError` (not catchable; see
+  Deviations). `==` between `any` values holding arrays compares the elements
+  in order (`[1]` holding an int is not equal to `[1L]`).
 - String lengths and indexes count UTF-16 code units, as on the JVM:
   `len("çağ😀x")` is 6. `substring` may split a surrogate pair; each half is
   then a lone surrogate (printed as `?`), and joining the halves again, with
@@ -181,7 +222,8 @@ returning one from a function returning `any` (the reference fails with
 | stdout closed early (e.g. piped into `head`) | keeps running, exit 0 | killed by SIGPIPE (exit 141 from the shell), as C programs are |
 | A `bool`/`long`/`string` function falling off its end without `return` | `VerifyError` at class load (`int` functions return 0) | returns the type's default (`false`, `0L`, null) |
 | `fn main() -> int` | crashes with `NoSuchMethodError` | rejected at compile time |
-| Null `any` (other than the literal `null`) read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part; a catch variable receives that shorter message |
+| A null array (from an `any`, or a global read before its initialiser) indexed, assigned into or passed to `len`/`push`/`pop`/`removeAt` | `java.lang.NullPointerException: Cannot invoke "java.util.List.get(int)" because "<local0>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` |
+| Null `any` or array element (other than the literal `null`) read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field, `"java.util.List.get(int)"` for an element, `"java.util.List.set(int, Object)"` for the element an assignment replaced) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part; a catch variable receives that shorter message |
 | String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` instead of the helpful message |
 | `toUpper` of characters whose Java upper case is several characters, other than `ß` | one-to-many mapping from Unicode SpecialCasing | the character is kept, or mapped to a single character (see below) |
 | `toLower` of `Σ` ending a word | final `ς` | `σ` |
