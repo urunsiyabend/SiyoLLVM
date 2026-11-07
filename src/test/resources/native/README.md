@@ -12,6 +12,12 @@ built from SiyoCompiler `02c226298296fb4379f7251a9dfba19b7e887f3d` (0.9.0),
 keeping only the first line of stderr: SiyoLLVM prints the exception line but
 no Java stack trace.
 
+The reference ran on OpenJDK 21.0.12.1 (`java -version`: `openjdk version
+"21.0.12.1" 2026-08-18 LTS`). Exception messages are that JDK's wording, for
+example `Range [2, 9) out of bounds for length 3` (`substring_range`; older
+JDKs said `begin 2, end 9, length 3`) and `Cannot parse null string`
+(`parse_long_null`).
+
 Exception: `fall_off_return_defaults` has a hand-written expectation, marked
 in the file. JVM 0.9.0 fails class verification for that program; SiyoLLVM
 returns the type's default. See `docs/SUBSET.md`, "Deviations".

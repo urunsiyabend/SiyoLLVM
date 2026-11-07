@@ -1,0 +1,31 @@
+// toUpper and toLower over Latin, Turkish, German, Greek and Cyrillic letters.
+// Java's context-dependent final sigma and its one-to-many mappings other than
+// ß and İ are SiyoLLVM deviations (docs/SUBSET.md) and are not used here.
+fn both(s: string) {
+    println(s + " -> " + toUpper(s) + " / " + toLower(s))
+}
+
+fn main() {
+    both("Hello World")
+    both("àáâãäåæçèéêëìíîïñòóôõöøùúûüýÿ")
+    both("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝ")
+    both("ąćęłńśźż ĄĆĘŁŃŚŹŻ œŒ")
+    both("ığüşöç İĞÜŞÖÇ iI")
+    both("Straße")
+    both("ß")
+    both("İstanbul")
+    both("İ")
+    both("Größe ÄÖÜ äöü")
+    both("αβγδεζηθικλμνξοπρστυφχψω")
+    both("ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ")
+    both("άέήίόύώ ΆΈΉΊΌΎΏ")
+    both("абвгдеёжзийклмнопрстуфхцчшщъыьэюя")
+    both("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ")
+    both("їієґ ЇІЄҐ")
+    both("ǅ ǈ ǋ")
+    both("😀 a€b 123")
+    println(len(toUpper("Straße")))
+    println(len(toLower("İ")))
+    println(toUpper("ß") == "SS")
+    println(toLower("İ") == "i" + chr(775))
+}

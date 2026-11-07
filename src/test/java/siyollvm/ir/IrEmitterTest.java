@@ -107,6 +107,52 @@ class IrEmitterTest {
     }
 
     @Test
+    void stringOrderingComparesWithCompareTo() {
+        String ir = emit("fn main() { mut a = \"a\" println(a < \"b\") println(a >= \"b\") }");
+        assertEquals(2, count(ir, "call i32 @siyo_rt_str_compare(ptr "), ir);
+        assertTrue(ir.contains(", 0\n") && ir.contains("icmp slt i32 ") && ir.contains("icmp sge i32 "), ir);
+        assertTrue(ir.contains("declare i32 @siyo_rt_str_compare(ptr, ptr)"), ir);
+    }
+
+    @Test
+    void numericConversionsAreInline() {
+        String ir = emit("fn main() { mut i = 7 mut l = 8L println(toLong(i)) println(toInt(l)) }");
+        assertTrue(ir.contains("sext i32 "), ir);
+        assertTrue(ir.contains("trunc i64 "), ir);
+    }
+
+    @Test
+    void stringBuiltinsCallTheRuntime() {
+        String ir = emit("""
+                fn main() {
+                  mut s = "abc"
+                  println(len(s))
+                  println(substring(s, 0, 1))
+                  println(contains(s, "b"))
+                  println(startsWith(s, "a"))
+                  println(chr(65))
+                  println(toInt("1") + parseInt("2"))
+                  println(parseLong("3"))
+                }
+                """);
+        assertTrue(ir.contains("call i32 @siyo_rt_str_len(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_substring(ptr %t"), ir);
+        assertTrue(ir.contains(", i32 0, i32 1)"), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_str_contains(ptr "), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_str_starts_with(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_chr(i32 65)"), ir);
+        assertEquals(2, count(ir, "call i32 @siyo_rt_parse_int(ptr "), ir);
+        assertTrue(ir.contains("call i64 @siyo_rt_parse_long(ptr "), ir);
+    }
+
+    @Test
+    void userFunctionNamedLikeABuiltinIsNotTheBuiltin() {
+        String ir = emit("fn trim(s: string) -> string { return s }\nfn main() { println(trim(\" a \")) }");
+        assertFalse(ir.contains("call ptr @siyo_rt_str_trim("), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn.0(ptr "), ir);
+    }
+
+    @Test
     void divisionIsGuardedAgainstZeroAndOverflow() {
         String ir = emit("fn d(a: int, b: int) -> int { return a / b }\nfn main() { println(d(1, 1)) }");
         assertTrue(ir.contains("icmp eq i32"), ir);

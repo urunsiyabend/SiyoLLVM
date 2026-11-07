@@ -28,6 +28,21 @@ final class RuntimeIr {
                 declare ptr @siyo_rt_str_from_long(i64)
                 declare ptr @siyo_rt_str_from_bool(i1 zeroext)
                 declare ptr @siyo_rt_str_of_string(ptr)
+                declare i32 @siyo_rt_str_len(ptr)
+                declare ptr @siyo_rt_str_substring(ptr, i32, i32)
+                declare zeroext i1 @siyo_rt_str_contains(ptr, ptr)
+                declare i32 @siyo_rt_str_index_of(ptr, ptr)
+                declare zeroext i1 @siyo_rt_str_starts_with(ptr, ptr)
+                declare zeroext i1 @siyo_rt_str_ends_with(ptr, ptr)
+                declare ptr @siyo_rt_str_replace(ptr, ptr, ptr)
+                declare ptr @siyo_rt_str_trim(ptr)
+                declare ptr @siyo_rt_str_to_upper(ptr)
+                declare ptr @siyo_rt_str_to_lower(ptr)
+                declare ptr @siyo_rt_chr(i32)
+                declare i32 @siyo_rt_ord(ptr)
+                declare i32 @siyo_rt_str_compare(ptr, ptr)
+                declare i32 @siyo_rt_parse_int(ptr)
+                declare i64 @siyo_rt_parse_long(ptr)
                 declare void @siyo_rt_div_by_zero() noreturn cold
                 declare void @siyo_rt_stack_overflow() noreturn cold
 

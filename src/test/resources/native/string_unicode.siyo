@@ -1,0 +1,75 @@
+// Indexes, lengths and searches count UTF-16 code units, as the JVM does:
+// 1 unit for 1-, 2- and 3-byte characters, 2 for a 4-byte one.
+fn show(label: string, value: string) {
+    println(label + "=[" + value + "]")
+}
+
+fn main() {
+    mut s = "çağ😀x"
+    println(len(s))
+    println(len("é"))
+    println(len("€"))
+    println(len("😀"))
+    println(len("😀😀"))
+    println(len("a€😀é"))
+    println(indexOf(s, "x"))
+    println(indexOf(s, "😀"))
+    println(indexOf(s, "ğ"))
+    println(indexOf("😀😀a€", "a"))
+    println(indexOf("😀😀a€", "€"))
+    println(indexOf("ab", "😀"))
+    show("sub", substring(s, 0, 3))
+    show("sub", substring(s, 3, 5))
+    show("sub", substring(s, 5, 6))
+    show("sub", substring("a€😀é", 1, 2))
+    show("sub", substring("a€😀é", 2, 5))
+    println(contains(s, "ağ"))
+    println(contains(s, "a😀"))
+    println(startsWith(s, "ça"))
+    println(endsWith(s, "😀x"))
+    println(endsWith("é", "e"))
+    println(startsWith("é", "e"))
+
+    // A lone surrogate taken from a pair still matches that half of the pair.
+    mut high = substring("😀", 0, 1)
+    mut low = substring("😀", 1, 2)
+    println(indexOf("a😀", high))
+    println(indexOf("a😀", low))
+    println(indexOf("a😀b", low + "b"))
+    println(indexOf("a😀b", "a" + high))
+    println(contains("😀", low))
+    println(startsWith("😀x", high))
+    println(startsWith("😀x", low))
+    println(endsWith("x😀", low))
+    println(endsWith("x😀", high))
+    println(indexOf("😀", high + low))
+    println(indexOf(high + "a", high))
+
+    // replace with Unicode text and the empty target.
+    show("rep", replace("çay çok", "ç", "ch"))
+    show("rep", replace("a😀b😀", "😀", "€"))
+    show("rep", replace("é€", "", "|"))
+    println(len(replace("😀", "", "|")))
+    show("rep", replace("😀", "", "|"))
+    show("rep", replace("x😀y", high, "H"))
+    show("rep", replace("x😀y", low, "L"))
+
+    // trim leaves non-ASCII spaces alone.
+    show("trim", trim(" é "))
+    show("trim", trim(" ç\0"))
+    println(len(trim(" 😀 ")))
+
+    // ord gives the first UTF-16 unit; chr takes a code point.
+    println(ord("é"))
+    println(ord("€uro"))
+    println(ord("😀"))
+    println(ord(low))
+    show("chr", chr(233))
+    show("chr", chr(8364))
+    show("chr", chr(128512))
+    show("chr", chr(65601))
+    println(len(chr(128512)))
+    println(len(chr(1114111)))
+    println(chr(128512) == "😀")
+    println(chr(305) + chr(304))
+}

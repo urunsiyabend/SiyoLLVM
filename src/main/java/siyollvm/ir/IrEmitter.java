@@ -301,12 +301,21 @@ public final class IrEmitter {
         if (left.type() == String.class || right.type() == String.class) {
             requireType(left, String.class);
             requireType(right, String.class);
-            String equal = instruction("call zeroext i1 @siyo_rt_str_eq(ptr " + left.ref() + ", ptr " + right.ref() + ")");
-            return switch (op) {
-                case Equals -> new Value(equal, Boolean.class);
-                case NotEquals -> new Value(instruction("xor i1 " + equal + ", true"), Boolean.class);
+            if (op == BoundBinaryOperatorType.Equals || op == BoundBinaryOperatorType.NotEquals) {
+                String equal = instruction("call zeroext i1 @siyo_rt_str_eq(ptr " + left.ref() + ", ptr " + right.ref() + ")");
+                return op == BoundBinaryOperatorType.Equals ? new Value(equal, Boolean.class)
+                        : new Value(instruction("xor i1 " + equal + ", true"), Boolean.class);
+            }
+            String predicate = switch (op) {
+                case LessThan -> "slt";
+                case LessOrEqualsThan -> "sle";
+                case GreaterThan -> "sgt";
+                case GreaterOrEqualsThen -> "sge";
                 default -> throw unsupported("string operator " + op);
             };
+            // compareTo's sign, over UTF-16 code units.
+            String order = instruction("call i32 @siyo_rt_str_compare(ptr " + left.ref() + ", ptr " + right.ref() + ")");
+            return compare(predicate, "i32", order, "0");
         }
         if (left.type() == Boolean.class || right.type() == Boolean.class) {
             requireType(left, Boolean.class);
@@ -432,6 +441,16 @@ public final class IrEmitter {
             return text(value);
         }
 
+        if (function == BuiltinFunctions.TO_LONG) {
+            return coerce(requireType(expression(call.getArguments().get(0)), Integer.class), Long.class);
+        }
+        if (function == BuiltinFunctions.TO_INT_LONG) {
+            Value value = requireType(expression(call.getArguments().get(0)), Long.class);
+            return new Value(instruction("trunc i64 " + value.ref() + " to i32"), Integer.class);
+        }
+        String runtime = RUNTIME_BUILTINS.get(function);
+        if (runtime != null) return runtimeCall(runtime, function, call.getArguments());
+
         String name = _functionNames.get(function);
         if (name == null) throw unsupported("call to " + function.getName());
         StringBuilder args = new StringBuilder();
@@ -451,21 +470,77 @@ public final class IrEmitter {
         return new Value(t, function.getReturnType());
     }
 
+    /**
+     * Builtins that are one call into the runtime, which raises Java's
+     * exception where the JVM would (null receivers included). toLong(int)
+     * and toInt(long) are emitted inline as sext and trunc. Keyed by
+     * identity, as FunctionSymbol.equals compares name and arity only.
+     */
+    private static final Map<FunctionSymbol, String> RUNTIME_BUILTINS = new IdentityHashMap<>();
+
+    static {
+        RUNTIME_BUILTINS.put(BuiltinFunctions.LEN, "@siyo_rt_str_len");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.SUBSTRING, "@siyo_rt_str_substring");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.CONTAINS, "@siyo_rt_str_contains");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.INDEX_OF, "@siyo_rt_str_index_of");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.STARTS_WITH, "@siyo_rt_str_starts_with");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.ENDS_WITH, "@siyo_rt_str_ends_with");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.REPLACE, "@siyo_rt_str_replace");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.TRIM, "@siyo_rt_str_trim");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.TO_UPPER, "@siyo_rt_str_to_upper");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.TO_LOWER, "@siyo_rt_str_to_lower");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.CHR, "@siyo_rt_chr");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.ORD, "@siyo_rt_ord");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.PARSE_INT, "@siyo_rt_parse_int");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.TO_INT_STR, "@siyo_rt_parse_int");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.PARSE_LONG, "@siyo_rt_parse_long");
+    }
+
+    /** Calls {@code runtime} with the arguments coerced to the builtin's parameter types. */
+    private Value runtimeCall(String runtime, FunctionSymbol function, List<BoundExpression> arguments) {
+        StringBuilder args = new StringBuilder();
+        List<ParameterSymbol> parameters = function.getParameters();
+        if (arguments.size() != parameters.size()) throw unsupported(function.getName() + " arity");
+        for (int i = 0; i < parameters.size(); i++) {
+            Class<?> type = parameters.get(i).getType();
+            // len's parameter is declared as any value; the validator admits strings only.
+            Value argument = type == Object.class
+                    ? requireType(expression(arguments.get(i)), String.class)
+                    : coerce(expression(arguments.get(i)), type);
+            if (i > 0) args.append(", ");
+            args.append(abiType(argument.type())).append(' ').append(argument.ref());
+        }
+        Class<?> result = function.getReturnType();
+        return new Value(instruction("call " + abiType(result) + " " + runtime + "(" + args + ")"), result);
+    }
+
+    /** The type as it crosses into C: {@code _Bool} is {@code zeroext i1}. */
+    private static String abiType(Class<?> type) {
+        String llvm = LlvmTypes.of(type);
+        return llvm.equals("i1") ? "zeroext i1" : llvm;
+    }
+
     // --- helpers -------------------------------------------------------------
 
     /**
      * {@code value} as a string operand of {@code +}: Java's decimal form for
      * int and long, {@code true}/{@code false} for bool. A string is kept as
-     * is, null included; concatenation reads null as {@code "null"}.
+     * is, null included; concatenation reads null as {@code "null"}. Any other
+     * type is refused.
      */
     private Value text(Value value) {
-        String call = switch (LlvmTypes.of(value.type())) {
-            case "i32" -> "call ptr @siyo_rt_str_from_int(i32 ";
-            case "i64" -> "call ptr @siyo_rt_str_from_long(i64 ";
-            case "i1" -> "call ptr @siyo_rt_str_from_bool(i1 zeroext ";
-            default -> null;
-        };
-        return call == null ? value : new Value(instruction(call + value.ref() + ")"), String.class);
+        if (value.type() == String.class) return value;
+        String call;
+        if (value.type() == Integer.class) {
+            call = "call ptr @siyo_rt_str_from_int(i32 ";
+        } else if (value.type() == Long.class) {
+            call = "call ptr @siyo_rt_str_from_long(i64 ";
+        } else if (value.type() == Boolean.class) {
+            call = "call ptr @siyo_rt_str_from_bool(i1 zeroext ";
+        } else {
+            throw unsupported("conversion of " + value.type() + " to text");
+        }
+        return new Value(instruction(call + value.ref() + ")"), String.class);
     }
 
     private Value coerce(Value value, Class<?> to) {

@@ -61,10 +61,14 @@ class SubsetValidatorTest {
             fn main() { println("a" + 1.5) }                                | float values are
             fn main() { println("d=${1.5}") }                               | float values are
             fn main() { println(toString(1.5)) }                            | float values are
-            fn main() { println("a" < "b") }                                | string ordering comparisons are
             fn main() { mut a = [1, 2] println(a) }                         | arrays are
             fn main() { mut f = fn(x: int) -> int { x } println(f(1)) }     | lambdas are
             fn main() { println(range(0, 3)) }                              | the builtin range() is
+            fn main() { println(split("a,b", ",")) }                        | the builtin split() is
+            fn main() { println(len(5)) }                                   | len() on int is
+            fn main() { println(len(true)) }                                | len() on bool is
+            fn main() { println(toInt(2.5)) }                               | the builtin toInt() is
+            fn main() { println(parseFloat("1.5")) }                        | the builtin parseFloat() is
             fn main() -> int { return 1 }                                    | entry points returning a value are
             fn init() -> int { return 1 } fn main() { }                      | entry points returning a value are
             """)
@@ -87,6 +91,32 @@ class SubsetValidatorTest {
             """)
     void stringConcatenationIsSupported(String source) {
         assertEquals(List.of(), validate(source));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { println(len("abc")) }
+            fn main() { mut s = "abc" println(substring(s, 1, len(s))) }
+            fn main() { println(contains("abc", "b")) }
+            fn main() { println(indexOf("abc", "c")) }
+            fn main() { println(startsWith("abc", "a") && endsWith("abc", "c")) }
+            fn main() { println(replace("abc", "b", "x")) }
+            fn main() { println(trim(" a ")) }
+            fn main() { println(toUpper("a") + toLower("B")) }
+            fn main() { println(chr(65) + ord("A")) }
+            fn main() { println(parseInt("1") + parseLong("2")) }
+            fn main() { println(toLong(1) + toInt(2L) + toInt("3")) }
+            fn main() { println("a" < "b") }
+            fn main() { mut a = "a" println(a <= "b" && a > "c" && a >= "d") }
+            fn f(s: string) -> int { return len(trim(s)) } fn main() { println(f(" x ")) }
+            """)
+    void stringBuiltinsAndOrderingAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    @Test
+    void unsupportedArgumentOfAStringBuiltinIsRejected() {
+        assertRejected("fn main() { println(contains(\"a\", toString(1.5))) }", "float values are");
     }
 
     @Test

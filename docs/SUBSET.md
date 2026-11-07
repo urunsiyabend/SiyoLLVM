@@ -20,14 +20,14 @@ byte.
 | Variables | `mut`/`imut` locals and parameters; file-level globals |
 | Arithmetic | `+ - * / %` on int and long, and on an int mixed with a long (the int widens) |
 | Bitwise | `& \| ^ << >>` and unary `~` on int; `& \| ^` on bool |
-| Comparison | `== != < <= > >=` on int/long (mixed allowed); `== !=` on bool and string |
+| Comparison | `== != < <= > >=` on int/long (mixed allowed); `== !=` on bool; `== != < <= > >=` on string (ordering is Java's `compareTo`, over UTF-16 code units) |
 | Logic | `&&`, `\|\|` (short-circuit), `!` |
 | Strings | `+` joining a string with an int, long, bool or string (either side, so `1 + 2 + "x"` is `3x`); interpolation `"$x"`, `"${e}"`; `s += v`; `toString(x)` on every accepted type |
 | Unary | `+`, `-` on int |
 | Assignment | `=`, `+= -= *= /=` |
 | Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `break`, `continue`, `return` |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
-| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type |
+| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type; on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
 | Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
 
 ## Rejected
@@ -37,13 +37,13 @@ and exit status 1, with no output file. This holds anywhere in the file:
 in functions that are never called, and in code after a `return`.
 
 `float` values (also as an operand of `+` on strings or in `"$x"`);
-string ordering (`<` etc. on strings: the JVM compares UTF-16 code units);
 `null`; arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; `try`/`catch`/`throw`;
-casts; `import` and `import java`; scope/spawn/send; every builtin other
-than `print`/`println`/`toString`; `main`/`init` with parameters or a return value.
+casts; `import` and `import java`; scope/spawn/send; `len` of anything but
+a string; every builtin not listed above, `split` included (it returns an
+array); `main`/`init` with parameters or a return value.
 
 ## Runtime behaviour
 
@@ -68,6 +68,35 @@ than `print`/`println`/`toString`; `main`/`init` with parameters or a return val
 - `toString` and `+` write int and long in decimal and bool as
   `true`/`false`, as Java's `String.valueOf` does.
 - `&&` and `||` evaluate their right operand only when needed.
+- String lengths and indexes count UTF-16 code units, as on the JVM:
+  `len("çağ😀x")` is 6. `substring` may split a surrogate pair; each half is
+  then a lone surrogate (printed as `?`), and joining the halves again, with
+  `+` or by `replace` removing what lies between them, gives back the
+  character. `indexOf`, `contains`, `startsWith`, `endsWith` and `replace`
+  match lone halves against pairs as Java does; `replace` with an empty
+  target inserts the replacement between every code unit.
+- `substring` out of range raises
+  `java.lang.StringIndexOutOfBoundsException: Range [b, e) out of bounds for length n`;
+  `ord("")` raises `java.lang.StringIndexOutOfBoundsException: Index 0 out of bounds for length 0`.
+- `chr(c)` is Java's `Character.toString(int)`: one code point, so
+  `chr(128512)` is `😀` (two code units) and a surrogate code point gives a
+  lone surrogate; outside `0..0x10FFFF` it raises
+  `java.lang.IllegalArgumentException: Not a valid Unicode code point: 0x…`.
+  `ord(s)` is the first UTF-16 code unit.
+- `trim` strips code units up to U+0020 (`\0` and tabs included) at both
+  ends, and nothing else.
+- `parseInt` and `toInt(string)` return 0 for anything `Integer.parseInt`
+  rejects (empty, a lone sign, spaces, overflow, null); `parseLong` raises
+  `java.lang.NumberFormatException: For input string: "…"` instead (for null:
+  `Cannot parse null string`). Both accept an optional `+`/`-` and the
+  Unicode decimal digits of the BMP that Java 21 accepts (`"٣٤"` is 34).
+- `toInt(long)` keeps the low 32 bits; `toLong(int)` widens.
+- `toUpper`/`toLower` map each code point with glibc's `towupper`/`towlower`
+  in the `C.UTF-8` locale (whatever the program's locale), plus Java's
+  `ß` → `SS` and `İ` → `i̇`. If `C.UTF-8` cannot be loaded only ASCII
+  letters change.
+- A null string (a global read before its initialiser) passed to a string
+  builtin or ordered with `<` etc. raises `java.lang.NullPointerException`.
 
 ## Deviations from `siyoc run`
 
@@ -78,6 +107,32 @@ than `print`/`println`/`toString`; `main`/`init` with parameters or a return val
 | stdout closed early (e.g. piped into `head`) | keeps running, exit 0 | killed by SIGPIPE (exit 141 from the shell), as C programs are |
 | A `bool`/`long`/`string` function falling off its end without `return` | `VerifyError` at class load (`int` functions return 0) | returns the type's default (`false`, `0L`, null) |
 | `fn main() -> int` | crashes with `NoSuchMethodError` | rejected at compile time |
+| String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException` |
+| `toUpper` of characters whose Java upper case is several characters, other than `ß` | one-to-many mapping from Unicode SpecialCasing | the character is kept, or mapped to a single character (see below) |
+| `toLower` of `Σ` ending a word | final `ς` | `σ` |
+| `toUpper`/`toLower` of characters added after Unicode 15.0 | unchanged (Java 21 knows Unicode 15.0) | mapped by glibc's newer tables (glibc 2.43 measured) |
+
+**Case mapping, measured.** Every code point was mapped singly by Java 21
+(`String.toUpperCase()`/`toLowerCase()`, default locale `en_US` under
+`LC_ALL=C`) and by the runtime's rule with glibc 2.43. They differ only here:
+
+- Java's one-to-many upper case, which SiyoLLVM does not produce: U+0149 `ŉ`,
+  U+01F0 `ǰ`, U+0390 `ΐ`, U+03B0 `ΰ`, U+0587 `և`, U+1E96–U+1E9A,
+  U+1F50, U+1F52, U+1F54, U+1F56, U+1F80–U+1FAF (Greek with ypogegrammeni;
+  glibc maps the lower-case ones to their single title-case letter
+  U+1F88–U+1FAF), U+1FB2–U+1FB4, U+1FB6, U+1FB7, U+1FBC, U+1FC2–U+1FC4,
+  U+1FC6, U+1FC7, U+1FCC, U+1FD2, U+1FD3, U+1FD6, U+1FD7, U+1FE2–U+1FE4,
+  U+1FE6, U+1FE7, U+1FF2–U+1FF4, U+1FF6, U+1FF7, U+1FFC, the ligatures
+  U+FB00–U+FB06 and U+FB13–U+FB17. (U+1FB3/U+1FC3/U+1FF3 upper-case to
+  U+1FBC/U+1FCC/U+1FFC.)
+- Pairs only glibc knows (Unicode 16 and later): U+019B/U+A7DC,
+  U+0264/U+A7CB, U+1C89/U+1C8A, U+A7CC–U+A7CF, U+A7D2–U+A7D5, U+A7DA/U+A7DB,
+  U+10D50–U+10D65/U+10D70–U+10D85, U+16EA0–U+16EB8/U+16EBB–U+16ED3. Another
+  glibc version may differ here.
+
+The context-dependent final sigma cannot show up in a per-character
+comparison and is listed separately above. `case_mapping` in the corpus uses
+none of these characters.
 
 ## Platform
 

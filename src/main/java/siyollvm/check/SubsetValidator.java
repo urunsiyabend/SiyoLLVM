@@ -27,7 +27,9 @@ import siyollvm.frontend.LoweredProgram;
 import siyollvm.frontend.SourceDiagnostic;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +61,23 @@ public final class SubsetValidator {
             BoundBinaryOperatorType.BitwiseAnd, BoundBinaryOperatorType.BitwiseOr, BoundBinaryOperatorType.BitwiseXor,
             BoundBinaryOperatorType.LogicalAnd, BoundBinaryOperatorType.LogicalOr,
             BoundBinaryOperatorType.Equals, BoundBinaryOperatorType.NotEquals);
+
+    /**
+     * Builtins over strings and numbers whose parameters all have value types;
+     * split needs arrays (F3). Compared by identity: FunctionSymbol.equals
+     * looks at name and arity only, so the overloads of toInt, and a user
+     * function named like a builtin, would otherwise collide.
+     */
+    private static final Set<FunctionSymbol> STRING_BUILTINS = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    static {
+        STRING_BUILTINS.addAll(List.of(
+                BuiltinFunctions.SUBSTRING, BuiltinFunctions.CONTAINS, BuiltinFunctions.INDEX_OF,
+                BuiltinFunctions.STARTS_WITH, BuiltinFunctions.ENDS_WITH, BuiltinFunctions.REPLACE,
+                BuiltinFunctions.TRIM, BuiltinFunctions.TO_UPPER, BuiltinFunctions.TO_LOWER,
+                BuiltinFunctions.CHR, BuiltinFunctions.ORD, BuiltinFunctions.PARSE_INT, BuiltinFunctions.PARSE_LONG,
+                BuiltinFunctions.TO_LONG, BuiltinFunctions.TO_INT_LONG, BuiltinFunctions.TO_INT_STR));
+    }
 
     /** What to call a node kind outside the subset; the default is the kind's own name. */
     private static final Map<BoundNodeType, String> CONSTRUCTS = Map.ofEntries(
@@ -217,12 +236,8 @@ public final class SubsetValidator {
                 if (operandsClean && requireValueType(left, "values")) requireValueType(right, "values");
                 return;
             }
-            if (COMPARISON.contains(op) && left == right
-                    && op != BoundBinaryOperatorType.Equals && op != BoundBinaryOperatorType.NotEquals) {
-                report("string ordering comparisons are");
-                return;
-            }
-            supported = left == right && (op == BoundBinaryOperatorType.Equals || op == BoundBinaryOperatorType.NotEquals);
+            // == and != compare values; < <= > >= follow compareTo.
+            supported = left == right && COMPARISON.contains(op);
         } else if (isInteger(left) && isInteger(right)) {
             supported = ARITHMETIC.contains(op) || COMPARISON.contains(op)
                     || (INT_ONLY.contains(op) && left == Integer.class && right == Integer.class);
@@ -247,7 +262,16 @@ public final class SubsetValidator {
             }
             return;
         }
-        if (!builtinPrint && !_program.functions().containsKey(function)) {
+        if (function == BuiltinFunctions.LEN) {
+            // len(x) takes any value; only strings are in the subset.
+            BoundExpression argument = call.getArguments().get(0);
+            if (validatesCleanly(argument) && requireValueType(argument.getClassType(), "values")
+                    && argument.getClassType() != String.class) {
+                report("len() on " + typeName(argument.getClassType()) + " is");
+            }
+            return;
+        }
+        if (!builtinPrint && !STRING_BUILTINS.contains(function) && !_program.functions().containsKey(function)) {
             report("the builtin " + function.getName() + "() is");
             return;
         }

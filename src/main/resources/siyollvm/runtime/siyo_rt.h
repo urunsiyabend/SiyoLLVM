@@ -92,6 +92,37 @@ SiyoStr *siyo_rt_str_from_bool(_Bool value);
 /* toString(string): s itself, or "null" for null. */
 SiyoStr *siyo_rt_str_of_string(const SiyoStr *s);
 
+/*
+ * String builtins. Indexes and lengths count UTF-16 code units, as Java's do;
+ * a null string argument raises java.lang.NullPointerException unless noted.
+ * Every result is in canonical form: a high surrogate followed by a low one
+ * is always stored as one 4-byte sequence.
+ */
+int32_t siyo_rt_str_len(const SiyoStr *s);
+/* String.substring(begin, end); out of range is StringIndexOutOfBoundsException. */
+SiyoStr *siyo_rt_str_substring(const SiyoStr *s, int32_t begin, int32_t end);
+int32_t siyo_rt_str_index_of(const SiyoStr *s, const SiyoStr *sub);
+_Bool siyo_rt_str_contains(const SiyoStr *s, const SiyoStr *sub);
+_Bool siyo_rt_str_starts_with(const SiyoStr *s, const SiyoStr *prefix);
+_Bool siyo_rt_str_ends_with(const SiyoStr *s, const SiyoStr *suffix);
+/* String.replace(CharSequence, CharSequence): literal, every occurrence. */
+SiyoStr *siyo_rt_str_replace(const SiyoStr *s, const SiyoStr *target, const SiyoStr *replacement);
+/* String.trim: strips units up to U+0020 at both ends. */
+SiyoStr *siyo_rt_str_trim(const SiyoStr *s);
+/* Per code point in the C.UTF-8 locale, plus Java's ß -> SS and İ -> i̇. */
+SiyoStr *siyo_rt_str_to_upper(const SiyoStr *s);
+SiyoStr *siyo_rt_str_to_lower(const SiyoStr *s);
+/* Character.toString(int): a code point outside 0..0x10FFFF is IllegalArgumentException. */
+SiyoStr *siyo_rt_chr(int32_t code_point);
+/* charAt(0); empty is StringIndexOutOfBoundsException. */
+int32_t siyo_rt_ord(const SiyoStr *s);
+/* compareTo over UTF-16 code units: negative, zero or positive. */
+int32_t siyo_rt_str_compare(const SiyoStr *a, const SiyoStr *b);
+/* Integer.parseInt, 0 for anything it rejects (null included). */
+int32_t siyo_rt_parse_int(const SiyoStr *s);
+/* Long.parseLong; rejected input, null included, is NumberFormatException. */
+int64_t siyo_rt_parse_long(const SiyoStr *s);
+
 /* Uncaught Java errors: flush stdout, print the exception line to stderr, exit 1. */
 _Noreturn void siyo_rt_div_by_zero(void);
 _Noreturn void siyo_rt_stack_overflow(void);
