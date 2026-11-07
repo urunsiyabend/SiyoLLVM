@@ -30,3 +30,4 @@ Task 2: complete (commits f0a22bd..04f9dca, review clean after fix round)
 NEXT: whole-feature F4 review (BASE 5a54d11..HEAD) → one fix wave (README/ROADMAP + findings) → final-gates.sh f4 → publish-evidence.sh f4 f4-modules
 Final review: README Important + minors; ONE fix wave b0cce71; scoped re-review: all addressed
 Final gates at b0cce71: java 379+2, native 529+2 (0 skipped), requires-clang OK, receipts returncode 0 / oom_kill_delta 0
+Published: 242c7ac (remote verified), CI run 42343930723 success (Java + Native)
