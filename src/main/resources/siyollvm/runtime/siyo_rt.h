@@ -22,21 +22,38 @@ enum {
 };
 
 /*
- * An immutable Siyo string: WTF-8 bytes (UTF-8 that may hold lone
- * surrogates), not NUL-terminated. utf16_len is the length in UTF-16 code
- * units, or -1 until computed. Siyo's null string is a NULL pointer.
- * The IR emits literals as { i32 1, i32 <utf16 length>, i64 <byte length>, [n x i8] }.
+ * The bytes behind runtime strings: capacity, how many bytes are in use, and
+ * the bytes themselves. Bytes below the used mark never change, so several
+ * headers can share one buffer; only the header ending exactly at the used
+ * mark may append past it (see siyo_rt_str_concat).
+ */
+typedef struct SiyoBuf {
+    int64_t cap;
+    int64_t used;
+    char bytes[];
+} SiyoBuf;
+
+/*
+ * An immutable Siyo string: a header pointing at WTF-8 bytes (UTF-8 that may
+ * hold lone surrogates), not NUL-terminated. utf16_len is the length in UTF-16
+ * code units, or -1 until computed. buf is the buffer data lies in, or NULL
+ * for a literal, whose bytes are a constant of their own. Siyo's null string
+ * is a NULL pointer. The IR emits literals as
+ * { i32 1, i32 <utf16 length>, i64 <byte length>, ptr <bytes>, ptr null }.
  */
 typedef struct SiyoStr {
     uint32_t tag;
     int32_t utf16_len;
     int64_t len;
-    char bytes[];
+    const char *data;
+    struct SiyoBuf *buf;
 } SiyoStr;
 
 _Static_assert(offsetof(SiyoStr, utf16_len) == 4, "SiyoStr layout must match the IR");
 _Static_assert(offsetof(SiyoStr, len) == 8, "SiyoStr layout must match the IR");
-_Static_assert(offsetof(SiyoStr, bytes) == 16, "SiyoStr layout must match the IR");
+_Static_assert(offsetof(SiyoStr, data) == 16, "SiyoStr layout must match the IR");
+_Static_assert(offsetof(SiyoStr, buf) == 24, "SiyoStr layout must match the IR");
+_Static_assert(sizeof(SiyoStr) == 32, "SiyoStr layout must match the IR");
 
 /* Lowest stack address a Siyo function may start at; set on the program thread. */
 extern uint64_t siyo_rt_stack_limit;
@@ -62,6 +79,10 @@ _Bool siyo_rt_str_eq(const SiyoStr *a, const SiyoStr *b);
  * a + b, as Java's StringBuilder appends: a null operand reads as "null". A
  * lone high surrogate ending a and a lone low surrogate starting b become one
  * 4-byte sequence, as their UTF-16 code units would form one code point.
+ * Always returns a new header. When a ends at its buffer's used mark, no
+ * surrogates join and b fits, b's bytes are appended there in place;
+ * otherwise both are copied into a fresh buffer of twice the total size, so
+ * repeated appends are amortised linear.
  */
 SiyoStr *siyo_rt_str_concat(const SiyoStr *a, const SiyoStr *b);
 /* String.valueOf: decimal for int and long, "true"/"false" for bool. */

@@ -8,9 +8,9 @@ package siyollvm.ir;
  * {@code siyo_rt_stack_limit} before it does.
  *
  * <p>A Siyo string is a pointer to the runtime's {@code SiyoStr},
- * {@code { i32 tag, i32 utf16 length, i64 byte length, [n x i8] bytes }}, or
- * null for Siyo's null. C {@code _Bool} crosses the boundary as
- * {@code zeroext i1}.
+ * {@code { i32 tag, i32 utf16 length, i64 byte length, ptr data, ptr buffer }}
+ * (the buffer is null for a literal), or null for Siyo's null. C {@code _Bool}
+ * crosses the boundary as {@code zeroext i1}.
  */
 final class RuntimeIr {
     private RuntimeIr() {}
