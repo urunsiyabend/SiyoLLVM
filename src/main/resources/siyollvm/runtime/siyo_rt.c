@@ -119,10 +119,9 @@ static int64_t siyo_rt_count_units(const unsigned char *bytes, int64_t len) {
     return units;
 }
 
-/* UTF-16 length of s. */
+/* UTF-16 length of s, as recorded when it was made. */
 static int64_t siyo_rt_str_utf16_len(const SiyoStr *s) {
-    if (s->utf16_len >= 0) return s->utf16_len;
-    return siyo_rt_count_units((const unsigned char *)s->data, s->len);
+    return s->utf16_len;
 }
 
 /* The surrogate a 3-byte WTF-8 sequence at p encodes, or 0 if it is none. */
@@ -556,25 +555,37 @@ SiyoStr *siyo_rt_str_trim(const SiyoStr *s) {
     return siyo_rt_str_header(s->data + start, end - start, units, s->buf);
 }
 
-/* The C.UTF-8 locale for case mapping, made once and kept; (locale_t)0 if unavailable. */
+/* The locale case mapping uses. Only a test build overrides it, with a name
+   newlocale cannot load, to reach the missing-locale error below. */
+#ifndef SIYO_RT_CASE_LOCALE
+#define SIYO_RT_CASE_LOCALE "C.UTF-8"
+#endif
+
+/* The case-mapping locale, made once and kept; (locale_t)0 if unavailable. */
 static locale_t siyo_rt_case_locale(void) {
     static locale_t locale;
     static _Bool made;
     if (!made) {
         made = 1;
-        locale = newlocale(LC_CTYPE_MASK, "C.UTF-8", (locale_t)0);
+        locale = newlocale(LC_CTYPE_MASK, SIYO_RT_CASE_LOCALE, (locale_t)0);
     }
     return locale;
 }
 
+/* cp mapped to upper or lower case. ASCII and lone surrogates need no locale;
+   any other code point does, and without it the program stops rather than
+   leave the code point unmapped. */
 static uint32_t siyo_rt_map_case(uint32_t cp, _Bool upper) {
     if (cp >= 0xD800 && cp <= 0xDFFF) return cp;
-    locale_t locale = siyo_rt_case_locale();
-    if (locale == (locale_t)0) {
-        /* Without the locale only ASCII letters change. */
+    if (cp < 0x80) {
         if (upper && cp >= 'a' && cp <= 'z') return cp - 32;
         if (!upper && cp >= 'A' && cp <= 'Z') return cp + 32;
         return cp;
+    }
+    locale_t locale = siyo_rt_case_locale();
+    if (locale == (locale_t)0) {
+        siyo_rt_fail("SiyoLLVM runtime: toUpper/toLower of non-ASCII text needs the " SIYO_RT_CASE_LOCALE
+                " locale, which is not available\n");
     }
     return (uint32_t)(upper ? towupper_l((wint_t)cp, locale) : towlower_l((wint_t)cp, locale));
 }

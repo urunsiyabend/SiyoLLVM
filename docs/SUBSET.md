@@ -103,9 +103,15 @@ array); `main`/`init` with parameters or a return value.
 - `toInt(long)` keeps the low 32 bits; `toLong(int)` widens.
 - `toUpper`/`toLower` map each code point with glibc's `towupper`/`towlower`
   in the `C.UTF-8` locale (whatever the program's locale), plus Java's
-  `ß` → `SS` and `İ` → `i̇`. If `C.UTF-8` cannot be loaded, the
-  `towupper`/`towlower` mapping covers only ASCII letters; `ß` and `İ` still
-  map as above.
+  `ß` → `SS` (toUpper) and `İ` → `i̇` (toLower). ASCII letters, lone
+  surrogates and those two special cases are mapped without the locale. Any
+  other non-ASCII code point needs it: if `C.UTF-8` cannot be loaded, the
+  program stops with `SiyoLLVM runtime: toUpper/toLower of non-ASCII text
+  needs the C.UTF-8 locale, which is not available` on stderr and exit status
+  1, after flushing stdout, instead of leaving the text unmapped. (The glibc
+  2.43 SiyoLLVM is tested on loads `C.UTF-8` even with `LOCPATH` at an empty
+  directory, so there this path is reached only by a test build of the
+  runtime; see `RuntimeBuildNativeTest`.)
 - A null string (a global read before its initialiser) passed to a string
   builtin or ordered with `<` etc. raises `java.lang.NullPointerException`.
 

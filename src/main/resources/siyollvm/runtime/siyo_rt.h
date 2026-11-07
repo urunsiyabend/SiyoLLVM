@@ -35,8 +35,9 @@ typedef struct SiyoBuf {
 
 /*
  * An immutable Siyo string: a header pointing at WTF-8 bytes (UTF-8 that may
- * hold lone surrogates), not NUL-terminated. utf16_len is the length in UTF-16
- * code units, or -1 until computed. buf is the buffer data lies in, or NULL
+ * hold lone surrogates), not NUL-terminated. utf16_len is the exact length in
+ * UTF-16 code units, always recorded when the header is made (by the IR for a
+ * literal, by the runtime otherwise) and never written afterwards. buf is the buffer data lies in, or NULL
  * for a literal, whose bytes are a constant of their own. Siyo's null string
  * is a NULL pointer. The IR emits literals as
  * { i32 1, i32 <utf16 length>, i64 <byte length>, ptr <bytes>, ptr null }.

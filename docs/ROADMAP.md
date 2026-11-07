@@ -43,6 +43,12 @@ string and int keys in insertion order, index read/write, `has`, `keys`,
 `for k in m`, `len`, `toString`. Aliasing (two names, one array), struct
 field mutation through a parameter, and initialisation-order tests.
 
+*Planned follow-up (from F1):* on non-ASCII strings, `substring`, `indexOf`
+and other index operations scan the WTF-8 bytes from the start of the string
+on every call, so a per-character loop over long non-ASCII input is quadratic.
+To be addressed (for example with a cached UTF-16 offset index) if the F5
+application needs it.
+
 **F4** — `import "x"` / `import "dir/x"` / `as` aliases resolved like
 `siyoc`; cross-module functions, globals, structs, enums and init order;
 `std/io` file functions on real files (Unicode paths, missing file error

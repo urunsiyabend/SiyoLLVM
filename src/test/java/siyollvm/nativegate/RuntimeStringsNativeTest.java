@@ -42,11 +42,11 @@ class RuntimeStringsNativeTest {
             declare void @siyo_rt_print_bool(i1 zeroext)
             declare void @siyo_rt_print_newline()
 
-            ; "a" + U+D83D, "\\uDE00" + "b" (UTF-16 length not computed), and both surrogates alone.
+            ; "a" + U+D83D, "\\uDE00" + "b", and both surrogates alone.
             @high.b = private constant [4 x i8] c"a\\ED\\A0\\BD"
             @high = private constant { i32, i32, i64, ptr, ptr } { i32 1, i32 2, i64 4, ptr @high.b, ptr null }, align 8
             @low.b = private constant [4 x i8] c"\\ED\\B8\\80b"
-            @low = private constant { i32, i32, i64, ptr, ptr } { i32 1, i32 -1, i64 4, ptr @low.b, ptr null }, align 8
+            @low = private constant { i32, i32, i64, ptr, ptr } { i32 1, i32 2, i64 4, ptr @low.b, ptr null }, align 8
             @high.only.b = private constant [3 x i8] c"\\ED\\A0\\BD"
             @high.only = private constant { i32, i32, i64, ptr, ptr } { i32 1, i32 1, i64 3, ptr @high.only.b, ptr null }, align 8
             @low.only.b = private constant [3 x i8] c"\\ED\\B8\\80"
@@ -156,7 +156,7 @@ class RuntimeStringsNativeTest {
                 4
                 4
                 ?b
-                -1
+                2
                 4
                 """, stdout);
     }
