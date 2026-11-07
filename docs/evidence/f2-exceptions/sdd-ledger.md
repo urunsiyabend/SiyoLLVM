@@ -39,3 +39,4 @@ Task 3: minor (deferred→final wave): SUBSET try-expression rejected-position s
 Task 3: complete (commits 82ec364..3366c7d, review clean)
 Final review: 4 Important (untrue SUBSET VerifyError claim, payload-text corpus gap, try-expr CFG corpus gaps, stale README) + minors; ONE fix wave 0c1c449; scoped re-review: all addressed
 Final gates at 0c1c449: java 237+2, native 325+2, requires-clang OK, bounded receipts returncode 0 / oom_kill_delta 0
+Published: 4f934b2 (remote verified), CI run 42333036738 success (Java + Native jobs)
