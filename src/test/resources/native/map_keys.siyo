@@ -1,0 +1,67 @@
+// Key identity: int and long keys are distinct; equal strings built
+// differently match; NUL and non-ASCII keys; null keys and null values;
+// array and struct keys by content; map keys by identity.
+struct P { x: int }
+
+fn main() {
+    mut m: Map<any, string> = {}
+    m[1] = "int"
+    m[toLong(1)] = "long"
+    m[true] = "bool"
+    m["1"] = "string"
+    println(m)
+    println(len(m))
+    println(m[1])
+    println(m[1L])
+    println(m["1"])
+    m[1] = "int2"
+    println(m)
+
+    imut a = "ab"
+    mut s: Map<string, int> = {}
+    s[a + "c"] = 1
+    println(s["a" + "bc"])
+    println(s.has(substring("xabc", 1, 4)))
+    s["é\0ü"] = 2
+    s["日本"] = 3
+    s[""] = 4
+    println(s["é\0ü"])
+    println(s["日本"])
+    println(s[""])
+    println(s)
+
+    mut n: Map<any, any> = {}
+    n[null] = "null key"
+    n["v"] = null
+    println(n)
+    println(n[null])
+    println(n.has(null))
+    println(n.has("v"))
+    println(n.get("v"))
+    println(n.has("w"))
+    println(n.get("w"))
+    n.remove(null)
+    println(n)
+
+    mut big: Map<int, string> = {}
+    big[1000] = "a"
+    imut k = 999 + 1
+    println(big[k])
+    mut lk: Map<long, int> = {}
+    lk[5000000000L] = 1
+    println(lk[5000000000L])
+
+    mut ak: Map<any, string> = {}
+    ak[[1, 2]] = "array"
+    println(ak[[1, 2]])
+    println(ak[[2, 1]])
+    ak[P { x: 1 }] = "struct"
+    println(ak[P { x: 1 }])
+    println(ak[P { x: 2 }])
+    imut k1 = {"a": 1}
+    imut k2 = {"a": 1}
+    ak[k1] = "map"
+    println(ak[k1])
+    println(ak[k2])
+    println(len(ak))
+}

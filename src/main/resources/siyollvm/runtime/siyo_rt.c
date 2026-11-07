@@ -902,27 +902,36 @@ static const char *siyo_rt_java_class_of(const void *value) {
     case SIYO_TAG_LONG: return "java.lang.Long";
     case SIYO_TAG_BOOL: return "java.lang.Boolean";
     case SIYO_TAG_ARRAY: return "codeanalysis.SiyoArray";
+    case SIYO_TAG_MAP: return "codeanalysis.SiyoMap";
     case SIYO_TAG_STRUCT: return "codeanalysis.SiyoObject";
     default: siyo_rt_fail("SiyoLLVM runtime: a value has an unknown type tag\n");
     }
 }
 
-/* checkcast failing, worded as HotSpot does: every target is a java.base
-   class, and so is every value's class but SiyoArray and SiyoObject, which
-   the reference loads from the class path. */
+/* Where HotSpot says a class comes from: the reference loads codeanalysis.*
+   (SiyoArray, SiyoObject, SiyoMap) from the class path; the rest are
+   java.base classes. */
+static _Bool siyo_rt_app_class(const char *java_class) {
+    return strncmp(java_class, "codeanalysis.", 13) == 0;
+}
+
+static const char *siyo_rt_module_of(const char *java_class) {
+    return siyo_rt_app_class(java_class) ? "unnamed module of loader 'app'"
+            : "module java.base of loader 'bootstrap'";
+}
+
+/* checkcast failing, worded as HotSpot does. */
 static void siyo_rt_class_cast(const void *value, const char *target) {
     const char *from = siyo_rt_java_class_of(value);
-    uint32_t tag = siyo_rt_tag_of(value);
-    if (tag == SIYO_TAG_ARRAY || tag == SIYO_TAG_STRUCT) {
+    if (siyo_rt_app_class(from) != siyo_rt_app_class(target)) {
         siyo_rt_raise_format("java.lang.ClassCastException",
-                "class %s cannot be cast to class %s (%s is in unnamed module of loader 'app'; "
-                "%s is in module java.base of loader 'bootstrap')",
-                from, target, from, target);
+                "class %s cannot be cast to class %s (%s is in %s; %s is in %s)",
+                from, target, from, siyo_rt_module_of(from), target, siyo_rt_module_of(target));
         return;
     }
     siyo_rt_raise_format("java.lang.ClassCastException",
-            "class %s cannot be cast to class %s (%s and %s are in module java.base of loader 'bootstrap')",
-            from, target, from, target);
+            "class %s cannot be cast to class %s (%s and %s are in %s)",
+            from, target, from, target, siyo_rt_module_of(from));
 }
 
 /*
@@ -951,6 +960,18 @@ int32_t siyo_rt_unbox_int(const void *value) {
 int32_t siyo_rt_unbox_int_field(const void *value) {
     SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Integer.intValue()\" because the return value of "
             "\"java.util.Map.get(Object)\" is null");
+    return siyo_rt_unbox_int_or(value, &message);
+}
+
+int32_t siyo_rt_unbox_int_map_get(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Integer.intValue()\" because the return value of "
+            "\"codeanalysis.SiyoMap.get(Object)\" is null");
+    return siyo_rt_unbox_int_or(value, &message);
+}
+
+int32_t siyo_rt_unbox_int_map_get_str(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Integer.intValue()\" because the return value of "
+            "\"codeanalysis.SiyoMap.get(String)\" is null");
     return siyo_rt_unbox_int_or(value, &message);
 }
 
@@ -991,6 +1012,18 @@ _Bool siyo_rt_unbox_bool_field(const void *value) {
     return siyo_rt_unbox_bool_or(value, &message);
 }
 
+_Bool siyo_rt_unbox_bool_map_get(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Boolean.booleanValue()\" because the return value of "
+            "\"codeanalysis.SiyoMap.get(Object)\" is null");
+    return siyo_rt_unbox_bool_or(value, &message);
+}
+
+_Bool siyo_rt_unbox_bool_map_get_str(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Boolean.booleanValue()\" because the return value of "
+            "\"codeanalysis.SiyoMap.get(String)\" is null");
+    return siyo_rt_unbox_bool_or(value, &message);
+}
+
 const SiyoStr *siyo_rt_cast_str(const void *value) {
     if (value != NULL && siyo_rt_tag_of(value) != SIYO_TAG_STR) {
         siyo_rt_class_cast(value, "java.lang.String");
@@ -1013,6 +1046,14 @@ SiyoStruct *siyo_rt_cast_struct(const void *value) {
         return NULL;
     }
     return (SiyoStruct *)value;
+}
+
+SiyoMap *siyo_rt_cast_map(const void *value) {
+    if (value != NULL && siyo_rt_tag_of(value) != SIYO_TAG_MAP) {
+        siyo_rt_class_cast(value, "codeanalysis.SiyoMap");
+        return NULL;
+    }
+    return (SiyoMap *)value;
 }
 
 SiyoStruct *siyo_rt_cast_struct_arg(const void *value) {
@@ -1059,6 +1100,26 @@ static SiyoStr *siyo_rt_struct_to_string(const SiyoStruct *s) {
     return siyo_rt_str_concat(text, &close);
 }
 
+/* SiyoMap.toString: "{k: v, k2: w}", each key and value by String.valueOf. */
+static SiyoStr *siyo_rt_map_to_string(const SiyoMap *map) {
+    SIYO_RT_STATIC_STR(separator, ", ");
+    SIYO_RT_STATIC_STR(colon, ": ");
+    SIYO_RT_STATIC_STR(close, "}");
+    siyo_rt_check_stack();
+    SiyoStr *text = siyo_rt_str_from_bytes("{", 1, 1);
+    _Bool first = 1;
+    for (int32_t i = 0; i < map->used; i++) {
+        const SiyoMapEntry *e = &map->entries[i];
+        if (!e->live) continue;
+        if (!first) text = siyo_rt_str_concat(text, &separator);
+        first = 0;
+        text = siyo_rt_str_concat(text, siyo_rt_any_to_string(e->key));
+        text = siyo_rt_str_concat(text, &colon);
+        text = siyo_rt_str_concat(text, siyo_rt_any_to_string(e->value));
+    }
+    return siyo_rt_str_concat(text, &close);
+}
+
 SiyoStr *siyo_rt_any_to_string(const void *value) {
     if (value == NULL) return siyo_rt_str_from_bytes("null", 4, 4);
     switch (siyo_rt_tag_of(value)) {
@@ -1068,6 +1129,7 @@ SiyoStr *siyo_rt_any_to_string(const void *value) {
     case SIYO_TAG_BOOL: return siyo_rt_str_from_bool(siyo_rt_box_value(value) != 0);
     case SIYO_TAG_ARRAY: return siyo_rt_array_to_string(value);
     case SIYO_TAG_STRUCT: return siyo_rt_struct_to_string(value);
+    case SIYO_TAG_MAP: return siyo_rt_map_to_string(value);
     default: siyo_rt_java_class_of(value); return NULL;
     }
 }
@@ -1108,12 +1170,13 @@ _Bool siyo_rt_any_equals(const void *a, const void *b) {
     case SIYO_TAG_BOOL: return siyo_rt_box_value(a) == siyo_rt_box_value(b);
     case SIYO_TAG_ARRAY: return siyo_rt_array_equals(a, b);
     case SIYO_TAG_STRUCT: return siyo_rt_struct_equals(a, b);
+    case SIYO_TAG_MAP: return 0; /* Object.equals: a == b was checked above */
     default: siyo_rt_java_class_of(a); return 0;
     }
 }
 
 /* Prints a string or a boxed value without allocating, so printing those in a
-   loop does not grow memory; an array or a struct is built into one string first, as
+   loop does not grow memory; an array, a struct or a map is built into one string first, as
    PrintStream.print(Object) does, so a failure prints nothing of it. */
 void siyo_rt_print_any(const void *value) {
     if (value == NULL) {
@@ -1127,6 +1190,7 @@ void siyo_rt_print_any(const void *value) {
     case SIYO_TAG_BOOL: siyo_rt_print_bool(siyo_rt_box_value(value) != 0); return;
     case SIYO_TAG_ARRAY: siyo_rt_print_str(siyo_rt_array_to_string(value)); return;
     case SIYO_TAG_STRUCT: siyo_rt_print_str(siyo_rt_struct_to_string(value)); return;
+    case SIYO_TAG_MAP: siyo_rt_print_str(siyo_rt_map_to_string(value)); return;
     default: siyo_rt_java_class_of(value); return;
     }
 }
@@ -1406,4 +1470,189 @@ void siyo_rt_struct_set(SiyoStruct *s, const SiyoStr *name, void *value) {
 SiyoStr *siyo_rt_type_name(const void *value) {
     if (value != NULL && siyo_rt_tag_of(value) == SIYO_TAG_STRUCT) return (SiyoStr *)((const SiyoStruct *)value)->type_name;
     return siyo_rt_str_from_bytes("", 0, 0);
+}
+
+/* --- maps ------------------------------------------------------------------ */
+
+static uint32_t siyo_rt_mix(uint64_t x) {
+    x ^= x >> 33;
+    x *= UINT64_C(0xff51afd7ed558ccd);
+    x ^= x >> 33;
+    return (uint32_t)x;
+}
+
+/*
+ * A hash consistent with siyo_rt_any_equals: a string by its bytes (equal
+ * strings have the same canonical bytes), a box by its type and value, an
+ * array by its elements in order, a struct by its fields in any order (type
+ * name ignored), a map by identity. As in Java, a key mutated while in a map
+ * is not found again by its new contents.
+ */
+static uint32_t siyo_rt_any_hash(const void *value) {
+    if (value == NULL) return 0;
+    uint32_t tag = siyo_rt_tag_of(value);
+    switch (tag) {
+    case SIYO_TAG_STR: {
+        const SiyoStr *s = value;
+        uint32_t h = 2166136261u;
+        for (int64_t i = 0; i < s->len; i++) {
+            h ^= (unsigned char)s->data[i];
+            h *= 16777619u;
+        }
+        return h;
+    }
+    case SIYO_TAG_INT:
+    case SIYO_TAG_LONG:
+    case SIYO_TAG_BOOL: return siyo_rt_mix((uint64_t)siyo_rt_box_value(value) * 8 + tag);
+    case SIYO_TAG_ARRAY: {
+        const SiyoArray *a = value;
+        siyo_rt_check_stack();
+        uint32_t h = 1;
+        for (int32_t i = 0; i < a->len; i++) h = 31 * h + siyo_rt_any_hash(a->items[i]);
+        return h;
+    }
+    case SIYO_TAG_STRUCT: {
+        const SiyoStruct *st = value;
+        siyo_rt_check_stack();
+        uint32_t h = 0;
+        for (int32_t i = 0; i < st->count; i++) h += siyo_rt_any_hash(st->names[i]) ^ siyo_rt_any_hash(st->values[i]);
+        return h;
+    }
+    case SIYO_TAG_MAP: return siyo_rt_mix((uint64_t)(uintptr_t)value);
+    default: siyo_rt_java_class_of(value); return 0;
+    }
+}
+
+SiyoMap *siyo_rt_map_new(void) {
+    SiyoMap *map = siyo_rt_alloc(sizeof(SiyoMap));
+    map->tag = SIYO_TAG_MAP;
+    map->size = 0;
+    map->used = 0;
+    map->cap = 0;
+    map->entries = NULL;
+    map->slots = NULL;
+    map->slot_count = 0;
+    return map;
+}
+
+/* The entry number holding key, or -1. Dead entries never match. */
+static int32_t siyo_rt_map_find(const SiyoMap *map, const void *key, uint32_t hash) {
+    if (map->slot_count == 0) return -1;
+    uint32_t mask = (uint32_t)map->slot_count - 1;
+    for (uint32_t i = hash & mask;; i = (i + 1) & mask) {
+        int32_t n = map->slots[i];
+        if (n < 0) return -1;
+        const SiyoMapEntry *e = &map->entries[n];
+        if (e->live && e->hash == hash && siyo_rt_any_equals(e->key, key)) return n;
+    }
+}
+
+static void siyo_rt_map_index(SiyoMap *map, int32_t n) {
+    uint32_t mask = (uint32_t)map->slot_count - 1;
+    uint32_t i = map->entries[n].hash & mask;
+    while (map->slots[i] >= 0) i = (i + 1) & mask;
+    map->slots[i] = n;
+}
+
+/* Makes room for one more entry: drops the dead entries, keeping the order,
+   and doubles the room when that frees too little; then rebuilds the index. */
+static void siyo_rt_map_grow(SiyoMap *map) {
+    int32_t live = 0;
+    for (int32_t i = 0; i < map->used; i++) {
+        if (map->entries[i].live) map->entries[live++] = map->entries[i];
+    }
+    map->used = live;
+    if (live >= map->cap / 2) {
+        if (map->cap >= INT32_MAX / 4) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+        int32_t cap = map->cap < 8 ? 8 : map->cap * 2;
+        SiyoMapEntry *entries = realloc(map->entries, (size_t)cap * sizeof(SiyoMapEntry));
+        if (entries == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+        map->entries = entries;
+        map->cap = cap;
+        map->slot_count = cap * 2;
+        free(map->slots);
+        map->slots = siyo_rt_alloc((size_t)map->slot_count * sizeof(int32_t));
+    }
+    for (int32_t i = 0; i < map->slot_count; i++) map->slots[i] = -1;
+    for (int32_t i = 0; i < map->used; i++) siyo_rt_map_index(map, i);
+}
+
+void siyo_rt_map_insert(SiyoMap *map, void *key, void *value) {
+    uint32_t hash = siyo_rt_any_hash(key);
+    int32_t n = siyo_rt_map_find(map, key, hash);
+    if (n >= 0) {
+        map->entries[n].value = value;
+        return;
+    }
+    if (map->used == map->cap) siyo_rt_map_grow(map);
+    n = map->used++;
+    map->entries[n] = (SiyoMapEntry){ key, value, hash, 1 };
+    siyo_rt_map_index(map, n);
+    map->size++;
+}
+
+void *siyo_rt_map_get(SiyoMap *map, void *key) {
+    if (map == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    int32_t n = siyo_rt_map_find(map, key, siyo_rt_any_hash(key));
+    return n < 0 ? NULL : map->entries[n].value;
+}
+
+void siyo_rt_map_put(SiyoMap *map, void *key, void *value) {
+    if (map == NULL) {
+        siyo_rt_null_pointer();
+        return;
+    }
+    siyo_rt_map_insert(map, key, value);
+}
+
+_Bool siyo_rt_map_has(SiyoMap *map, void *key) {
+    if (map == NULL) {
+        siyo_rt_null_pointer();
+        return 0;
+    }
+    return siyo_rt_map_find(map, key, siyo_rt_any_hash(key)) >= 0;
+}
+
+/* The entry stays in the index, dead, until the next rebuild. */
+void *siyo_rt_map_remove(SiyoMap *map, void *key) {
+    if (map == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    int32_t n = siyo_rt_map_find(map, key, siyo_rt_any_hash(key));
+    if (n < 0) return NULL;
+    SiyoMapEntry *e = &map->entries[n];
+    void *old = e->value;
+    e->live = 0;
+    e->key = NULL;
+    e->value = NULL;
+    map->size--;
+    return old;
+}
+
+int32_t siyo_rt_map_size(SiyoMap *map) {
+    if (map == NULL) {
+        siyo_rt_null_pointer();
+        return 0;
+    }
+    return map->size;
+}
+
+int32_t siyo_rt_map_len(SiyoMap *map) {
+    return map == NULL ? 0 : map->size;
+}
+
+SiyoArray *siyo_rt_map_keys(SiyoMap *map) {
+    if (map == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    SiyoArray *keys = siyo_rt_array_new(map->size);
+    for (int32_t i = 0; i < map->used; i++) {
+        if (map->entries[i].live) siyo_rt_array_append(keys, map->entries[i].key);
+    }
+    return keys;
 }

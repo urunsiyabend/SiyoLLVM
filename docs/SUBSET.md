@@ -15,7 +15,7 @@ byte.
 
 | Area | Accepted |
 |---|---|
-| Types | `int` (32-bit), `long` (64-bit), `bool`, `string`, arrays of these (`int[]`, `Array<string>`, `any[]`, and nested arrays written as unannotated literals such as `[[1, 2], [3]]`), structs, `any` (`object`) holding one of those or null |
+| Types | `int` (32-bit), `long` (64-bit), `bool`, `string`, arrays of these (`int[]`, `Array<string>`, `any[]`, and nested arrays written as unannotated literals such as `[[1, 2], [3]]`), structs, maps (`Map<K, V>`, `map`), `any` (`object`) holding one of those or null |
 | Literals | int, long (`5L`, or an int literal too large for `int`), `true`/`false`, strings (escapes `\n \t \r \\ \" \0 \$ \{ \}`, triple-quoted strings), `null` |
 | Variables | `mut`/`imut` locals and parameters; file-level globals |
 | Arithmetic | `+ - * / %` on int and long, and on an int mixed with a long (the int widens) |
@@ -25,15 +25,16 @@ byte.
 | Strings | `+` joining a string with an int, long, bool or string (either side, so `1 + 2 + "x"` is `3x`); interpolation `"$x"`, `"${e}"`; `s += v`; `toString(x)` on every accepted type; `s[i]` (Java's `charAt`, as a one-unit string) |
 | Unary | `+`, `-` on int |
 | Assignment | `=`, `+= -= *= /=` |
-| Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `for x in …` over an array (including `range(a, b)` and `split(s, d)`) or a string (its UTF-16 units), `break`, `continue`, `return` |
+| Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `for x in …` over an array (including `range(a, b)` and `split(s, d)`), a string (its UTF-16 units) or a map (its keys), `break`, `continue`, `return` |
 | Exceptions | `throw v` of any accepted value (an int, long or bool is boxed); `error(msg)`, which throws its argument; `try { … } catch e { … }` statements, nested anywhere (in loops, in other try and catch bodies), with `break`, `continue` and `return` inside both bodies; the catch variable untyped (`any`) or typed `catch e: int` / `long` / `bool` / `string` / `any` (a checked cast, as for an `any` read); `try` expressions (`imut v = try { parseLong(s) } catch e { 0L - 1L }`) as a statement, a declaration's or assignment's value, a condition, a returned or thrown value, or the first argument of a function or `toString` (also nested: `imut s = f(g(try { … } catch e { … }))`) |
 | Arrays | literals (`[1, 2]`, `["a"]`, `[[1], [2]]`; an empty literal `[]` typed by its declaration, `mut xs: int[] = []`); as variables, globals, parameters, return values, elements of other arrays, `any` values, thrown values, catch variables (`catch e: int[]`) and `try` expression values; `xs[i]` (also on an `any` holding an array, as the JVM backend's checkcast to `List`), `xs[i] = v` and `xs[i] += v`; `len(xs)`, `push(xs, v)`, `pop(xs)`, `removeAt(xs, i)` and their method forms (`xs.push(v)`); printing, `toString`, interpolation (`"$xs"`), `+` with a string when the array is held in an `any`; `==`/`!=` between an `any` holding an array and any value (`List.equals`); `range(a, b)` and `split(s, d)`, which make new arrays; `for x in xs` (the binder's desugaring into `len` and indexing) |
 | Structs | `struct` declarations; literals (`Point { y: 2, x: 1 }`, fields in any order, some left out); field reads `p.x` (also nested, `b.p.x`, and on array elements, `ps[0].x`), writes `p.x = v` and compound writes `p.x += v`; struct values as variables, globals, parameters, return values, array elements, fields of other structs, `any` values, thrown values and catch variables (`catch e: Point`); printing, `toString`, interpolation; `==`/`!=` against `null` or an `any` (between two values of struct type it is a bind error on the reference, `Binary operator '==' is not defined for types <class codeanalysis.SiyoStruct> and <class codeanalysis.SiyoStruct>`, and so here too; hold one in an `any` to compare); fields of the types above; `typeName(x)`; a field write used as a value (`println(p.x = 5)` prints 5) |
+| Maps | literals `{"a": 1, 2: true}` with keys and values of every accepted type, `{}` typed by its declaration (`mut m: Map<string, int> = {}`), and `map()`; as variables, globals, parameters, return values, array elements, struct fields, map values (`Map<string, Map<string, int>>`), `any` values (read back with a checked cast to `codeanalysis.SiyoMap`) and thrown values; `m[k]` (null for a missing key), `m[k] = v`, `m[k] += v`; the methods `m.get(k)`, `m.set(k, v)`, `m.has(k)`, `m.remove(k)`, `m.size()`, `m.keys()`; `len(m)`; `for k in m` (over a snapshot of the keys, `$mapKeys`); printing, `toString`, interpolation; `==`/`!=` between an `any` and a map (identity, as `SiyoMap` does not override `equals`; between two values of map type it is a bind error on the reference); `typeName(m)` is `""`. A read through a map whose value type is not declared (`imut m = {"a": [1]}`) is an `any`, so `push(m["a"], 2)` and `m["a"] + 1` are rejected as for any other `any`; declare the map's type (`Map<string, int[]>`) |
 | `impl` methods | `impl Point { … }` blocks: instance methods (first parameter `self`) called as `p.m(a)` (also on array elements, `ps[0].m()`, and on call results, `Point.new(1, 2).m()`), static methods called as `Point.new(1, 2)`; each is a function named `Point.m` taking `self` first, with the parameter and return types above; methods calling each other on `self`, recursion, throwing to the caller. Method calls work only where the binder can tell which struct the receiver is: a variable initialised from a call or a literal, a field, an array element, a for-in variable or a catch variable (`catch e: Point`). Where it cannot (`mut q: Point = null` then `q = mk()`, or `mut q: Point = a` with `a: any`) the call binds as Java dynamic dispatch and is rejected with `method calls on a struct whose type the binder cannot tell are not supported` |
 | Enums | `enum Color { Red, Green = 5, Blue }`: each member is an `int` constant (`Color.Red` is 0; a member without a value is the previous one plus 1, so `Blue` is 6; negative values allowed), usable wherever an int is: comparisons, conditions, arithmetic, arrays, struct fields, `any` values. An enum's name is not a type on the reference (`c: Color` is a bind error, `Type 'Color' does not exist`), nor is it a value (`Color` alone: `Name 'Color' does not exist`); `typeName(Color.Red)` is `""` |
 | `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
-| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any`, arrays and structs included); `typeName(x)`; `len`, `push`, `pop`, `removeAt` on arrays; `range(a, b)`; on strings `len`, `s[i]`, `split`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
+| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any`, arrays, structs and maps included); `typeName(x)`; `len`, `push`, `pop`, `removeAt` on arrays; `len` and `map()` for maps; `range(a, b)`; on strings `len`, `s[i]`, `split`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
 | Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
 
 ## Rejected
@@ -43,14 +44,17 @@ and exit status 1, with no output file. This holds anywhere in the file:
 in functions that are never called, and in code after a `return`.
 
 `float` values (also as an operand of `+` on strings or in `"$x"`);
-maps, sets; index assignment, `push`, `pop`
+sets (`#{…}`, `set()`, `for … in` over a set); the `SiyoMap` methods other than
+`get`, `set`, `has`, `remove`, `size` and `keys` (`values`, `increment`,
+`getInt`, `getLong`, `getStr`, `getBool`: `map method <name>() is not
+supported`); index assignment, `push`, `pop`
 and `removeAt` through an `any` value (`push(a[0], 1)` where `a` is
 `any[]`: the reference uses `invokeinterface`, which raises
 `IncompatibleClassChangeError` for a non-list; SiyoLLVM does not reproduce
 that error); `sort`, `map`, `filter`, `reduce` and `forEach` (they take
-lambdas); `for … in` over an `any`, a map, a set or a channel; sum types,
+lambdas); `for … in` over an `any`, a set or a channel; sum types,
 interfaces (so `impl Named for Point` is a bind error, `Type 'Named' does not exist`), actors (even when declared but unused);
-fields of a type outside the subset (`float`, maps, …); `match` and `if` expressions; lambdas, closures and nested
+fields of a type outside the subset (`float`, sets, …); `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; a `try` expression
 anywhere else, or one whose body ends in a call with no value
 (`try { println(x) } catch e { … }`; the reference fails to compile it).
@@ -203,6 +207,25 @@ returning one from a function returning `any` (the reference fails with
   `Other { x: 1 }`). `typeName(x)` is a struct's name, and `""` for any
   other value. A struct that contains itself prints until the stack runs
   out (`java.lang.StackOverflowError`, as for arrays).
+- A map is a reference too, as on the JVM, where it is a `SiyoMap` over a
+  `LinkedHashMap`: keys and values are `any` values (an int, long or bool
+  boxed), kept in insertion order, which is the order `m.keys()`, `for k in
+  m` and printing (`{b: 3, a: 1}`, each key and value by `String.valueOf`)
+  follow. Setting a key that is present keeps its place; removing a key and
+  setting it again appends it. Keys compare as `Objects.equals` does: `1`
+  and `1L` are different keys, equal strings are one key however they were
+  built, `null` is a key like any other, arrays compare by elements and
+  structs by fields; a map key is only equal to itself. A missing key reads
+  as null (`m.has(k)` tells a missing key from a null value); read into an
+  `int` or `bool` it raises `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "codeanalysis.SiyoMap.get(Object)" is null`
+  (`get(String)` for `m.get(k)` with a string key, the overload the binder
+  picks; into a `long`, `… "java.lang.Long.longValue()" because "value" is
+  null`), also in `m[k] += 1`. A value of the wrong type raises
+  `ClassCastException`. `for k in m` iterates over a fresh array of the keys
+  taken when the loop starts, so keys set or removed in the body do not
+  change which keys it visits. `len(m)` of a null map is 0; every other use
+  of a null map raises `NullPointerException` (see Deviations). The table is
+  never freed; it doubles when full, and removed entries are dropped then.
 - `for x in xs` is the binder's index loop: it walks the array the
   expression named when the loop began (assigning the variable another
   array does not change that), and reads `len` before every iteration, so
@@ -279,6 +302,7 @@ returning one from a function returning `any` (the reference fails with
 | A `bool`/`long`/`string` function falling off its end without `return` | `VerifyError` at class load (`int` functions return 0) | returns the type's default (`false`, `0L`, null) |
 | `fn main() -> int` | crashes with `NoSuchMethodError` | rejected at compile time |
 | A null array (from an `any`, or a global read before its initialiser) indexed, assigned into or passed to `len`/`push`/`pop`/`removeAt` | `java.lang.NullPointerException: Cannot invoke "java.util.List.get(int)" because "<local0>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` |
+| A null map used as a receiver (`m[k]`, `m[k] = v`, `m.get(k)` and the other methods, `for k in m`) | `java.lang.NullPointerException: Cannot invoke "codeanalysis.SiyoMap.get(Object)" because "<local0>" is null` (the method and overload called; a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` |
 | A null struct (from a variable or field holding null) whose field is read or written | `java.lang.NullPointerException: Cannot invoke "java.util.Map.get(Object)" because "<local3>" is null` (`Map.put(Object, Object)` for a write; a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` |
 | Null `any` or array element (other than the literal `null`) read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field, `"java.util.List.get(int)"` for an element, `"java.util.List.set(int, Object)"` for the element an assignment replaced) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part; a catch variable receives that shorter message |
 | String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` instead of the helpful message |

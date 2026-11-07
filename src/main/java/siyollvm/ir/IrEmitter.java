@@ -5,6 +5,7 @@ import codeanalysis.FunctionSymbol;
 import codeanalysis.LabelSymbol;
 import codeanalysis.ParameterSymbol;
 import codeanalysis.SiyoArray;
+import codeanalysis.SiyoMap;
 import codeanalysis.SiyoStruct;
 import codeanalysis.VariableSymbol;
 import codeanalysis.binding.BoundArrayLiteralExpression;
@@ -20,8 +21,10 @@ import codeanalysis.binding.BoundExpressionStatement;
 import codeanalysis.binding.BoundGotoStatement;
 import codeanalysis.binding.BoundIndexAssignmentExpression;
 import codeanalysis.binding.BoundIndexExpression;
+import codeanalysis.binding.BoundJavaMethodCallExpression;
 import codeanalysis.binding.BoundLabelStatement;
 import codeanalysis.binding.BoundLiteralExpression;
+import codeanalysis.binding.BoundMapLiteralExpression;
 import codeanalysis.binding.BoundMemberAccessExpression;
 import codeanalysis.binding.BoundMemberAssignmentExpression;
 import codeanalysis.binding.BoundReturnStatement;
@@ -80,6 +83,17 @@ import java.util.Map;
  * a read is narrowed to the type the binder gives it with the checked cast of
  * an any read. A struct declaration leaves only a placeholder statement.
  *
+ * <p>A map is a {@code ptr} to the runtime's {@code SiyoMap}, an
+ * insertion-ordered table of any keys and values like the JVM's
+ * {@code SiyoMap}: keys and values are boxed going in, and a read
+ * ({@code m[k]}, {@code m.get(k)}) is narrowed like an element read, except
+ * that unboxing a missing key's null into an int or bool raises the
+ * NullPointerException naming {@code SiyoMap.get}, as the JVM's does. The
+ * methods the validator accepts ({@code get}, {@code set}, {@code has},
+ * {@code remove}, {@code size}, {@code keys}) arrive as Java method calls on
+ * {@code SiyoMap} and are each one runtime call; {@code for k in m} arrives
+ * as the binder's loop over {@code $mapKeys(m)}, a fresh key array.
+ *
  * <p>Exceptions never unwind the native stack. A raise (a Siyo {@code throw}
  * or {@code error()}, or a runtime error) records a pending exception in the
  * runtime and returns normally; after every call that can raise (a Siyo
@@ -119,7 +133,17 @@ public final class IrEmitter {
     /** Whether the function's default-return handler ({@code unwind}) is used. */
     private boolean _unwindUsed;
 
-    private record Value(String ref, Class<?> type) {}
+    /**
+     * An emitted value. {@code nullOrigin}, for an any, names the
+     * {@code siyo_rt_unbox_*} variant to narrow it with when the JVM's
+     * NullPointerException message names where it came from (a map read),
+     * else null.
+     */
+    private record Value(String ref, Class<?> type, String nullOrigin) {
+        Value(String ref, Class<?> type) {
+            this(ref, type, null);
+        }
+    }
 
     private IrEmitter(LoweredProgram program) {
         _program = program;
@@ -457,6 +481,12 @@ public final class IrEmitter {
                 String unit = raisingCall("call ptr @siyo_rt_str_char_at(ptr " + target.ref() + ", i32 " + position.ref() + ")");
                 yield coerce(new Value(unit, String.class), index.getClassType());
             }
+            case BoundIndexExpression index when index.getTarget().getClassType() == SiyoMap.class -> {
+                Value target = requireType(expression(index.getTarget()), SiyoMap.class);
+                Value key = coerce(expression(index.getIndex()), Object.class);
+                String item = raisingCall("call ptr @siyo_rt_map_get(ptr " + target.ref() + ", ptr " + key.ref() + ")");
+                yield coerce(new Value(item, Object.class, "map_get"), index.getClassType());
+            }
             case BoundIndexExpression index -> {
                 // An erased target is checkcast to List first, as the JVM backend does.
                 Value target = coerce(expression(index.getTarget()), SiyoArray.class);
@@ -464,7 +494,22 @@ public final class IrEmitter {
                 String item = raisingCall("call ptr @siyo_rt_array_get(ptr " + target.ref() + ", i32 " + position.ref() + ")");
                 yield coerce(new Value(item, Object.class), index.getClassType());
             }
+            case BoundIndexAssignmentExpression assignment
+                    when assignment.getTarget().getClassType() == SiyoMap.class -> {
+                // Map.put; the expression's value is the value stored.
+                Value target = requireType(expression(assignment.getTarget()), SiyoMap.class);
+                Value key = coerce(expression(assignment.getIndex()), Object.class);
+                Value value = expression(assignment.getValue());
+                Value item = coerce(value, Object.class);
+                instructionNoResult("call void @siyo_rt_map_put(ptr " + target.ref() + ", ptr " + key.ref() + ", ptr "
+                        + item.ref() + ")");
+                checkPending();
+                yield value;
+            }
             case BoundIndexAssignmentExpression assignment -> indexAssignment(assignment);
+            case BoundMapLiteralExpression literal -> mapLiteral(literal);
+            case BoundJavaMethodCallExpression call when call.getTarget() != null
+                    && call.getTarget().getClassType() == SiyoMap.class -> mapMethod(call);
             case BoundStructLiteralExpression literal -> structLiteral(literal);
             case BoundMemberAccessExpression access -> {
                 Value target = requireType(expression(access.getTarget()), SiyoStruct.class);
@@ -500,6 +545,60 @@ public final class IrEmitter {
             instructionNoResult("call void @siyo_rt_array_append(ptr " + array + ", ptr " + item.ref() + ")");
         }
         return new Value(array, SiyoArray.class);
+    }
+
+    /**
+     * A new map, then each key and value, boxed, inserted in the literal's
+     * order (a repeated key keeps its first place and its last value). The
+     * map is not null, so the inserts cannot raise.
+     */
+    private Value mapLiteral(BoundMapLiteralExpression node) {
+        String map = instruction("call ptr @siyo_rt_map_new()");
+        List<BoundExpression> keys = node.getKeys();
+        List<BoundExpression> values = node.getValues();
+        for (int i = 0; i < keys.size(); i++) {
+            Value key = coerce(expression(keys.get(i)), Object.class);
+            Value value = coerce(expression(values.get(i)), Object.class);
+            instructionNoResult("call void @siyo_rt_map_insert(ptr " + map + ", ptr " + key.ref() + ", ptr "
+                    + value.ref() + ")");
+        }
+        return new Value(map, SiyoMap.class);
+    }
+
+    /**
+     * A SiyoMap method the validator accepted. A string key makes the binder
+     * choose the {@code get(String)} overload, which the JVM's message for an
+     * unboxed null names; the other overloads behave alike.
+     */
+    private Value mapMethod(BoundJavaMethodCallExpression call) {
+        Value target = requireType(expression(call.getTarget()), SiyoMap.class);
+        List<String> args = new java.util.ArrayList<>();
+        for (BoundExpression argument : call.getArguments()) {
+            args.add("ptr " + coerce(expression(argument), Object.class).ref());
+        }
+        String list = args.isEmpty() ? "" : ", " + String.join(", ", args);
+        String receiver = "ptr " + target.ref() + list;
+        return switch (call.getMethodName()) {
+            case "get" -> {
+                String[] params = call.getResolvedSignature().getParamDescriptors();
+                String origin = params.length == 1 && params[0].equals("Ljava/lang/String;") ? "map_get_str" : "map_get";
+                yield new Value(raisingCall("call ptr @siyo_rt_map_get(" + receiver + ")"), Object.class, origin);
+            }
+            case "set" -> {
+                instructionNoResult("call void @siyo_rt_map_put(" + receiver + ")");
+                checkPending();
+                yield new Value(null, null);
+            }
+            case "has" -> new Value(raisingCall("call zeroext i1 @siyo_rt_map_has(" + receiver + ")"), Boolean.class);
+            case "remove" -> {
+                // SiyoMap.remove returns nothing.
+                raisingCall("call ptr @siyo_rt_map_remove(" + receiver + ")");
+                yield new Value(null, null);
+            }
+            case "size" -> new Value(raisingCall("call i32 @siyo_rt_map_size(" + receiver + ")"), Integer.class);
+            case "keys" -> new Value(raisingCall("call ptr @siyo_rt_map_keys(" + receiver + ")"), SiyoArray.class);
+            default -> throw unsupported("map method " + call.getMethodName());
+        };
     }
 
     /**
@@ -738,7 +837,8 @@ public final class IrEmitter {
                     : type == Long.class ? "@siyo_rt_print_long(i64 "
                     : type == Boolean.class ? "@siyo_rt_print_bool(i1 zeroext "
                     : type == String.class ? "@siyo_rt_print_str(ptr "
-                    : type == Object.class || type == SiyoArray.class || type == SiyoStruct.class ? "@siyo_rt_print_any(ptr "
+                    : type == Object.class || type == SiyoArray.class || type == SiyoStruct.class
+                            || type == SiyoMap.class ? "@siyo_rt_print_any(ptr "
                     : null;
             if (printer == null) throw unsupported("printing " + type);
             instructionNoResult("call void " + printer + value.ref() + ")");
@@ -776,6 +876,21 @@ public final class IrEmitter {
         if (function == BuiltinFunctions.TO_INT_LONG) {
             Value value = requireType(expression(call.getArguments().get(0)), Long.class);
             return new Value(instruction("trunc i64 " + value.ref() + " to i32"), Integer.class);
+        }
+        if (function == BuiltinFunctions.NEW_MAP) {
+            if (!call.getArguments().isEmpty()) throw unsupported("map arity");
+            return new Value(instruction("call ptr @siyo_rt_map_new()"), SiyoMap.class);
+        }
+        if (function == BuiltinFunctions.MAP_KEYS || (function == BuiltinFunctions.LEN && call.getArguments().size() == 1
+                && call.getArguments().get(0).getClassType() == SiyoMap.class)) {
+            // for k in m iterates over $mapKeys(m), a fresh array of the keys;
+            // len(m) is 0 for a null map, as SiyoRuntime.lengthOf is.
+            if (call.getArguments().size() != 1) throw unsupported(function.getName() + " arity");
+            Value map = requireType(expression(call.getArguments().get(0)), SiyoMap.class);
+            if (function == BuiltinFunctions.LEN) {
+                return new Value(instruction("call i32 @siyo_rt_map_len(ptr " + map.ref() + ")"), Integer.class);
+            }
+            return new Value(raisingCall("call ptr @siyo_rt_map_keys(ptr " + map.ref() + ")"), SiyoArray.class);
         }
         Value arrayResult = arrayBuiltin(call);
         if (arrayResult != null) return arrayResult;
@@ -918,7 +1033,8 @@ public final class IrEmitter {
             call = "call ptr @siyo_rt_str_from_long(i64 ";
         } else if (value.type() == Boolean.class) {
             call = "call ptr @siyo_rt_str_from_bool(i1 zeroext ";
-        } else if (value.type() == Object.class || value.type() == SiyoArray.class || value.type() == SiyoStruct.class) {
+        } else if (value.type() == Object.class || value.type() == SiyoArray.class || value.type() == SiyoStruct.class
+                || value.type() == SiyoMap.class) {
             call = "call ptr @siyo_rt_any_to_string(ptr ";
         } else {
             throw unsupported("conversion of " + value.type() + " to text");
@@ -942,7 +1058,7 @@ public final class IrEmitter {
                     : from == Long.class ? "call ptr @siyo_rt_box_long(i64 "
                     : from == Boolean.class ? "call ptr @siyo_rt_box_bool(i1 zeroext "
                     : null;
-            if (from == String.class || from == SiyoArray.class || from == SiyoStruct.class) {
+            if (from == String.class || from == SiyoArray.class || from == SiyoStruct.class || from == SiyoMap.class) {
                 return new Value(value.ref(), Object.class);
             }
             if (box != null) return new Value(instruction(box + value.ref() + ")"), Object.class);
@@ -952,7 +1068,9 @@ public final class IrEmitter {
             // NullPointerException, whose message names the literal. Anything
             // else is checked at run time.
             if (value.ref().equals("null")) {
-                if (to == String.class || to == SiyoArray.class || to == SiyoStruct.class) return new Value("null", to);
+                if (to == String.class || to == SiyoArray.class || to == SiyoStruct.class || to == SiyoMap.class) {
+                    return new Value("null", to);
+                }
                 if (to == Integer.class || to == Boolean.class) {
                     int tag = to == Integer.class ? 2 : 4; // SIYO_TAG_INT, SIYO_TAG_BOOL
                     instructionNoResult("call void @siyo_rt_unbox_null_literal(i32 " + tag + ")");
@@ -965,15 +1083,21 @@ public final class IrEmitter {
         throw unsupported("conversion from " + from + " to " + to);
     }
 
-    /** An any narrowed to {@code to} by the runtime's checked unbox or cast, even for the null literal. */
+    /**
+     * An any narrowed to {@code to} by the runtime's checked unbox or cast,
+     * even for the null literal; an int or bool unbox names the value's null
+     * origin when it has one. (unbox_long's message never depends on it.)
+     */
     private Value checkedCast(Value value, Class<?> to) {
         requireType(value, Object.class);
-        String cast = to == Integer.class ? "call i32 @siyo_rt_unbox_int(ptr "
+        String origin = value.nullOrigin() == null ? "" : "_" + value.nullOrigin();
+        String cast = to == Integer.class ? "call i32 @siyo_rt_unbox_int" + origin + "(ptr "
                 : to == Long.class ? "call i64 @siyo_rt_unbox_long(ptr "
-                : to == Boolean.class ? "call zeroext i1 @siyo_rt_unbox_bool(ptr "
+                : to == Boolean.class ? "call zeroext i1 @siyo_rt_unbox_bool" + origin + "(ptr "
                 : to == String.class ? "call ptr @siyo_rt_cast_str(ptr "
                 : to == SiyoArray.class ? "call ptr @siyo_rt_cast_array(ptr "
                 : to == SiyoStruct.class ? "call ptr @siyo_rt_cast_struct(ptr "
+                : to == SiyoMap.class ? "call ptr @siyo_rt_cast_map(ptr "
                 : null;
         if (cast == null) throw unsupported("conversion from " + value.type() + " to " + to);
         return new Value(raisingCall(cast + value.ref() + ")"), to);

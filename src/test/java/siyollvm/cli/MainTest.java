@@ -101,11 +101,11 @@ class MainTest {
 
     @Test
     void unsupportedProgramReportsAndWritesNothing() throws Exception {
-        Path file = source("bad.siyo", "fn main() {\n  println(1.5)\n  mut a = {\"k\": 1}\n}");
+        Path file = source("bad.siyo", "fn main() {\n  println(1.5)\n  mut a = #{1}\n}");
         Path ll = dir.resolve("bad.ll");
         assertEquals(1, run("emit-llvm", file.toString(), "-o", ll.toString()));
         assertEquals("bad.siyo(2, 11): [llvm] float values are not supported by SiyoLLVM\n"
-                + "bad.siyo(3, 11): [llvm] maps are not supported by SiyoLLVM\n", stderr());
+                + "bad.siyo(3, 11): [llvm] sets are not supported by SiyoLLVM\n", stderr());
         assertFalse(Files.exists(ll));
         assertEquals("", stdout());
     }

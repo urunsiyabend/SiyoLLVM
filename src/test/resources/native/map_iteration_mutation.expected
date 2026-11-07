@@ -1,0 +1,14 @@
+a
+b
+c
+{a: 1, b: 2, c: 3, aa: 0, bb: 0, cc: 0}
+a 1
+b null
+c 3
+aa 0
+bb 0
+cc null
+{a: 1, c: 3, aa: 0, bb: 0}
+[a, c, aa, bb]
+[a, c, aa, bb, z]
+3

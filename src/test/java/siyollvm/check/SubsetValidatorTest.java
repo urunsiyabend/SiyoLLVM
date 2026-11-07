@@ -62,7 +62,7 @@ class SubsetValidatorTest {
             fn main() { println("d=${1.5}") }                               | float values are
             fn main() { println(toString(1.5)) }                            | float values are
             fn main() { mut a = [1.5, 2.5] println(a) }                     | float values are
-            fn main() { mut m = {"a": 1} println(m) }                       | maps are
+            fn main() { mut m = #{1} println(m) }                           | sets are
             fn main() { mut f = fn(x: int) -> int { x } println(f(1)) }     | lambdas are
             fn main() { println(len(5)) }                                   | len() on int is
             fn main() { println(len(true)) }                                | len() on bool is
@@ -141,8 +141,8 @@ class SubsetValidatorTest {
 
     @ParameterizedTest(name = "{1}")
     @CsvSource(delimiter = '|', textBlock = """
-            fn main() { try { mut a = {"a": 1} } catch e { println(e) } }          | maps are
-            fn main() { try { println(1) } catch e { mut a = {"a": 1} } }          | maps are
+            fn main() { try { mut a = #{1} } catch e { println(e) } }              | sets are
+            fn main() { try { println(1) } catch e { mut a = #{1} } }              | sets are
             fn main() { try { try { println(1) } catch e { mut d = 1.5 } } catch e { } } | float values are
             fn main() { throw 1.5 }                                                | float values are
             fn main() { throw [1.5] }                                              | float values are
@@ -336,7 +336,6 @@ class SubsetValidatorTest {
 
     @ParameterizedTest(name = "{1}")
     @CsvSource(delimiter = '|', textBlock = """
-            fn main() { imut m = map() for k in m { println(k) } }                    | for … in over maps is
             fn main() { imut s = set() for v in s { println(v) } }                    | for … in over sets is
             fn main() { imut a: any = "ab" for c in a { println(c) } }                | for … in over any values is
             fn main() { imut ch = channel() for m in ch { println(m) } }              | the builtin channel() is
@@ -385,7 +384,7 @@ class SubsetValidatorTest {
             struct P { f: float } fn main() { imut p = P { f: 1.5 } println(p) }      | float values are
             struct P { f: float } fn main() { imut p = P { f: 1.5 } println(p.f) }    | float values are
             struct P { x: int } fn main() { imut p = P { x: 1 } println(len(p)) }     | len() on struct is
-            struct P { m: any } fn main() { imut p = P { m: null } p.m = {"a": 1} }  | maps are
+            struct P { m: any } fn main() { imut p = P { m: null } p.m = #{1} }      | sets are
             """)
     void unsupportedStructConstructsAreRejected(String source, String construct) {
         assertRejected(source, construct);
@@ -408,7 +407,7 @@ class SubsetValidatorTest {
     @ParameterizedTest(name = "{1}")
     @CsvSource(delimiter = '|', textBlock = """
             struct P { x: int } impl P { fn f(self, d: float) { } } fn main() { println(1) }       | parameters of type float are
-            struct P { x: int } impl P { fn m(self) { mut a = {"a": 1} } } fn main() { println(1) } | maps are
+            struct P { x: int } impl P { fn m(self) { mut a = #{1} } } fn main() { println(1) }     | sets are
             """)
     void unsupportedCodeInImplMethodsIsRejected(String source, String construct) {
         assertRejected(source, construct);
@@ -436,12 +435,12 @@ class SubsetValidatorTest {
 
     @Test
     void unsupportedCodeInUncalledFunctionIsRejected() {
-        assertRejected("fn never() { mut a = {\"a\": 1} }\nfn main() { println(1) }", "maps are");
+        assertRejected("fn never() { mut a = #{1} }\nfn main() { println(1) }", "sets are");
     }
 
     @Test
     void unsupportedCodeInDeadBranchIsRejected() {
-        assertRejected("fn main() { if false { mut a = {\"a\": 1} } println(1) }", "maps are");
+        assertRejected("fn main() { if false { mut a = #{1} } println(1) }", "sets are");
     }
 
     @Test
@@ -456,7 +455,7 @@ class SubsetValidatorTest {
 
     @Test
     void everyViolationIsReportedWithItsLine() {
-        List<SourceDiagnostic> diagnostics = validate("fn main() {\n  mut a = 1.5\n  mut b = {\"a\": 1}\n}");
+        List<SourceDiagnostic> diagnostics = validate("fn main() {\n  mut a = 1.5\n  mut b = #{1}\n}");
         assertEquals(2, diagnostics.size(), diagnostics.toString());
         assertEquals(2, diagnostics.get(0).line());
         assertEquals(3, diagnostics.get(1).line());
@@ -465,6 +464,45 @@ class SubsetValidatorTest {
     @Test
     void parameterisedMainIsRejected() {
         assertRejected("fn main(x: int) { println(x) }", "entry points with parameters are");
+    }
+
+
+    // Maps: literals of every key and value type, map(), indexing, index
+    // assignment (compound too), the accepted SiyoMap methods, len, for-in
+    // (the binder's $mapKeys), printing and toString, maps as values of every
+    // kind, and maps held in any (cast back, printed, compared).
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { mut m: Map<string, int> = {"a": 1, "b": 2} m["a"] = 3 m["c"] += 1 println(m) println(m["a"] + 1) }
+            fn main() { mut m: Map<int, string> = {5: "five"} println(m[5] + "!") mut e = map() e[true] = 1L println(e) }
+            fn main() { mut m = map() m.set("k", 1) println(m.get("k")) println(m.has("k")) m.remove("k") println(m.size()) println(m.keys()) }
+            fn main() { mut m = {"a": 1} println(len(m)) for k in m { println(k) } println(toString(m)) print(m) }
+            fn f(m: Map<string, int>) -> Map<string, int> { return m } fn main() { println(f({"x": 1})) }
+            struct P { m: Map<string, int> } fn main() { imut p = P { m: {"a": 1} } p.m["b"] = 2 println(p) }
+            fn main() { imut xs = [{"a": 1}] xs[0]["b"] = 2 imut a: any = xs[0] imut m: Map<string, int> = a println(a == m) }
+            fn main() { imut n: Map<string, int[]> = {"xs": [1, 2]} push(n["xs"], 3) imut k = {1L: {"in": true}} println(k) }
+            fn main() { try { throw {"a": 1} } catch e { println(e) } imut m = {"a": 1} println("s" + toString(m) + "$m") }
+            mut g = {"a": 1} fn main() { imut v: int = g.get("a") imut ks: any[] = g.keys() println(v + len(ks)) println(typeName(g)) }
+            """)
+    void mapsAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            fn main() { mut m = {"a": 1} println(m.values()) }                  | map method values() is
+            fn main() { mut m = {"a": 1} m.increment("a") }                     | map method increment() is
+            fn main() { mut m = {"a": 1} println(m.getInt("a")) }               | map method getInt() is
+            fn main() { mut m = {"a": 1} println(m.getStr("a")) }               | map method getStr() is
+            fn main() { mut m = {"a": 1} println(m.getBool("a")) }              | map method getBool() is
+            fn main() { mut s = #{1} println(s) }                               | sets are
+            fn main() { imut s = set() for v in s { println(v) } }              | for … in over sets is
+            fn main() { imut a: any = {"a": 1} a[0] = 2 }                       | index assignment on any values is
+            fn main() { imut n = {"xs": [1, 2]} push(n["xs"], 3) }              | push() on any values is
+            fn main() { imut n = {"a": 1} println(n["a"] + 1) }                 | operator Addition on any and int is
+            """)
+    void unsupportedMapConstructsAreRejected(String source, String construct) {
+        assertRejected(source, construct);
     }
 
     @Test

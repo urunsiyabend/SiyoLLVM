@@ -595,8 +595,52 @@ class IrEmitterTest {
     }
 
     @Test
+    void mapLiteralIsMadeWithBoxedKeysAndValuesInOrder() {
+        String ir = emit("fn main() { imut m = {\"a\": 1, \"b\": 2} println(m) imut e = map() println(e) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertEquals(2, count(main, "call ptr @siyo_rt_map_new()"), main);
+        assertEquals(2, count(main, "call void @siyo_rt_map_insert(ptr "), main);
+        assertEquals(2, count(main, "call ptr @siyo_rt_box_int(i32 "), main);
+        // A new map is not null: nothing here can raise.
+        assertEquals(0, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+        assertEquals(2, count(main, "call void @siyo_rt_print_any(ptr "), main);
+    }
+
+    @Test
+    void mapIndexingReadsAndWritesThroughTheRuntime() {
+        String ir = emit("fn main() { mut m: Map<string, int> = {} m[\"a\"] = 1 m[\"a\"] += 2 println(m[\"a\"]) "
+                + "imut b: Map<string, bool> = {} println(b[\"x\"]) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertEquals(2, count(main, "call void @siyo_rt_map_put(ptr "), main);
+        assertEquals(3, count(main, "call ptr @siyo_rt_map_get(ptr "), main);
+        // A missing key unboxed names SiyoMap.get(Object), as the JVM's message does.
+        assertEquals(2, count(main, "call i32 @siyo_rt_unbox_int_map_get(ptr "), main);
+        assertEquals(1, count(main, "call zeroext i1 @siyo_rt_unbox_bool_map_get(ptr "), main);
+        assertFalse(main.contains("@siyo_rt_unbox_int(ptr"), main);
+        assertFalse(main.contains("@siyo_rt_array_"), main);
+    }
+
+    @Test
+    void mapMethodsAndLenAndForInCallTheRuntime() {
+        String ir = emit("fn main() { mut m: Map<string, int> = {} m.set(\"k\", 1) imut v: int = m.get(\"k\") "
+                + "println(m.has(1)) m.remove(\"k\") println(m.size() + len(m) + v) println(m.keys()) "
+                + "for k in m { println(k) } imut a: any = m imut back: Map<string, int> = a println(back) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertEquals(1, count(main, "call void @siyo_rt_map_put(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_map_get(ptr "), main);
+        // get(String) was the overload the binder chose, so its message names it.
+        assertEquals(1, count(main, "call i32 @siyo_rt_unbox_int_map_get_str(ptr "), main);
+        assertEquals(1, count(main, "call zeroext i1 @siyo_rt_map_has(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_map_remove(ptr "), main);
+        assertEquals(1, count(main, "call i32 @siyo_rt_map_size(ptr "), main);
+        assertEquals(1, count(main, "call i32 @siyo_rt_map_len(ptr "), main);
+        assertEquals(2, count(main, "call ptr @siyo_rt_map_keys(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_cast_map(ptr "), main);
+    }
+
+    @Test
     void refusesNodesItDoesNotKnow() {
-        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut m = {\"a\": 1} }");
+        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut m = #{1} }");
         assertThrows(IllegalStateException.class, () -> IrEmitter.emit(result.program()));
     }
 

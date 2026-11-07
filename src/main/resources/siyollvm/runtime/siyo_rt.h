@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* First word of every heap object. Tags 6 and 8 are reserved for later features. */
+/* First word of every heap object. Tag 8 is reserved for a later feature. */
 enum {
     SIYO_TAG_STR = 1,
     SIYO_TAG_INT = 2,
@@ -106,6 +106,34 @@ _Static_assert(offsetof(SiyoStruct, type_name) == 8, "SiyoStruct layout must mat
 _Static_assert(offsetof(SiyoStruct, names) == 16, "SiyoStruct layout must match the IR");
 _Static_assert(offsetof(SiyoStruct, values) == 24, "SiyoStruct layout must match the IR");
 
+/*
+ * A Siyo map (tag SIYO_TAG_MAP), as the JVM's SiyoMap over a LinkedHashMap:
+ * entries in insertion order (an overwritten key keeps its place; a removed
+ * one leaves a dead entry until the next rebuild, and inserting it again
+ * appends it), each an any key and value, found through an open-addressing
+ * index of entry numbers. Keys are compared by siyo_rt_any_equals and hashed
+ * consistently with it. Maps are shared by reference and mutated in place;
+ * they are never freed. The layout past the tag is private to the runtime.
+ */
+typedef struct SiyoMapEntry {
+    void *key;
+    void *value;
+    uint32_t hash;
+    _Bool live;
+} SiyoMapEntry;
+
+typedef struct SiyoMap {
+    uint32_t tag;
+    int32_t size;        /* live entries */
+    int32_t used;        /* entries made, dead ones included */
+    int32_t cap;         /* room in entries */
+    SiyoMapEntry *entries;
+    int32_t *slots;      /* slot_count entry numbers, -1 for an empty slot */
+    int32_t slot_count;  /* a power of two, at least twice cap */
+} SiyoMap;
+
+_Static_assert(offsetof(SiyoMap, tag) == 0, "SiyoMap tag must be the first word");
+
 /* Lowest stack address a Siyo function may start at; set on the program thread. */
 extern uint64_t siyo_rt_stack_limit;
 
@@ -188,7 +216,7 @@ int64_t siyo_rt_parse_long(const SiyoStr *s);
 
 /*
  * any values. An any is a pointer to a tagged heap object (a SiyoStr, a
- * SiyoBox or a SiyoArray) or NULL for null. Boxes are never mutated, so their
+ * SiyoBox, a SiyoArray, a SiyoStruct or a SiyoMap) or NULL for null. Boxes are never mutated, so their
  * identity is never observable (== is Objects.equals): box_int returns one
  * static box per value in -128..127, as Integer.valueOf does, and allocates
  * a new one otherwise.
@@ -209,6 +237,8 @@ _Bool siyo_rt_unbox_bool(const void *value);
 const SiyoStr *siyo_rt_cast_str(const void *value);
 /* checkcast java/util/List: the array itself, null passes. */
 SiyoArray *siyo_rt_cast_array(const void *value);
+/* checkcast codeanalysis/SiyoMap: the map itself, null passes. */
+SiyoMap *siyo_rt_cast_map(const void *value);
 /* checkcast java/util/Map: the struct itself, null passes. */
 SiyoStruct *siyo_rt_cast_struct(const void *value);
 /* checkcast java/util/LinkedHashMap, which the JVM backend uses for an any
@@ -219,11 +249,21 @@ SiyoStruct *siyo_rt_cast_struct_arg(const void *value);
    'because the return value of "java.util.Map.get(Object)" is null'. */
 int32_t siyo_rt_unbox_int_field(const void *value);
 _Bool siyo_rt_unbox_bool_field(const void *value);
+/* unbox_int and unbox_bool of what SiyoMap.get returned (m[k], or m.get(k)
+   where the binder chose get(Object)): the NullPointerException's message
+   ends 'because the return value of "codeanalysis.SiyoMap.get(Object)" is
+   null'; the _str forms name get(String), the overload the binder picks for
+   a string key in m.get(k). */
+int32_t siyo_rt_unbox_int_map_get(const void *value);
+int32_t siyo_rt_unbox_int_map_get_str(const void *value);
+_Bool siyo_rt_unbox_bool_map_get(const void *value);
+_Bool siyo_rt_unbox_bool_map_get_str(const void *value);
 /*
  * String.valueOf(Object): "null" for null, a string itself, an array as
  * SiyoArray.toString writes it ("[a, b]", each element by String.valueOf,
  * nested arrays recursively), a struct as SiyoObject.toString writes it
- * ("Point { x: 1, y: 2 }", each value by String.valueOf). An array or struct
+ * ("Point { x: 1, y: 2 }", each value by String.valueOf), a map as
+ * SiyoMap.toString writes it ("{k: v, k2: w}"). An array, struct or map
  * that contains itself recurses until
  * the stack runs out, which is java.lang.StackOverflowError (fatal, as for
  * Siyo functions).
@@ -232,7 +272,8 @@ SiyoStr *siyo_rt_any_to_string(const void *value);
 /* Objects.equals: same type and value, so a boxed 5L is not equal to a boxed 5;
    arrays are equal when their elements are, in order (List.equals); structs
    when they have the same field names with equal values, in any order and
-   whatever their type names (AbstractMap.equals). */
+   whatever their type names (AbstractMap.equals); maps only when they are the
+   same map, as SiyoMap does not override Object.equals. */
 _Bool siyo_rt_any_equals(const void *a, const void *b);
 /* PrintStream.print(Object). */
 void siyo_rt_print_any(const void *value);
@@ -278,6 +319,29 @@ void *siyo_rt_struct_get(SiyoStruct *s, const SiyoStr *name);
 void siyo_rt_struct_set(SiyoStruct *s, const SiyoStr *name, void *value);
 /* typeName(value): a struct's type name, "" for anything else (null included). */
 SiyoStr *siyo_rt_type_name(const void *value);
+
+/*
+ * Maps. A null map raises java.lang.NullPointerException (without the JVM's
+ * helpful message), except in len, as SiyoRuntime.lengthOf gives 0 for null.
+ */
+/* A new, empty map. Never raises. */
+SiyoMap *siyo_rt_map_new(void);
+/* put into a map known not to be null (one just made): never raises. */
+void siyo_rt_map_insert(SiyoMap *map, void *key, void *value);
+/* Map.getOrDefault(key, null): the value, null when the key is absent. */
+void *siyo_rt_map_get(SiyoMap *map, void *key);
+/* Map.put: replaces the value in place, or appends the key after the others. */
+void siyo_rt_map_put(SiyoMap *map, void *key, void *value);
+/* Map.containsKey. */
+_Bool siyo_rt_map_has(SiyoMap *map, void *key);
+/* Map.remove: the value removed, or null (SiyoMap.remove itself returns nothing). */
+void *siyo_rt_map_remove(SiyoMap *map, void *key);
+/* Map.size. */
+int32_t siyo_rt_map_size(SiyoMap *map);
+/* len(map): its size, 0 for null. Never raises. */
+int32_t siyo_rt_map_len(SiyoMap *map);
+/* SiyoMap.keys: a new array of the keys in insertion order. */
+SiyoArray *siyo_rt_map_keys(SiyoMap *map);
 
 /*
  * Exceptions. A raise records a pending exception and returns; the raising

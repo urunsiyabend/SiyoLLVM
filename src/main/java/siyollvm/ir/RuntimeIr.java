@@ -18,7 +18,9 @@ import java.util.Set;
  * {@code any} values, or null. A struct is a pointer to a {@code SiyoStruct}
  * {@code { i32 tag, i32 count, ptr type name, ptr names, ptr values }}: field
  * names (strings) and {@code any} values in the order the literal wrote them,
- * as the JVM's {@code SiyoObject}, a {@code LinkedHashMap}; or null. C {@code _Bool} crosses the boundary as {@code zeroext i1}.
+ * as the JVM's {@code SiyoObject}, a {@code LinkedHashMap}; or null. A
+ * map is a pointer to a {@code SiyoMap} (tag 6, the rest private to the
+ * runtime), an insertion-ordered table of {@code any} keys and values; or null. C {@code _Bool} crosses the boundary as {@code zeroext i1}.
  *
  * <p>Exceptions are explicit: a raise sets the thread-local pending flag and
  * returns, and the code after each raising call branches on the flag (no
@@ -87,6 +89,20 @@ final class RuntimeIr {
                 declare i32 @siyo_rt_unbox_int_field(ptr)
                 declare zeroext i1 @siyo_rt_unbox_bool_field(ptr)
                 declare ptr @siyo_rt_type_name(ptr)
+                declare ptr @siyo_rt_map_new()
+                declare void @siyo_rt_map_insert(ptr, ptr, ptr)
+                declare ptr @siyo_rt_map_get(ptr, ptr)
+                declare void @siyo_rt_map_put(ptr, ptr, ptr)
+                declare zeroext i1 @siyo_rt_map_has(ptr, ptr)
+                declare ptr @siyo_rt_map_remove(ptr, ptr)
+                declare i32 @siyo_rt_map_size(ptr)
+                declare i32 @siyo_rt_map_len(ptr)
+                declare ptr @siyo_rt_map_keys(ptr)
+                declare ptr @siyo_rt_cast_map(ptr)
+                declare i32 @siyo_rt_unbox_int_map_get(ptr)
+                declare i32 @siyo_rt_unbox_int_map_get_str(ptr)
+                declare zeroext i1 @siyo_rt_unbox_bool_map_get(ptr)
+                declare zeroext i1 @siyo_rt_unbox_bool_map_get_str(ptr)
                 declare void @siyo_rt_throw(ptr)
                 declare ptr @siyo_rt_catch()
                 declare void @siyo_rt_uncaught() noreturn cold
@@ -119,5 +135,8 @@ final class RuntimeIr {
             "@siyo_rt_cast_array", "@siyo_rt_array_push", "@siyo_rt_array_get", "@siyo_rt_array_set",
             "@siyo_rt_array_pop", "@siyo_rt_array_remove_at", "@siyo_rt_array_len",
             "@siyo_rt_struct_get", "@siyo_rt_struct_set", "@siyo_rt_cast_struct", "@siyo_rt_cast_struct_arg",
-            "@siyo_rt_unbox_int_field", "@siyo_rt_unbox_bool_field");
+            "@siyo_rt_unbox_int_field", "@siyo_rt_unbox_bool_field",
+            "@siyo_rt_map_get", "@siyo_rt_map_put", "@siyo_rt_map_has", "@siyo_rt_map_remove", "@siyo_rt_map_size",
+            "@siyo_rt_map_keys", "@siyo_rt_cast_map", "@siyo_rt_unbox_int_map_get", "@siyo_rt_unbox_int_map_get_str",
+            "@siyo_rt_unbox_bool_map_get", "@siyo_rt_unbox_bool_map_get_str");
 }

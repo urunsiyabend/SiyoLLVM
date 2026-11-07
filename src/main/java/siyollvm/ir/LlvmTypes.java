@@ -1,11 +1,12 @@
 package siyollvm.ir;
 
 import codeanalysis.SiyoArray;
+import codeanalysis.SiyoMap;
 import codeanalysis.SiyoStruct;
 
 /**
  * LLVM types of Siyo's value types. An {@code any} ({@code Object}) is a tagged
- * heap pointer or null, and so are an array and a struct.
+ * heap pointer or null, and so are an array, a struct and a map.
  */
 final class LlvmTypes {
     private LlvmTypes() {}
@@ -15,7 +16,7 @@ final class LlvmTypes {
         if (type == Long.class) return "i64";
         if (type == Boolean.class) return "i1";
         if (type == String.class || type == Object.class || type == SiyoArray.class
-                || type == SiyoStruct.class) return "ptr";
+                || type == SiyoStruct.class || type == SiyoMap.class) return "ptr";
         throw new IllegalStateException("SiyoLLVM has no LLVM type for " + type);
     }
 
@@ -23,7 +24,7 @@ final class LlvmTypes {
     static String zero(Class<?> type) {
         if (type == Boolean.class) return "false";
         if (type == String.class || type == Object.class || type == SiyoArray.class
-                || type == SiyoStruct.class) return "null";
+                || type == SiyoStruct.class || type == SiyoMap.class) return "null";
         of(type);
         return "0";
     }
