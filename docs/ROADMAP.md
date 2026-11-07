@@ -16,7 +16,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 | F3b | Structs, `impl` methods, enums | F3a | done | ff55202..6c609fa, pushed at 175e760 | `docs/evidence/f3b-structs/`; CI run 42338248852 green at 175e760 |
 | F3c | Maps (insertion-ordered) | F3a | done | e8b52be..2018ca3, pushed at 552d5ba | `docs/evidence/f3c-maps/`; CI run 42340020516 green at 552d5ba |
 | F4 | User modules; native `std/io`, `std/os`, `std/strings` | F3a–c | done | edafc1a..b0cce71, pushed at 242c7ac | `docs/evidence/f4-modules/`; CI run 42343930723 green at 242c7ac |
-| F5 | `projects/ledger` application + independent oracles | F4 | in progress (gates green at 9f0ecf3; publishing) | 134bd0d..9f0ecf3 | `docs/evidence/f5-ledger/` |
+| F5 | `projects/ledger` application + independent oracles | F4 | done | 134bd0d..9f0ecf3, pushed at c317efb | `docs/evidence/f5-ledger/`; CI run 42346474485 green at c317efb; fresh clone gates green (`docs/evidence/milestone/`) |
 | — | float, sum types + match, lambdas, sets, GC | after milestone | planned | | |
 
 ## Acceptance criteria
@@ -101,9 +101,10 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Next step (2026-11-07, F5 in progress): ledger app and independent Python oracle
-  (27/27 agreement) are done and the measurements are done. Remaining (controller): final gates, publish,
-  exact-head CI, fresh-clone gates, milestone status. Ledger: `.superpowers/sdd/2026-11-07-f5-ledger/progress.md`.
+- Status (2026-11-07): F0–F5 published; milestone criteria evidenced in `docs/evidence/milestone/`
+  (fresh clone + exact-head CI at c317efb). Next actionable step: post-milestone work by priority —
+  a memory-reclamation design (arena or GC; owner decision, see limitations), then float, sum
+  types/match and lambdas (enables `sort`).
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
