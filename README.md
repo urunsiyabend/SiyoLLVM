@@ -41,6 +41,19 @@ $ bin/siyollvm build path/to/main.siyo -o app
 $ ./app input.csv out.txt     # read in the program with os.args()
 ```
 
+## Milestone application: `projects/ledger`
+
+[`projects/ledger`](projects/ledger/README.md) is a multi-module Siyo program (about 520 lines in five
+modules) that reconciles a CSV file of bank transactions into a per-account and per-category report. Its
+behaviour is specified in [FORMAT.md](projects/ledger/FORMAT.md); the native executable is checked case by case
+against the JVM reference and an independent Python oracle (`LedgerAppNativeTest`, `LedgerOracleNativeTest` in
+the native gate). After `mvn package`:
+
+```
+$ bin/siyollvm build projects/ledger/src/main.siyo -o ledger
+$ ./ledger projects/ledger/tests/clean/files/in.csv report.txt
+```
+
 ## Requirements
 
 - Java 21 and Maven 3.9 to build.

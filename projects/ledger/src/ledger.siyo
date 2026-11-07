@@ -40,9 +40,7 @@ fn record(book: Book, lineNumber: int, line: string) {
     accept(book, checked.tx)
 }
 
-// Adds an accepted transaction. `tx` is a parameter so that the binder types
-// its fields (a nested struct field read through another module's struct is
-// an `any`, SUBSET.md).
+// Adds an accepted transaction.
 fn accept(book: Book, tx: Transaction) {
     book.accepted += 1
     if book.minDate == "" || tx.date < book.minDate {
@@ -65,8 +63,9 @@ fn accept(book: Book, tx: Transaction) {
     addToCategory(categories[tx.category], tx.cents)
 }
 
-// A struct read from a map is an `any` to the binder, whose fields are then
-// `any` too (SUBSET.md, structs); passing it as a struct parameter types it.
+// `accounts` in accept() is a map local inferred from a field, so a struct read
+// from it is an `any` to the binder, and so are its fields (SUBSET.md, maps);
+// passing it as a struct parameter types them.
 fn addToAccount(account: Account, cents: long) {
     account.count += 1
     if cents > 0L {

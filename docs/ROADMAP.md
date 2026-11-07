@@ -59,6 +59,32 @@ application; `build` of a multi-file program from any working directory.
 (no SiyoCompiler checkout, no JVM in the executable), passes its fixtures
 against both oracles, and is part of the native gate.
 
+## Milestone status and remaining limitations
+
+The milestone application is `projects/ledger` (F5). This section lists what the toolchain still does not do
+after it; F5's status is in the table above.
+
+- **Memory is never freed.** Strings, arrays, structs and maps live until the process exits (no GC, no
+  reference counting). Measured on the ledger (`projects/ledger/README.md`, "Resource use"): 313 KB of input
+  peaks at 28 MB RSS, ten times that input at 268 MB (about 87 bytes per additional input byte), while the
+  JVM reference stays near 100 MB. Long-running or large-input programs will run out of memory.
+- **Not in the subset:** `float`; sum types and `match`; lambdas and closures (so no `sort`, `map`, `filter`,
+  `reduce`, `forEach`; the ledger hand-writes an insertion sort); sets; interfaces, actors, generic functions,
+  `scope`/`spawn`/`send`; `import java` and every other Java interop; most of the std library beyond `std/io`,
+  `std/os` and `std/strings` (docs/SUBSET.md, "Rejected").
+- **Typing gaps met by the application** (accepted by the reference, rejected here or untyped): array elements
+  returned from another module and struct values read through a map local inferred from a field are `any`;
+  each needs a typed local or a struct-typed parameter (docs/SUBSET.md, "Accepted").
+- **Error message deviations:** `NullPointerException` messages lack the JVM's "helpful" `because …` part;
+  uncaught exceptions print no stack trace (docs/SUBSET.md, "Deviations").
+- **Stack overflow cannot be caught:** it ends the program as an uncaught error, on a fixed 16 MiB program
+  stack.
+- **Quadratic non-ASCII index scans:** on strings with non-ASCII characters, `substring`, `indexOf` and
+  other index operations scan from the start of the string, so a per-character loop over long non-ASCII text
+  is quadratic (see the F1 follow-up above; not needed by the ledger's input sizes).
+- **Platform:** Linux with glibc only (x86_64, aarch64), clang 15 or newer; no Windows or macOS.
+- **Single-threaded:** programs run on one program thread; no concurrency primitives.
+
 ## Known limitations (current)
 
 See `docs/SUBSET.md`. Updated as features land.

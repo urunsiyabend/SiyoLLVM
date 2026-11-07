@@ -45,9 +45,8 @@ fn sortNames(names: string[]) {
     }
 }
 
-// A struct read from a map is an `any` to the binder, and so are its fields
-// (SUBSET.md, structs): these helpers take it as a struct parameter, which
-// types its fields.
+// These helpers take the struct read from a map as a struct parameter, which
+// keeps its field reads typed (SUBSET.md, maps).
 fn accountRow(account: Account, width: int) -> string {
     return accountLine(account.name, width, toString(account.count), money(account.credits), money(account.debits),
         money(account.credits + account.debits))
