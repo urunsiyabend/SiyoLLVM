@@ -61,6 +61,16 @@ array); `main`/`init` with parameters or a return value.
 - Strings are UTF-8 bytes with an explicit length: embedded `\0` is printed
   and compared like any other byte. Output is always UTF-8 bytes, whatever
   the locale (the JVM reference also writes UTF-8 under `LC_ALL=C`).
+- Memory is never reclaimed during a run: strings live until the process
+  exits, so no string can be used after it is freed. `s += x` and `a + b`
+  append in place into a growing buffer when `a` is the newest string built
+  on it, so building a string by repeated appends costs memory linear in its
+  final size (100 000 appends: about 8 MB peak RSS). Other operations each
+  allocate their result; a long-running program that creates many temporary
+  strings grows accordingly. `substring` and the other index-based builtins
+  scan non-ASCII strings from the start on every call (ASCII strings are
+  indexed directly), so a per-character loop over a long non-ASCII string is
+  quadratic.
 - A global read before its initialiser has run holds the JVM default
   (`0`, `0L`, `false`, or null, which prints as `null`); `==` on strings is
   value equality with `null == null`. A null string reads as `null` in

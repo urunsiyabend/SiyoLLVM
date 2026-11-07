@@ -9,11 +9,13 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 
 | # | Feature | Depends on | Status | Commit | Evidence |
 |---|---|---|---|---|---|
-| F0 | Spec, roadmap, oracle script, PR for CI | — | in progress | 62218e8 | — |
-| F1 | C runtime linked by clang; tagged heap values; strings | F0 | planned | | |
+| F0 | Spec, roadmap, oracle script, PR for CI | — | done | 62218e8, 0d5903f | PR #1; CI run 42307548296 green at 0d5903f |
+| F1 | C runtime linked by clang; appendable WTF-8 strings; string builtins | F0 | in progress (implemented and reviewed locally; publishing) | 90f3129..30c6e72 | `docs/evidence/f1-strings/` |
 | F2 | Exceptions: try/catch/throw, catchable runtime errors | F1 | planned | | |
-| F3 | Arrays, for-in, structs + impl, enums, maps | F1, F2 | planned | | |
-| F4 | User modules; native `std/io`, `std/os`, `std/strings` | F3 | planned | | |
+| F3a | Arrays, `for … in`, `range`, `split` | F2 | planned | | |
+| F3b | Structs, `impl` methods, enums | F3a | planned | | |
+| F3c | Maps (insertion-ordered) | F3a | planned | | |
+| F4 | User modules; native `std/io`, `std/os`, `std/strings` | F3a–c | planned | | |
 | F5 | `projects/ledger` application + independent oracles | F4 | planned | | |
 | — | float, sum types + match, lambdas, sets, GC | after milestone | planned | | |
 
@@ -21,7 +23,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 
 **F1** — `+` on strings with int/long/bool/string operands, `+=`,
 interpolation, `toString`, `len`, `substring`, `indexOf`, `contains`,
-`startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `split`,
+`startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`,
 `chr`, `ord`, `parseInt`, `parseLong`, `toLong`, `<`/`<=`/`>`/`>=` on strings
 compile and match the JVM reference byte for byte (UTF-16 indexing, Unicode,
 embedded NUL, `LC_ALL=C`), with oracle-generated corpus files. All v0.1 corpus
@@ -33,7 +35,7 @@ division by zero, string index errors and later bounds errors are catchable
 with the JVM message; uncaught errors print the JVM first line and exit 1
 after flushing stdout. Throw across function calls and out of nested loops.
 
-**F3** — arrays of every accepted type (including structs and nested
+**F3a–c** — `split` (returns `string[]`); arrays of every accepted type (including structs and nested
 arrays), literal/index/index-assign with bounds errors, `push`, `pop`,
 `removeAt`, `len`, `for x in arr`, `for i in range(a, b)`; structs with
 literals, field read/write, `impl` methods, `toString`; enums; maps with
@@ -55,7 +57,18 @@ against both oracles, and is part of the native gate.
 
 See `docs/SUBSET.md`. Updated as features land.
 
+## Incidents
+
+- 2026-11-07: two controller sessions were OOM-killed (4 GiB scope) by the
+  native `concat_loop` test running against the pre-buffer runtime, which
+  copied on every concatenation (~3.6 GB RSS). Fixed by appendable string
+  buffers (8ece096; peak RSS 7.8 MB). Since then all Maven, oracle and native
+  runs go through the automation's 768 MiB bounded wrapper
+  (`~/.hermes/automation/siyollvm/BOUNDED.md`).
+
 ## Continuity notes
 
-- Local clang 19: `SIYOLLVM_CLANG=$HOME/.hermes/cache/scratch/siyo-llvm-toolchain/bin/clang`.
+- Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
+  probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
+- SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
 - Reference oracle: `scripts/reference-oracle.sh build` then `run <case.siyo>`.

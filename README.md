@@ -18,7 +18,9 @@ command-line tool. The JVM compiler (`siyoc`) is not involved at run time.
 What it accepts, how programs behave, and where the behaviour differs from
 `siyoc run` is in **[docs/SUBSET.md](docs/SUBSET.md)**. In short: `int`,
 `long`, `bool` and `string` values, all statement-level control flow,
-functions and recursion, and `print`/`println`. Everything else is rejected
+functions and recursion, `print`/`println`, string concatenation and
+interpolation, and the string builtins (`len`, `substring`, `indexOf`, … with
+Java's UTF-16 indexing). Everything else is rejected
 with a diagnostic, including code that is never reached.
 
 ## Requirements
