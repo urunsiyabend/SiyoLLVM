@@ -203,6 +203,11 @@ static void siyo_rt_null_pointer(void) {
     siyo_rt_raise_java("java.lang.NullPointerException", NULL);
 }
 
+/* A fixed ASCII exception message, made like a literal (buf NULL) so that a
+   raise in a catch loop allocates nothing. */
+#define SIYO_RT_STATIC_STR(name, text) \
+    static const SiyoStr name = { SIYO_TAG_STR, (int32_t)(sizeof text - 1), (int64_t)(sizeof text - 1), text, NULL }
+
 /* Raises java_class with a short ASCII message formatted from format. */
 __attribute__((format(printf, 2, 3)))
 static void siyo_rt_raise_format(const char *java_class, const char *format, ...) {
@@ -659,7 +664,8 @@ int32_t siyo_rt_ord(const SiyoStr *s) {
         return 0;
     }
     if (s->len == 0) {
-        siyo_rt_raise_format("java.lang.StringIndexOutOfBoundsException", "Index 0 out of bounds for length 0");
+        SIYO_RT_STATIC_STR(message, "Index 0 out of bounds for length 0");
+        siyo_rt_raise_java("java.lang.StringIndexOutOfBoundsException", &message);
         return 0;
     }
     SiyoUnits it = siyo_rt_units_from(s, 0);
@@ -748,14 +754,16 @@ int32_t siyo_rt_parse_int(const SiyoStr *s) {
 
 int64_t siyo_rt_parse_long(const SiyoStr *s) {
     if (s == NULL) {
-        siyo_rt_raise_format("java.lang.NumberFormatException", "Cannot parse null string");
+        SIYO_RT_STATIC_STR(message, "Cannot parse null string");
+        siyo_rt_raise_java("java.lang.NumberFormatException", &message);
         return 0;
     }
     int64_t value;
     if (!siyo_rt_parse(s, INT64_MIN, INT64_MAX, &value)) {
-        SiyoStr *message = siyo_rt_str_concat(siyo_rt_str_from_bytes("For input string: \"", 19, 19), s);
+        SIYO_RT_STATIC_STR(prefix, "For input string: \"");
+        SIYO_RT_STATIC_STR(quote, "\"");
         siyo_rt_raise_java("java.lang.NumberFormatException",
-                siyo_rt_str_concat(message, siyo_rt_str_from_bytes("\"", 1, 1)));
+                siyo_rt_str_concat(siyo_rt_str_concat(&prefix, s), &quote));
         return 0;
     }
     return value;
@@ -817,7 +825,8 @@ static void siyo_rt_class_cast(const void *value, const char *target) {
  */
 int32_t siyo_rt_unbox_int(const void *value) {
     if (value == NULL) {
-        siyo_rt_raise_format("java.lang.NullPointerException", "%s", "Cannot invoke \"java.lang.Integer.intValue()\"");
+        SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Integer.intValue()\"");
+        siyo_rt_raise_java("java.lang.NullPointerException", &message);
         return 0;
     }
     if (siyo_rt_tag_of(value) != SIYO_TAG_INT) {
@@ -829,8 +838,8 @@ int32_t siyo_rt_unbox_int(const void *value) {
 
 int64_t siyo_rt_unbox_long(const void *value) {
     if (value == NULL) {
-        siyo_rt_raise_format("java.lang.NullPointerException", "%s",
-                "Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null");
+        SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null");
+        siyo_rt_raise_java("java.lang.NullPointerException", &message);
         return 0;
     }
     uint32_t tag = siyo_rt_tag_of(value);
@@ -843,8 +852,8 @@ int64_t siyo_rt_unbox_long(const void *value) {
 
 _Bool siyo_rt_unbox_bool(const void *value) {
     if (value == NULL) {
-        siyo_rt_raise_format("java.lang.NullPointerException", "%s",
-                "Cannot invoke \"java.lang.Boolean.booleanValue()\"");
+        SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Boolean.booleanValue()\"");
+        siyo_rt_raise_java("java.lang.NullPointerException", &message);
         return 0;
     }
     if (siyo_rt_tag_of(value) != SIYO_TAG_BOOL) {
@@ -926,10 +935,6 @@ void siyo_rt_raise_java(const char *java_class, const SiyoStr *message) {
     siyo_rt_pending_flag = 1;
 }
 
-_Bool siyo_rt_pending(void) {
-    return siyo_rt_pending_flag;
-}
-
 void *siyo_rt_catch(void) {
     siyo_rt_pending_flag = 0;
     if (siyo_rt_pending_class == NULL) return siyo_rt_pending_payload;
@@ -960,12 +965,14 @@ _Noreturn void siyo_rt_uncaught(void) {
 }
 
 void siyo_rt_div_by_zero(void) {
-    siyo_rt_raise_java("java.lang.ArithmeticException", siyo_rt_str_from_bytes("/ by zero", 9, 9));
+    SIYO_RT_STATIC_STR(message, "/ by zero");
+    siyo_rt_raise_java("java.lang.ArithmeticException", &message);
 }
 
 void siyo_rt_unbox_null_literal(int32_t tag) {
-    siyo_rt_raise_format("java.lang.NullPointerException", "Cannot invoke \"%s\" because \"null\" is null",
-            tag == SIYO_TAG_BOOL ? "java.lang.Boolean.booleanValue()" : "java.lang.Integer.intValue()");
+    SIYO_RT_STATIC_STR(on_bool, "Cannot invoke \"java.lang.Boolean.booleanValue()\" because \"null\" is null");
+    SIYO_RT_STATIC_STR(on_int, "Cannot invoke \"java.lang.Integer.intValue()\" because \"null\" is null");
+    siyo_rt_raise_java("java.lang.NullPointerException", tag == SIYO_TAG_BOOL ? &on_bool : &on_int);
 }
 
 _Noreturn void siyo_rt_stack_overflow(void) {

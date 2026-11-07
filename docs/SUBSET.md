@@ -43,13 +43,16 @@ arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; a `try` expression
-anywhere else (an operand of an operator, `x += try …`, an argument of
-`print`/`println`, of a builtin other than `toString`, or after a function's
-first argument: the reference evaluates it on a non-empty operand stack and
-fails with `VerifyError`, except as a left operand or a string builtin's or
-`error()`'s first argument, which are rejected too), or one whose body ends
-in a call with no value (`try { println(x) } catch e { … }`; the reference
-fails to compile it); a catch variable of a type outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
+anywhere else, or one whose body ends in a call with no value
+(`try { println(x) } catch e { … }`; the reference fails to compile it).
+Where the reference evaluates a `try` expression on a non-empty operand
+stack, it fails with `VerifyError`: the right operand of an arithmetic or
+comparison operator, `x += try …`, an argument of `print`/`println`, a
+string builtin's argument after the first, an argument after a function's
+first. Some other positions work on the reference: a left operand, the
+right operand of `&&`/`||`, a string builtin's first argument and
+`error()`'s argument. SiyoLLVM rejects those too, for now. Also rejected:
+a catch variable of a type outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
 a string; every builtin not listed above, `split` included (it returns an
 array); `main`/`init` with parameters or a return value.
 

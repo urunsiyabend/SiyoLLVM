@@ -174,7 +174,6 @@ void siyo_rt_throw(void *payload);
 /* Raises the Java exception java_class (e.g. "java.lang.ArithmeticException")
    with message, NULL for none. */
 void siyo_rt_raise_java(const char *java_class, const SiyoStr *message);
-_Bool siyo_rt_pending(void);
 /*
  * Clears the pending exception and returns what a catch variable receives
  * (SiyoRuntime.errorPayload): a SiyoThrow's payload; otherwise the message,

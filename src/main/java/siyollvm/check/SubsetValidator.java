@@ -64,8 +64,12 @@ import java.util.Set;
  * value, a condition, a returned or thrown value, or the first argument of a
  * user function or {@code toString} (recursively, so {@code imut s =
  * f(g(try …))} qualifies). Its exception handler clears the operand stack, so
- * anywhere else the reference fails verification. Its bodies end in a value,
- * in no expression at all (the value is null), or in {@code error()}.
+ * where the stack is not empty (a right arithmetic or comparison operand, an
+ * argument of {@code print}, a later argument) the reference fails
+ * verification. A left operand, the right operand of {@code &&}/{@code ||}, a
+ * string builtin's first argument and {@code error()}'s argument work on the
+ * reference but are rejected here for now, conservatively. Its bodies end in
+ * a value, in no expression at all (the value is null), or in {@code error()}.
  */
 public final class SubsetValidator {
 
@@ -216,7 +220,7 @@ public final class SubsetValidator {
                 }
             }
             case BoundReturnStatement ret -> {
-                _emptyStack = true;
+                if (ret.getExpression() != null) _emptyStack = true;
                 if (ret.getExpression() != null && validatesCleanly(ret.getExpression())) {
                     // The JVM backend returns the primitive unboxed, which fails verification.
                     Class<?> type = ret.getExpression().getClassType();

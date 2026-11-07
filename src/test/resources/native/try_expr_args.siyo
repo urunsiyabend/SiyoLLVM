@@ -1,0 +1,19 @@
+// try expressions as `return f(try …)`, `f(y = try …)` and other call arguments.
+fn sq(n: long) -> long { return n * n }
+fn ret(s: string) -> long { return sq(try { parseLong(s) } catch e { 0L - 3L }) }
+fn str(a: any) -> string { return "<" + a + ">" }
+mut y = 0L
+fn main() {
+    println(ret("4"))
+    println(ret("z"))
+    imut r = sq(y = try { parseLong("5") } catch e { 1L })
+    println(r)
+    println(y)
+    imut q = str(try { throw 1 } catch e { e })
+    println(q)
+    imut t: any = try { "s" } catch e { 1 }
+    println(t)
+    try { imut w = toString(try { error("x") } catch e { throw "rt " + e }) println(w) } catch e { println(e) }
+    imut u = try { substring("ab", 0, 1) } catch e { 5 }
+    println(u)
+}

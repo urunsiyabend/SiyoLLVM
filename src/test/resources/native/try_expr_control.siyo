@@ -1,0 +1,52 @@
+// try expressions: a join with no predecessors (both bodies throw), return,
+// break and continue inside a try-expression body, nesting and conditions.
+fn id(n: long) -> long { return n }
+fn both(n: int) -> int {
+    imut v = try { throw 1 } catch e { throw "both" + e }
+    return 5
+}
+fn early(s: string) -> long {
+    imut v = try { return parseLong(s) * 2L } catch e { 0L - 1L }
+    return v
+}
+fn tailErr(s: string) -> string {
+    return try { if len(s) == 0 { error("empty") } s } catch e { "E" + e }
+}
+mut gv = try { parseLong("q") } catch e { 77L }
+mut gw: any = try { error("gw") } catch e { e }
+fn loopy() -> int {
+    mut n = 0
+    mut i = 0
+    while i < 6 {
+        imut r = try {
+            if i == 1 { i = i + 1 continue }
+            if i == 5 { break }
+            10 / (i - 3)
+        } catch e { 0 - 100 }
+        n = n + r
+        i = i + 1
+    }
+    return n
+}
+fn main() {
+    try { println(both(1)) } catch e { println(e) }
+    println(early("21"))
+    println(early("x"))
+    println(tailErr(""))
+    println(tailErr("ok"))
+    println(gv)
+    println(gw)
+    println(loopy())
+    imut d = id(id(try { id(try { parseLong("x") } catch e { 3L }) } catch e { 4L }))
+    println(d)
+    mut k = 0
+    try {
+        throw "a"
+    } catch e {
+        while try { k < parseLong(substring("3", k, k + 1)) } catch e2 { false } { k = k + 1 }
+    }
+    println(k)
+    try {
+        try { throw "in" } catch e { imut q = try { 1 / 0 } catch e3 { throw "fromcatch:" + e3 } }
+    } catch e { println(e) }
+}
