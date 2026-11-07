@@ -26,3 +26,4 @@ Task 2: minor (→final wave): validator test row for channel for-in rejection
 Task 2: complete (commits 1d0e5ae..c581098, review clean)
 Final review: no code defects; 2 must-fix doc truth items (README summary, SUBSET string for-in var is any) + minors; ONE fix wave 2e5c8dd; scoped re-review: all addressed
 Final gates at 2e5c8dd: java 299+2, native 404+2, requires-clang OK, receipts returncode 0 / oom_kill_delta 0
+Published: 1abd7b0 (remote verified), CI run 42336285628 success (Java + Native)
