@@ -23,3 +23,4 @@ Task 2: complete (commits ff55202..34f0ac4, review clean)
 Final review: 2 Important (misleading "Java interop" message + SUBSET impl wording; cross-feature corpus coverage) + README; ONE fix wave 6c609fa; scoped re-review: all addressed (oracle re-run byte-identical)
 Final wave minor (deferred): struct-receiver message also applies to `any` receivers ("struct or any" would be more precise)
 Final gates at 6c609fa: java 335+2, native 451+2, requires-clang OK, receipts returncode 0 / oom_kill_delta 0
+Published: 175e760 (remote verified), CI run 42338248852 success (Java + Native)
