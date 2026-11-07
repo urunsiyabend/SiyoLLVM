@@ -1,0 +1,23 @@
+// SiyoLLVM's std/os: the public signatures of SiyoCompiler 0.9.0's std/os.
+// Every body here is a stub; the functions are native intrinsics in
+// SiyoLLVM's C runtime, bound by this file's classpath identity,
+// classpath:std/os.siyo.
+
+pub fn args() -> string[] {
+    error("SiyoLLVM intrinsic")
+    return [""]
+}
+
+pub fn env(name: string) -> string {
+    error("SiyoLLVM intrinsic")
+    return ""
+}
+
+pub fn exit(code: int) {
+    error("SiyoLLVM intrinsic")
+}
+
+pub fn cwd() -> string {
+    error("SiyoLLVM intrinsic")
+    return ""
+}

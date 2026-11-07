@@ -9,7 +9,7 @@ accepts.
 The reference semantics are those of `siyoc run` (the JVM backend) at
 SiyoCompiler `02c226298296fb4379f7251a9dfba19b7e887f3d`. Every program in
 `examples/` and `src/test/resources/native/`, and every multi-file program in
-`src/test/resources/modules/` (a directory per case, run from its `main.siyo`), is checked against it byte for
+`src/test/resources/modules/` (a directory per case, run from its `main.siyo` in a fresh directory holding a copy of the case's `files/`, with the lines of `main.args` as its arguments), is checked against it byte for
 byte.
 
 ## Accepted
@@ -37,6 +37,7 @@ byte.
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
 | Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any`, arrays, structs and maps included); `typeName(x)`; `len`, `push`, `pop`, `removeAt` on arrays; `len` and `map()` for maps; `range(a, b)`; on strings `len`, `s[i]`, `split`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
 | Modules | `import "x"`, `import "lib/x"`, `import "x" as y` of user modules, resolved by the binder exactly as `siyoc` resolves them, from the main file's directory: `x.siyo` beside the importing file, then `x/index.siyo`, `x/x.siyo`, then the working directory. Each module's functions (`x.f()`, or `y.f()` under an alias), globals (`x.n`, read and written), structs, enums and `impl` methods (by their bare names, `Point.new(1, 2)`) are usable by the importer. A module imported several times, by several files or under several names, is one module with one set of globals. Two modules may declare functions and globals of the same name; each call reaches its own module's function. Code in a module is checked against the subset like the main file's, and diagnostics in it name it relative to the main file's directory (`lib/util.siyo(3, 11): …`); a missing module is the binder's diagnostic at the importing `import` |
+| Standard library | `import "std/io"`, `"std/os"`, `"std/strings"` (aliases too), SiyoLLVM's own modules with SiyoCompiler 0.9.0's public signatures (see [Standard library](#standard-library)): `io.readFile`, `readLines`, `writeFile`, `appendFile`, `exists`, `isFile`, `isDir`, `listDir`, `mkdir`, `delete`, `eprintln`; `os.args`, `env`, `exit`, `cwd`; `strings.join`, `repeat`, `padLeft`, `padRight`, `trimStart`, `trimEnd`, `lastIndexOf`, `chars`, `lines`, `isInt` |
 | Entry | each imported module, dependencies first (the binder's registry order, as the JVM's class initialisation runs them), has its file-level globals initialised and then its own `init()` run; then the main file's globals are initialised in source order, then its `init()` runs, then `main()`; `init` and `main` optional, with no parameters and no return value. An exception escaping a module's globals or `init()` ends the program before `main` with `java.lang.ExceptionInInitializerError` and exit status 1, as the JVM's failed class initialiser does |
 
 ## Rejected
@@ -67,7 +68,7 @@ string builtin's argument after the first, an argument after a function's
 first. Some other positions work on the reference: a left operand, the
 right operand of `&&`/`||`, a string builtin's first argument and
 `error()`'s argument. SiyoLLVM rejects those too, for now. Also rejected:
-a catch variable of a type outside the subset; casts; `import java` (in the main file before binding; in a module, its Java calls are rejected); `std/…` modules (SiyoLLVM ships no standard library yet: `Module 'std/io' not found`); a module that imports its importer (the binder's circular import diagnostic); two different files that `siyoc` would give the same JVM class name, which it derives from the import string (`import "util"` reaching both `util.siyo` and `lib/util.siyo`: `[llvm] two modules named Util (util.siyo, lib/util.siyo) are not supported by SiyoLLVM`), and one file imported under two class names (`"lib/util"` and, from `lib/`, `"util"`); an import the binder gave up on without a diagnostic (a directory named `x.siyo`: `[llvm] module 'x' could not be compiled (x.siyo)`); in a module, the type declarations rejected in the main file (sum types, interfaces, actors), reported against the module's file; scope/spawn/send; `len` of anything but
+a catch variable of a type outside the subset; casts; `import java` (in the main file before binding; in a module, its Java calls are rejected); the std functions SiyoLLVM does not implement (`io.walk`, `io.readBytes`, `io.writeBytes`, `io.copyFile`, `strings.builder`: `[llvm] std/io.walk() is not supported by SiyoLLVM`) and the other std modules (`std/math`, `std/json`, …: `Module 'std/math' not found`); a module that imports its importer (the binder's circular import diagnostic); two different files that `siyoc` would give the same JVM class name, which it derives from the import string (`import "util"` reaching both `util.siyo` and `lib/util.siyo`: `[llvm] two modules named Util (util.siyo, lib/util.siyo) are not supported by SiyoLLVM`), and one file imported under two class names (`"lib/util"` and, from `lib/`, `"util"`); an import the binder gave up on without a diagnostic (a directory named `x.siyo`: `[llvm] module 'x' could not be compiled (x.siyo)`); in a module, the type declarations rejected in the main file (sum types, interfaces, actors), reported against the module's file; scope/spawn/send; `len` of anything but
 a string or an array; every builtin not listed above;
 `main`/`init` with parameters or a return value. A `try` expression is
 rejected as an array element, an index, an assigned element or a pushed
@@ -293,6 +294,75 @@ returning one from a function returning `any` (the reference fails with
 - A null string (a global read before its initialiser) passed to a string
   builtin or ordered with `<` etc. raises `java.lang.NullPointerException`.
 
+## Standard library
+
+SiyoLLVM ships `std/io.siyo`, `std/os.siyo` and `std/strings.siyo`
+(`src/main/resources/std/`) in its jar, where the binder's classpath lookup
+finds them as `classpath:std/<name>.siyo`. They have the public signatures of
+SiyoCompiler 0.9.0's std modules, but SiyoLLVM's own bodies:
+
+- `std/strings` is plain Siyo, compiled like any module, written to give the
+  reference's results (`builder()`, a Java `StringBuilder`, is rejected).
+- In `std/io` and `std/os` every body is a stub. A call to one is a call into
+  the C runtime (`siyo_rt_io_*`, `siyo_rt_os_*`), chosen by the module's
+  identity, the function's name and its arity (`siyollvm.ir.Intrinsics`); a
+  stub with no native implementation is rejected at compile time.
+
+**Which file is the standard module.** `siyoc` resolves `import "std/io"`
+beside the importing file first (`std/io.siyo` there), then in "dev mode" at
+`$CWD/src/main/resources/std/io.siyo`, then on the classpath. Only
+SiyoLLVM's own module gets intrinsics: the classpath resource, or the dev-mode
+file when its bytes are exactly the shipped resource's (as when SiyoLLVM runs
+in its own source tree). A program's own `std/io.siyo` beside it, or a
+different dev-mode file, is compiled as ordinary Siyo code, as `siyoc` would
+compile it (calls to it are never intrinsics). Note that the dev-mode lookup
+means running SiyoLLVM from a directory holding another project's
+`src/main/resources/std/` uses that project's files.
+
+**std/io** follows the reference's `java.io` calls:
+
+- Paths are `java.io.File`'s: repeated `/` collapsed and a trailing `/`
+  dropped, relative to the working directory. A path holding NUL raises
+  `java.io.FileNotFoundException: Invalid file path` when opened and is
+  `false`/`[]` for the queries; a null path raises `NullPointerException`.
+- `readFile`/`readLines` decode UTF-8 as `FileReader` does, each malformed
+  sequence becoming U+FFFD by Java's rules (a UTF-8-encoded surrogate is one
+  U+FFFD, a truncated sequence at the end is one); lines end at `\n`, `\r` or
+  `\r\n`, as `BufferedReader.readLine` splits them; `readFile` joins the
+  lines with `\n` (so a final line terminator, and a CR, is not kept), and an
+  empty file is `""` / `[]`.
+- `writeFile` creates or truncates, `appendFile` creates or appends; text is
+  written as UTF-8 with each lone surrogate as `?` (`FileWriter`). A null
+  content raises `NullPointerException` after the file is opened.
+- A failed open raises `java.io.FileNotFoundException` with Java's message,
+  `<path> (<strerror text>)` (the normalised path as the program wrote it;
+  `sub (Is a directory)`, `missing.txt (No such file or directory)`,
+  `/proc/version (Permission denied)`); a catch variable receives the message.
+  A read or write failing after the open raises `java.io.IOException`.
+- `exists`, `isFile`, `isDir` follow symbolic links; `mkdir` is `mkdirs`
+  (parents too, result ignored); `delete` removes a file or an empty directory
+  and returns whether it did; `eprintln` writes a line to stderr (a lone
+  surrogate as `?`).
+- **`listDir` order:** the reference returns `File.list()` order, the file
+  system's directory order, which is unspecified and differs between
+  directories and machines. SiyoLLVM sorts the names by their bytes. Entries
+  `.`/`..` are omitted; a missing path, a file or an unreadable directory
+  gives `[]`.
+
+**std/os:** `args()` is the program's arguments (after the executable),
+`env(name)` the variable or `""` when unset (`NullPointerException` for a null
+name), `cwd()` the working directory, `exit(code)` flushes stdout and stderr
+and ends the process with `code & 0xFF`, inside `try` too (it is not an
+exception).
+
+**Encodings.** File names, arguments, the environment and the working
+directory cross to the operating system as the JVM's `sun.jnu.encoding` does:
+UTF-8 when the locale's codeset is UTF-8, otherwise US-ASCII as in the C and
+POSIX locales, where each non-ASCII UTF-16 unit of a name is written as `?`
+(`writeFile("ç.txt", …)` creates `?.txt`, under `LC_ALL=C` as on the JVM) and
+each non-ASCII byte read (an argument, a listed name) becomes U+FFFD. File
+contents are always UTF-8.
+
 ## Deviations from `siyoc run`
 
 | Situation | `siyoc run` (0.9.0) | SiyoLLVM |
@@ -309,6 +379,10 @@ returning one from a function returning `any` (the reference fails with
 | Null `any` or array element (other than the literal `null`) read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field, `"java.util.List.get(int)"` for an element, `"java.util.List.set(int, Object)"` for the element an assignment replaced) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part; a catch variable receives that shorter message |
 | String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` instead of the helpful message |
 | `toUpper` of characters whose Java upper case is several characters, other than `ß` | one-to-many mapping from Unicode SpecialCasing | the character is kept, or mapped to a single character (see below) |
+| `io.listDir` order | `File.list()`: the file system's directory order | sorted by the names' bytes |
+| File names, arguments and environment under a locale whose codeset is neither UTF-8 nor ASCII (e.g. ISO-8859-1) | encoded with that charset | treated as US-ASCII |
+| `strerror` text in I/O exception messages | the JVM's (localised by the locale's `LC_MESSAGES`) | the C library's in the C locale (English) |
+| `io.mkdir` of a path through `..` | `File.mkdirs` makes the canonical path's parents | makes the parents along the path as written |
 | `toLower` of `Σ` ending a word | final `ς` | `σ` |
 | `toUpper`/`toLower` of characters added after Unicode 15.0 | unchanged (Java 21 knows Unicode 15.0) | mapped by glibc's newer tables (glibc 2.43 measured) |
 

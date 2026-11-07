@@ -42,13 +42,15 @@ public record LoweredProgram(List<Unit> units, IdentityHashMap<FunctionSymbol, U
      * One source file.
      *
      * @param file      File name used in diagnostics.
+     * @param identity  The module's identity: {@code classpath:std/<name>.siyo} for a standard module
+     *                  SiyoLLVM ships (see {@link Frontend#moduleIdentity}), else the file's absolute path.
      * @param text      Source text, for resolving offsets.
      * @param topLevel  Lowered file-level block: global declarations with their initialisers, in source order.
      * @param init      The file's own zero-argument {@code init}, or null.
      * @param functions Lowered function bodies the file declares, in declaration order.
      * @param declarationOffsets Source offset of each function's name, for diagnostics.
      */
-    public record Unit(String file, SourceText text, BoundBlockStatement topLevel, FunctionSymbol init,
+    public record Unit(String file, String identity, SourceText text, BoundBlockStatement topLevel, FunctionSymbol init,
                        LinkedHashMap<FunctionSymbol, BoundBlockStatement> functions,
                        Map<FunctionSymbol, Integer> declarationOffsets) {
     }

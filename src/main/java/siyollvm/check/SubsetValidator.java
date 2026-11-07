@@ -39,6 +39,7 @@ import codeanalysis.binding.BoundUnaryOperatorType;
 import codeanalysis.binding.BoundVariableDeclaration;
 import codeanalysis.binding.BoundVariableExpression;
 import siyollvm.frontend.LoweredProgram;
+import siyollvm.ir.Intrinsics;
 import siyollvm.frontend.SourceDiagnostic;
 
 import java.util.ArrayList;
@@ -528,6 +529,11 @@ public final class SubsetValidator {
             target = _program.target(function);
         } catch (IllegalStateException e) {
             report("calls to " + function.getName() + ", which names no single module function, are");
+            return;
+        }
+        if (target != null && Intrinsics.isUnimplemented(_program, target)) {
+            // A shipped std stub with no native implementation (std/io.walk, strings.builder).
+            report(Intrinsics.displayName(_program, target) + "() is");
             return;
         }
         // A user function's or toString's first argument is the first thing the

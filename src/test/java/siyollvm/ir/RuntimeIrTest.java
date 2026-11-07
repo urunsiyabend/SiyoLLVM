@@ -40,6 +40,7 @@ class RuntimeIrTest {
             "@siyo_rt_any_to_string", "@siyo_rt_any_equals",
             "@siyo_rt_struct_new", "@siyo_rt_struct_init", "@siyo_rt_type_name",
             "@siyo_rt_map_new", "@siyo_rt_map_insert", "@siyo_rt_map_len",
+            "@siyo_rt_io_eprintln", "@siyo_rt_os_args", "@siyo_rt_os_exit", "@siyo_rt_os_cwd",
             "@siyo_rt_catch", "@siyo_rt_uncaught", "@siyo_rt_uncaught_in_initializer", "@siyo_rt_stack_overflow");
 
     @Test

@@ -103,6 +103,21 @@ final class RuntimeIr {
                 declare i32 @siyo_rt_unbox_int_map_get_str(ptr)
                 declare zeroext i1 @siyo_rt_unbox_bool_map_get(ptr)
                 declare zeroext i1 @siyo_rt_unbox_bool_map_get_str(ptr)
+                declare ptr @siyo_rt_io_read_file(ptr)
+                declare ptr @siyo_rt_io_read_lines(ptr)
+                declare void @siyo_rt_io_write_file(ptr, ptr)
+                declare void @siyo_rt_io_append_file(ptr, ptr)
+                declare zeroext i1 @siyo_rt_io_exists(ptr)
+                declare zeroext i1 @siyo_rt_io_is_file(ptr)
+                declare zeroext i1 @siyo_rt_io_is_dir(ptr)
+                declare void @siyo_rt_io_eprintln(ptr)
+                declare void @siyo_rt_io_mkdir(ptr)
+                declare zeroext i1 @siyo_rt_io_delete(ptr)
+                declare ptr @siyo_rt_io_list_dir(ptr)
+                declare ptr @siyo_rt_os_args()
+                declare void @siyo_rt_os_exit(i32)
+                declare ptr @siyo_rt_os_env(ptr)
+                declare ptr @siyo_rt_os_cwd()
                 declare void @siyo_rt_throw(ptr)
                 declare ptr @siyo_rt_catch()
                 declare void @siyo_rt_uncaught() noreturn cold
@@ -139,5 +154,8 @@ final class RuntimeIr {
             "@siyo_rt_unbox_int_field", "@siyo_rt_unbox_bool_field",
             "@siyo_rt_map_get", "@siyo_rt_map_put", "@siyo_rt_map_has", "@siyo_rt_map_remove", "@siyo_rt_map_size",
             "@siyo_rt_map_keys", "@siyo_rt_cast_map", "@siyo_rt_unbox_int_map_get", "@siyo_rt_unbox_int_map_get_str",
-            "@siyo_rt_unbox_bool_map_get", "@siyo_rt_unbox_bool_map_get_str");
+            "@siyo_rt_unbox_bool_map_get", "@siyo_rt_unbox_bool_map_get_str",
+            "@siyo_rt_io_read_file", "@siyo_rt_io_read_lines", "@siyo_rt_io_write_file", "@siyo_rt_io_append_file",
+            "@siyo_rt_io_exists", "@siyo_rt_io_is_file", "@siyo_rt_io_is_dir", "@siyo_rt_io_mkdir",
+            "@siyo_rt_io_delete", "@siyo_rt_io_list_dir", "@siyo_rt_os_env");
 }

@@ -1,0 +1,57 @@
+import "std/io"
+
+fn show(label: string, s: string) {
+    println(label + " [" + s + "] " + toString(len(s)))
+}
+
+fn main() {
+    // Line endings: CRLF, CR only, no final newline; LF with a final newline.
+    println(io.readLines("crlf.txt"))
+    show("crlf", io.readFile("crlf.txt"))
+    println(io.readLines("lf.txt"))
+    show("lf", io.readFile("lf.txt"))
+    println(len(io.readLines("blank.txt")))
+    show("blank", io.readFile("blank.txt"))
+    // An empty file.
+    show("empty", io.readFile("empty.txt"))
+    println(len(io.readLines("empty.txt")))
+    // Invalid UTF-8 decodes to U+FFFD, as Java's decoder replaces it.
+    show("bad", io.readFile("bad.txt"))
+
+    // writeFile creates and overwrites; appendFile appends, creating the file.
+    io.writeFile("out.txt", "first version, long")
+    io.writeFile("out.txt", "ab")
+    io.appendFile("out.txt", "cd\n")
+    io.appendFile("new.txt", "made by append")
+    show("out", io.readFile("out.txt"))
+    show("new", io.readFile("new.txt"))
+    // Non-ASCII text round-trips; a lone surrogate is written as '?'.
+    io.writeFile("text.txt", "héllo wörld 😀\n" + "lone " + chr(55296) + " end")
+    println(io.readLines("text.txt"))
+    show("text", io.readFile("text.txt"))
+
+    // A Unicode file name (under LC_ALL=C, Java writes each non-ASCII unit as '?').
+    io.mkdir("names")
+    io.writeFile("names/ç ü.txt", "unicode name")
+    println(io.exists("names/ç ü.txt"))
+    show("uname", io.readFile("names/ç ü.txt"))
+    println(io.listDir("names"))
+
+    // Queries.
+    println(io.exists("lf.txt") + " " + io.exists("nope.txt") + " " + io.exists("sub") + " " + io.exists(""))
+    println(io.isFile("lf.txt") + " " + io.isFile("sub") + " " + io.isFile("nope"))
+    println(io.isDir("lf.txt") + " " + io.isDir("sub") + " " + io.isDir("nope") + " " + io.isDir("sub/"))
+    println(io.listDir("sub/inner"))
+    println(len(io.listDir("sub")))
+    println(io.listDir("missing"))
+    println(io.listDir("lf.txt"))
+
+    // mkdir makes parents; delete removes files and empty directories only.
+    io.mkdir("a/b/c")
+    io.mkdir("a/b/c")
+    println(io.isDir("a/b/c"))
+    io.writeFile("a/b/c/f.txt", "f")
+    println(io.delete("a/b") + " " + io.delete("a/b/c/f.txt") + " " + io.delete("a/b/c") + " " + io.delete("a/b/c"))
+    println(io.exists("a/b") + " " + io.exists("a/b/c"))
+    println(io.delete("nope.txt"))
+}

@@ -1,0 +1,32 @@
+[a, b, c]
+crlf [a
+b
+c] 5
+[x, y]
+lf [x
+y] 3
+2
+blank [
+] 1
+empty [] 0
+0
+bad [A�B�(C�D�E�F����G��H😀I﻿J�] 26
+out [abcd] 4
+new [made by append] 14
+[héllo wörld 😀, lone ? end]
+text [héllo wörld 😀
+lone ? end] 25
+true
+uname [unicode name] 12
+[? ?.txt]
+true false true false
+true false false
+false true false true
+[keep.txt]
+2
+[]
+[]
+true
+false true true false
+true false
+false

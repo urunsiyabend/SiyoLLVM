@@ -19,9 +19,12 @@ import codeanalysis.syntax.SyntaxType;
 import codeanalysis.text.SourceText;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,11 +104,14 @@ public final class Frontend {
         // The main file's imports first: the binder reaches them first.
         Imports imports = new Imports(registry, absolute, null);
         imports.check(tree.getRoot(), absolute.toString(), file, text, diagnostics);
+        Path cwd = Path.of("").toAbsolutePath();
         for (ModuleSymbol module : registry.getAllModules()) {
-            String display = displayName(absolute, module.getFilePath());
+            String identity = moduleIdentity(module.getFilePath(), cwd);
+            String display = identity.startsWith(CLASSPATH)
+                    ? identity.substring(CLASSPATH.length()) : displayName(absolute, module.getFilePath());
             String moduleSource;
             try {
-                moduleSource = Files.readString(Path.of(module.getFilePath()));
+                moduleSource = readModule(module.getFilePath());
             } catch (IOException | RuntimeException e) {
                 diagnostics.add(new SourceDiagnostic(display, 0, 0, "cannot read the module: " + e.getMessage()));
                 continue;
@@ -115,7 +121,7 @@ public final class Frontend {
             imports.check(moduleTree.getRoot(), module.getFilePath(), display, moduleTree.getText(), diagnostics);
             BoundBlockStatement topLevel = module.getTopLevelBlock() != null
                     ? module.getTopLevelBlock() : new BoundBlockStatement(new ArrayList<>());
-            LoweredProgram.Unit unit = unit(display, moduleTree, module.getFunctionBodies(), topLevel,
+            LoweredProgram.Unit unit = unit(display, identity, moduleTree, module.getFunctionBodies(), topLevel,
                     module.initFunction());
             units.add(unit);
             for (FunctionSymbol function : unit.functions().keySet()) {
@@ -142,7 +148,7 @@ public final class Frontend {
         for (FunctionSymbol function : own.keySet()) {
             if (function.getName().equals("init") && function.getParameters().isEmpty()) init = function;
         }
-        units.add(unit(file, tree, own, Lowerer.lower(scope.getBoundStatement()), init));
+        units.add(unit(file, absolute.toString(), tree, own, Lowerer.lower(scope.getBoundStatement()), init));
 
         IdentityHashMap<FunctionSymbol, LoweredProgram.Unit> unitOf = new IdentityHashMap<>();
         for (LoweredProgram.Unit unit : units) {
@@ -157,7 +163,7 @@ public final class Frontend {
      * A file's functions in declaration order, lowered unless the binder
      * already lowered them (impl methods).
      */
-    private static LoweredProgram.Unit unit(String file, SyntaxTree tree, Map<FunctionSymbol, BoundBlockStatement> bodies,
+    private static LoweredProgram.Unit unit(String file, String identity, SyntaxTree tree, Map<FunctionSymbol, BoundBlockStatement> bodies,
                                             BoundBlockStatement topLevel, FunctionSymbol init) {
         Map<String, Integer> declared = new HashMap<>();
         Set<String> implMethods = new HashSet<>();
@@ -174,7 +180,53 @@ public final class Frontend {
             boolean lowered = function.getDeclarationSpan() == null && implMethods.contains(key(function));
             functions.put(function, lowered ? entry.getValue() : Lowerer.lower(entry.getValue()));
         }
-        return new LoweredProgram.Unit(file, tree.getText(), topLevel, init, functions, offsets);
+        return new LoweredProgram.Unit(file, identity, tree.getText(), topLevel, init, functions, offsets);
+    }
+
+    /** The prefix of the pseudo-path the binder gives a module it found on the classpath. */
+    public static final String CLASSPATH = "classpath:";
+
+    /**
+     * The identity of a module the binder compiled from {@code filePath}:
+     * {@code classpath:std/<name>.siyo} for the standard module SiyoLLVM
+     * ships (its io and os functions are the runtime's intrinsics), else the
+     * file's absolute path, a user's module compiled as ordinary code.
+     *
+     * <p>siyoc looks for {@code std/<name>} beside the importing file first,
+     * then, in "dev mode", at {@code <cwd>/src/main/resources/std/<name>.siyo},
+     * and only then on the classpath. A file beside the importer is always the
+     * user's own. The dev-mode file is SiyoLLVM's module only when its text is
+     * byte for byte the shipped resource's (as it is when SiyoLLVM runs in its
+     * own source tree); any other file there is compiled as ordinary code.
+     *
+     * @param filePath The binder's path of the module: absolute, or {@code classpath:…}.
+     * @param cwd The working directory the binder resolved dev-mode paths against.
+     */
+    public static String moduleIdentity(String filePath, Path cwd) {
+        if (filePath.startsWith(CLASSPATH)) return filePath;
+        Path path = Path.of(filePath).toAbsolutePath().normalize();
+        Path devStd = cwd.toAbsolutePath().normalize().resolve("src/main/resources/std");
+        if (path.getParent() != null && path.getParent().equals(devStd)) {
+            String resource = "std/" + path.getFileName();
+            try (InputStream shipped = Frontend.class.getClassLoader().getResourceAsStream(resource)) {
+                if (shipped != null && Arrays.equals(shipped.readAllBytes(), Files.readAllBytes(path))) {
+                    return CLASSPATH + resource;
+                }
+            } catch (IOException e) {
+                // Unreadable: not provably the shipped text, so the user's own.
+            }
+        }
+        return path.toString();
+    }
+
+    /** A module's source, from its file or, for {@code classpath:…}, the resource beside the binder's classes. */
+    private static String readModule(String filePath) throws IOException {
+        if (!filePath.startsWith(CLASSPATH)) return Files.readString(Path.of(filePath));
+        String resource = filePath.substring(CLASSPATH.length());
+        try (InputStream in = Binder.class.getClassLoader().getResourceAsStream(resource)) {
+            if (in == null) throw new IOException("no resource " + resource);
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     /**

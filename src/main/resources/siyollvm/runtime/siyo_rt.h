@@ -377,6 +377,47 @@ void siyo_rt_unbox_null_literal(int32_t tag);
 /* Fatal and not catchable: prints java.lang.StackOverflowError, exits 1. */
 _Noreturn void siyo_rt_stack_overflow(void);
 
+/*
+ * std/io and std/os intrinsics: what SiyoCompiler 0.9.0's std/io and std/os
+ * do on the JVM. Paths are java.io.File's: repeated '/' collapsed and a
+ * trailing '/' dropped, a path holding NUL is invalid ("Invalid file path"
+ * when opened, false for the queries), a null path raises
+ * NullPointerException. File names, arguments, the environment and the
+ * working directory cross to the operating system in the JVM's
+ * sun.jnu.encoding: UTF-8 in a UTF-8 locale, else US-ASCII (each non-ASCII
+ * UTF-16 unit written as '?', each non-ASCII byte read as U+FFFD). File
+ * contents are always UTF-8: read with U+FFFD for malformed input, written
+ * with '?' for a lone surrogate.
+ */
+/* readFile: the lines (as readLines) joined with "\n". A failed open raises
+   java.io.FileNotFoundException "<path> (<strerror>)" (a directory is "Is a
+   directory"). */
+SiyoStr *siyo_rt_io_read_file(const SiyoStr *path);
+/* readLines: BufferedReader.readLine's lines ("\n", "\r" or "\r\n" ends one). */
+SiyoArray *siyo_rt_io_read_lines(const SiyoStr *path);
+/* writeFile, appendFile: FileWriter(path[, true]).write(content). */
+void siyo_rt_io_write_file(const SiyoStr *path, const SiyoStr *content);
+void siyo_rt_io_append_file(const SiyoStr *path, const SiyoStr *content);
+/* File.exists, isFile, isDirectory. */
+_Bool siyo_rt_io_exists(const SiyoStr *path);
+_Bool siyo_rt_io_is_file(const SiyoStr *path);
+_Bool siyo_rt_io_is_dir(const SiyoStr *path);
+/* System.err.println(message). Never raises. */
+void siyo_rt_io_eprintln(const SiyoStr *message);
+/* File.mkdirs (its result ignored), File.delete. */
+void siyo_rt_io_mkdir(const SiyoStr *path);
+_Bool siyo_rt_io_delete(const SiyoStr *path);
+/* File.list without "." and "..", sorted by bytes; empty unless a readable directory. */
+SiyoArray *siyo_rt_io_list_dir(const SiyoStr *path);
+/* The program's arguments (argv[1..]). Never raises. */
+SiyoArray *siyo_rt_os_args(void);
+/* System.getenv(name), "" when unset; a null name raises NullPointerException. */
+SiyoStr *siyo_rt_os_env(const SiyoStr *name);
+/* user.dir: the working directory. Never raises. */
+SiyoStr *siyo_rt_os_cwd(void);
+/* System.exit(code): flushes stdout and stderr and exits. */
+_Noreturn void siyo_rt_os_exit(int32_t code);
+
 /* malloc that never returns NULL: failure is java.lang.OutOfMemoryError. Never freed. */
 void *siyo_rt_alloc(size_t size);
 

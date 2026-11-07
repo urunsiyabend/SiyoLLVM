@@ -547,4 +547,23 @@ class SubsetValidatorTest {
                 "main.siyo(4, 11): [llvm] m.tag, which names no module global, is not supported by SiyoLLVM"),
                 diagnostics);
     }
+
+    @Test
+    void stdFunctionsWithoutANativeImplementationAreRejected() {
+        String source = """
+                import "std/io"
+                import "std/strings"
+                fn main() {
+                  println(io.walk("."))
+                  io.copyFile("a", "b")
+                  println(strings.builder())
+                  println(io.readFile("a") + strings.repeat("x", 2))
+                }
+                """;
+        List<String> diagnostics = validate(source).stream().map(SourceDiagnostic::format).toList();
+        assertEquals(List.of(
+                "v.siyo(4, 11): [llvm] std/io.walk() is not supported by SiyoLLVM",
+                "v.siyo(5, 3): [llvm] std/io.copyFile() is not supported by SiyoLLVM",
+                "v.siyo(6, 11): [llvm] std/strings.builder() is not supported by SiyoLLVM"), diagnostics);
+    }
 }

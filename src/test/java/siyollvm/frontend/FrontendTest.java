@@ -327,6 +327,48 @@ class FrontendTest {
         }
     }
 
+    @Test
+    void shippedStdModulesHaveTheirClasspathIdentity(@TempDir Path dir) throws Exception {
+        Path main = dir.resolve("main.siyo");
+        Files.writeString(main, "import \"std/io\"\nimport \"std/os\" as o\nimport \"std/strings\"\n"
+                + "fn main() { println(io.exists(\"x\")) println(o.args()) println(strings.repeat(\"a\", 2)) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        List<String> identities = result.program().units().stream().map(LoweredProgram.Unit::identity).toList();
+        assertEquals(List.of("classpath:std/io.siyo", "classpath:std/os.siyo", "classpath:std/strings.siyo",
+                main.toAbsolutePath().normalize().toString()), identities);
+        assertEquals("std/io.siyo", result.program().units().get(0).file());
+    }
+
+    @Test
+    void aUsersOwnStdModuleKeepsItsFileIdentity(@TempDir Path dir) throws Exception {
+        Files.createDirectories(dir.resolve("std"));
+        Files.writeString(dir.resolve("std/io.siyo"), "fn readFile(p: string) -> string { \"mine \" + p }\n");
+        Path main = dir.resolve("main.siyo");
+        Files.writeString(main, "import \"std/io\"\nfn main() { println(io.readFile(\"x\")) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        assertEquals(dir.resolve("std/io.siyo").toAbsolutePath().normalize().toString(),
+                result.program().units().get(0).identity());
+    }
+
+    @Test
+    void aDevModeStdFileIsTheShippedModuleOnlyWhenItsTextIsTheShippedText(@TempDir Path dir) throws Exception {
+        Path std = Files.createDirectories(dir.resolve("src/main/resources/std"));
+        String shipped;
+        try (var in = Frontend.class.getClassLoader().getResourceAsStream("std/io.siyo")) {
+            shipped = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+        Files.writeString(std.resolve("io.siyo"), shipped);
+        Files.writeString(std.resolve("os.siyo"), "pub fn args() -> string[] { return [\"mine\"] }\n");
+        assertEquals("classpath:std/io.siyo", Frontend.moduleIdentity(std.resolve("io.siyo").toString(), dir));
+        assertEquals(std.resolve("os.siyo").toString(), Frontend.moduleIdentity(std.resolve("os.siyo").toString(), dir));
+        // The same text elsewhere than the dev-mode location is the user's own file.
+        Files.writeString(dir.resolve("io.siyo"), shipped);
+        assertEquals(dir.resolve("io.siyo").toString(), Frontend.moduleIdentity(dir.resolve("io.siyo").toString(), dir));
+        assertEquals("classpath:std/os.siyo", Frontend.moduleIdentity("classpath:std/os.siyo", dir));
+    }
+
     private static String stripPrefix(String message) {
         return message.startsWith("[llvm] ") ? message.substring("[llvm] ".length()) : message;
     }

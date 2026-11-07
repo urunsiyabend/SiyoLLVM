@@ -5,12 +5,18 @@
 
 #include "siyo_rt.h"
 
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <langinfo.h>
 #include <locale.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <wctype.h>
 
 /*
@@ -105,7 +111,7 @@ static SiyoBuf *siyo_rt_buf_new(int64_t cap) {
 static SiyoStr *siyo_rt_str_from_bytes(const char *bytes, int64_t len, int64_t utf16_len) {
     if (utf16_len > INT32_MAX) siyo_rt_fail("java.lang.OutOfMemoryError\n");
     SiyoBuf *buf = siyo_rt_buf_new(len);
-    memcpy(buf->bytes, bytes, (size_t)len);
+    if (len > 0) memcpy(buf->bytes, bytes, (size_t)len);
     buf->used = len;
     return siyo_rt_str_header(buf->bytes, len, utf16_len, buf);
 }
@@ -1659,4 +1665,548 @@ SiyoArray *siyo_rt_map_keys(SiyoMap *map) {
         if (map->entries[i].live) siyo_rt_array_append(keys, map->entries[i].key);
     }
     return keys;
+}
+
+/* --- std/io and std/os ------------------------------------------------------ */
+
+/* A growable byte buffer for building file contents, paths and names. */
+typedef struct SiyoBytes {
+    unsigned char *bytes;
+    size_t len;
+    size_t cap;
+} SiyoBytes;
+
+static void siyo_rt_bytes_reserve(SiyoBytes *b, size_t extra) {
+    if (extra > SIZE_MAX / 2 - b->len) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+    if (b->len + extra <= b->cap) return;
+    size_t cap = b->cap < 64 ? 64 : b->cap;
+    while (cap < b->len + extra) cap *= 2;
+    unsigned char *bytes = siyo_rt_alloc(cap);
+    if (b->len > 0) memcpy(bytes, b->bytes, b->len);
+    free(b->bytes);
+    b->bytes = bytes;
+    b->cap = cap;
+}
+
+static void siyo_rt_bytes_put(SiyoBytes *b, const void *data, size_t n) {
+    siyo_rt_bytes_reserve(b, n);
+    if (n > 0) memcpy(b->bytes + b->len, data, n);
+    b->len += n;
+}
+
+static void siyo_rt_bytes_byte(SiyoBytes *b, unsigned char c) {
+    siyo_rt_bytes_put(b, &c, 1);
+}
+
+/* A string of ASCII bytes. */
+static SiyoStr *siyo_rt_str_ascii(const char *text) {
+    size_t len = strlen(text);
+    return siyo_rt_str_from_bytes(text, (int64_t)len, (int64_t)len);
+}
+
+/*
+ * Java's sun.jnu.encoding, which the JVM uses for file names, arguments, the
+ * environment and user.dir: UTF-8 when the locale (LC_ALL, LC_CTYPE or LANG,
+ * as setlocale(LC_ALL, "") reads them) has the UTF-8 codeset; otherwise
+ * US-ASCII, as in the C and POSIX locales. Read without changing the
+ * process's locale.
+ */
+static _Bool siyo_rt_jnu_utf8(void) {
+    static int state; /* 0 not read yet, 1 UTF-8, 2 US-ASCII */
+    if (state == 0) {
+        _Bool utf8 = 0;
+        locale_t locale = newlocale(LC_ALL_MASK, "", (locale_t)0);
+        if (locale != (locale_t)0) {
+            const char *codeset = nl_langinfo_l(CODESET, locale);
+            utf8 = codeset != NULL && strcmp(codeset, "UTF-8") == 0;
+            freelocale(locale);
+        }
+        state = utf8 ? 1 : 2;
+    }
+    return state == 1;
+}
+
+static _Bool siyo_rt_continuation(unsigned char b) {
+    return (b & 0xC0) == 0x80;
+}
+
+/*
+ * One step of Java's UTF-8 decoder (sun.nio.cs.UTF_8) over the n > 0 bytes at
+ * p, the rest of the input: returns how many bytes it consumes, setting *cp
+ * to the character, or to U+FFFD when those bytes are malformed and replaced
+ * by one U+FFFD. Surrogates encoded in UTF-8 and code points past U+10FFFF
+ * are malformed; an incomplete sequence at the end is one replacement.
+ */
+static size_t siyo_rt_utf8_step(const unsigned char *p, size_t n, uint32_t *cp) {
+    unsigned b1 = p[0];
+    *cp = 0xFFFD;
+    if (b1 < 0x80) {
+        *cp = b1;
+        return 1;
+    }
+    if (b1 >= 0xC2 && b1 <= 0xDF) {
+        if (n < 2 || !siyo_rt_continuation(p[1])) return 1;
+        *cp = ((b1 & 0x1Fu) << 6) | (p[1] & 0x3Fu);
+        return 2;
+    }
+    if (b1 >= 0xE0 && b1 <= 0xEF) {
+        _Bool bad2 = n > 1 && ((b1 == 0xE0 && (p[1] & 0xE0) == 0x80) || !siyo_rt_continuation(p[1]));
+        if (n < 3) return bad2 ? 1 : n;
+        if (bad2) return 1;
+        if (!siyo_rt_continuation(p[2])) return 2;
+        uint32_t c = ((b1 & 0x0Fu) << 12) | ((p[1] & 0x3Fu) << 6) | (p[2] & 0x3Fu);
+        if (c < 0xD800 || c > 0xDFFF) *cp = c;
+        return 3;
+    }
+    if (b1 >= 0xF0 && b1 <= 0xF7) {
+        if (n < 4) {
+            unsigned b2 = n > 1 ? p[1] : 0;
+            if (n > 1 && ((b1 == 0xF0 && (b2 < 0x90 || b2 > 0xBF)) || (b1 == 0xF4 && (b2 & 0xF0) != 0x80)
+                          || !siyo_rt_continuation(p[1]))) {
+                return 1;
+            }
+            if (n > 2 && !siyo_rt_continuation(p[2])) return 2;
+            return n;
+        }
+        uint32_t c = ((b1 & 0x07u) << 18) | ((p[1] & 0x3Fu) << 12) | ((p[2] & 0x3Fu) << 6) | (p[3] & 0x3Fu);
+        if (siyo_rt_continuation(p[1]) && siyo_rt_continuation(p[2]) && siyo_rt_continuation(p[3])
+            && c >= 0x10000 && c <= 0x10FFFF) {
+            *cp = c;
+            return 4;
+        }
+        unsigned b2 = p[1];
+        if (b1 > 0xF4 || (b1 == 0xF0 && (b2 < 0x90 || b2 > 0xBF)) || (b1 == 0xF4 && (b2 & 0xF0) != 0x80)
+            || !siyo_rt_continuation(p[1])) {
+            return 1;
+        }
+        return siyo_rt_continuation(p[2]) ? 3 : 2;
+    }
+    return 1;
+}
+
+/* n bytes decoded as Java's UTF-8 decoder with REPLACE does: valid UTF-8 out. */
+static SiyoStr *siyo_rt_decode_utf8(const unsigned char *p, size_t n) {
+    SiyoBytes out = {0};
+    siyo_rt_bytes_reserve(&out, n + 1);
+    for (size_t i = 0; i < n;) {
+        uint32_t cp;
+        size_t step = siyo_rt_utf8_step(p + i, n - i, &cp);
+        if (cp < 0x80) {
+            siyo_rt_bytes_byte(&out, (unsigned char)cp);
+        } else if (cp == 0xFFFD) {
+            siyo_rt_bytes_put(&out, "\xEF\xBF\xBD", 3);
+        } else {
+            siyo_rt_bytes_put(&out, p + i, step);
+        }
+        i += step;
+    }
+    SiyoStr *s = siyo_rt_str_from_bytes((const char *)out.bytes, (int64_t)out.len,
+                                        siyo_rt_count_units(out.bytes, (int64_t)out.len));
+    free(out.bytes);
+    return s;
+}
+
+/* Bytes from the operating system (an argument, a file name, the
+   environment, the working directory) as the JVM decodes them with
+   sun.jnu.encoding: UTF-8 with replacement, or US-ASCII, each byte past
+   0x7F becoming U+FFFD. */
+static SiyoStr *siyo_rt_from_os(const char *bytes) {
+    const unsigned char *p = (const unsigned char *)bytes;
+    size_t n = strlen(bytes);
+    if (siyo_rt_jnu_utf8()) return siyo_rt_decode_utf8(p, n);
+    SiyoBytes out = {0};
+    int64_t units = 0;
+    for (size_t i = 0; i < n; i++, units++) {
+        if (p[i] < 0x80) siyo_rt_bytes_byte(&out, p[i]);
+        else siyo_rt_bytes_put(&out, "\xEF\xBF\xBD", 3);
+    }
+    SiyoStr *s = siyo_rt_str_from_bytes((const char *)out.bytes, (int64_t)out.len, units);
+    free(out.bytes);
+    return s;
+}
+
+/* Appends s's WTF-8 bytes as Java encodes the string for the operating
+   system: UTF-8 with each lone surrogate as '?', or US-ASCII with each
+   UTF-16 unit past 0x7F as '?' (a 4-byte sequence is two units). */
+static void siyo_rt_to_os(SiyoBytes *out, const unsigned char *p, size_t n) {
+    _Bool utf8 = siyo_rt_jnu_utf8();
+    for (size_t i = 0; i < n;) {
+        int len = siyo_rt_seq_len(p[i]);
+        if (len == 1) {
+            siyo_rt_bytes_byte(out, p[i]);
+        } else if (!utf8) {
+            siyo_rt_bytes_put(out, len == 4 ? "??" : "?", len == 4 ? 2 : 1);
+        } else if (len == 3 && siyo_rt_surrogate_at(p + i) != 0) {
+            siyo_rt_bytes_byte(out, '?');
+        } else {
+            siyo_rt_bytes_put(out, p + i, (size_t)len);
+        }
+        i += (size_t)len;
+    }
+}
+
+/*
+ * A path as java.io.File holds and passes it: normal is the Siyo string with
+ * repeated '/' collapsed and a trailing '/' dropped (UnixFileSystem.normalize),
+ * os its NUL-terminated bytes for the operating system, invalid whether it
+ * holds a NUL character (File.isInvalid).
+ */
+typedef struct SiyoPath {
+    SiyoStr *normal;
+    char *os;
+    _Bool invalid;
+} SiyoPath;
+
+/* Fills *path from s; a null s raises NullPointerException (new File(null)) and returns 0. */
+static _Bool siyo_rt_path(const SiyoStr *s, SiyoPath *path) {
+    if (s == NULL) {
+        siyo_rt_null_pointer();
+        return 0;
+    }
+    const unsigned char *p = (const unsigned char *)s->data;
+    size_t n = (size_t)s->len;
+    SiyoBytes normal = {0};
+    int64_t removed = 0;
+    for (size_t i = 0; i < n; i++) {
+        if (p[i] == '/' && normal.len > 0 && normal.bytes[normal.len - 1] == '/') {
+            removed++;
+            continue;
+        }
+        siyo_rt_bytes_byte(&normal, p[i]);
+    }
+    if (normal.len > 1 && normal.bytes[normal.len - 1] == '/') {
+        normal.len--;
+        removed++;
+    }
+    path->normal = siyo_rt_str_from_bytes((const char *)normal.bytes, (int64_t)normal.len, s->utf16_len - removed);
+    path->invalid = normal.len > 0 && memchr(normal.bytes, 0, normal.len) != NULL;
+    SiyoBytes os = {0};
+    siyo_rt_to_os(&os, normal.bytes, normal.len);
+    siyo_rt_bytes_byte(&os, 0);
+    path->os = (char *)os.bytes;
+    free(normal.bytes);
+    return 1;
+}
+
+/* Raises java.io.FileNotFoundException "<path> (<strerror>)", as the JVM's
+   FileInputStream and FileOutputStream report a failed open. */
+static void siyo_rt_file_not_found(const SiyoPath *path, int error) {
+    const char *reason = strerror(error);
+    SiyoStr *message = siyo_rt_str_concat(path->normal, siyo_rt_str_ascii(" ("));
+    message = siyo_rt_str_concat(message, siyo_rt_str_ascii(reason));
+    message = siyo_rt_str_concat(message, siyo_rt_str_ascii(")"));
+    siyo_rt_raise_java("java.io.FileNotFoundException", message);
+}
+
+static void siyo_rt_invalid_path(void) {
+    SIYO_RT_STATIC_STR(message, "Invalid file path");
+    siyo_rt_raise_java("java.io.FileNotFoundException", &message);
+}
+
+/* Raises java.io.IOException with strerror(error), for a read or write that fails after the open. */
+static void siyo_rt_io_error(int error) {
+    siyo_rt_raise_java("java.io.IOException", siyo_rt_str_ascii(strerror(error)));
+}
+
+/* Opens path as FileInputStream/FileOutputStream do (a directory is EISDIR); -1 after raising. */
+static int siyo_rt_open(const SiyoPath *path, int flags) {
+    if (path->invalid) {
+        siyo_rt_invalid_path();
+        return -1;
+    }
+    int fd;
+    do {
+        fd = open(path->os, flags | O_CLOEXEC, 0666);
+    } while (fd < 0 && errno == EINTR);
+    if (fd < 0) {
+        siyo_rt_file_not_found(path, errno);
+        return -1;
+    }
+    struct stat st;
+    if (fstat(fd, &st) == 0 && S_ISDIR(st.st_mode)) {
+        close(fd);
+        siyo_rt_file_not_found(path, EISDIR);
+        return -1;
+    }
+    return fd;
+}
+
+/* The whole file at s decoded as Java's FileReader does (UTF-8, replacing
+   malformed input); NULL after raising. */
+static SiyoStr *siyo_rt_read_text(const SiyoStr *s) {
+    SiyoPath path;
+    if (!siyo_rt_path(s, &path)) return NULL;
+    int fd = siyo_rt_open(&path, O_RDONLY);
+    if (fd < 0) return NULL;
+    SiyoBytes data = {0};
+    for (;;) {
+        siyo_rt_bytes_reserve(&data, 65536);
+        ssize_t got = read(fd, data.bytes + data.len, data.cap - data.len);
+        if (got < 0 && errno == EINTR) continue;
+        if (got < 0) {
+            int error = errno;
+            close(fd);
+            free(data.bytes);
+            siyo_rt_io_error(error);
+            return NULL;
+        }
+        if (got == 0) break;
+        data.len += (size_t)got;
+    }
+    close(fd);
+    SiyoStr *text = siyo_rt_decode_utf8(data.bytes, data.len);
+    free(data.bytes);
+    return text;
+}
+
+/* BufferedReader.readLine over text: lines end at "\n", "\r" or "\r\n"; a
+   terminator at the very end starts no further line. */
+static SiyoArray *siyo_rt_lines_of(const SiyoStr *text) {
+    SiyoArray *lines = siyo_rt_array_new(0);
+    const unsigned char *p = (const unsigned char *)text->data;
+    size_t n = (size_t)text->len;
+    size_t start = 0;
+    for (size_t i = 0; i < n; i++) {
+        if (p[i] != '\n' && p[i] != '\r') continue;
+        int64_t len = (int64_t)(i - start);
+        siyo_rt_array_append(lines, siyo_rt_str_from_bytes((const char *)p + start, len,
+                                                           siyo_rt_count_units(p + start, len)));
+        if (p[i] == '\r' && i + 1 < n && p[i + 1] == '\n') i++;
+        start = i + 1;
+    }
+    if (start < n) {
+        int64_t len = (int64_t)(n - start);
+        siyo_rt_array_append(lines, siyo_rt_str_from_bytes((const char *)p + start, len,
+                                                           siyo_rt_count_units(p + start, len)));
+    }
+    return lines;
+}
+
+SiyoArray *siyo_rt_io_read_lines(const SiyoStr *path) {
+    SiyoStr *text = siyo_rt_read_text(path);
+    if (text == NULL) return NULL;
+    return siyo_rt_lines_of(text);
+}
+
+SiyoStr *siyo_rt_io_read_file(const SiyoStr *path) {
+    SiyoStr *text = siyo_rt_read_text(path);
+    if (text == NULL) return NULL;
+    SiyoArray *lines = siyo_rt_lines_of(text);
+    SiyoBytes out = {0};
+    int64_t units = 0;
+    for (int32_t i = 0; i < lines->len; i++) {
+        const SiyoStr *line = lines->items[i];
+        if (i > 0) {
+            siyo_rt_bytes_byte(&out, '\n');
+            units++;
+        }
+        siyo_rt_bytes_put(&out, line->data, (size_t)line->len);
+        units += line->utf16_len;
+    }
+    SiyoStr *result = siyo_rt_str_from_bytes((const char *)out.bytes, (int64_t)out.len, units);
+    free(out.bytes);
+    return result;
+}
+
+/* FileWriter(path, append).write(content).close(): opens (creating, and
+   truncating unless appending), then writes content as UTF-8 with each lone
+   surrogate as '?'. A null content raises NullPointerException after the open. */
+static void siyo_rt_write(const SiyoStr *s, const SiyoStr *content, _Bool append) {
+    SiyoPath path;
+    if (!siyo_rt_path(s, &path)) return;
+    int fd = siyo_rt_open(&path, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC));
+    if (fd < 0) return;
+    if (content == NULL) {
+        close(fd);
+        siyo_rt_null_pointer();
+        return;
+    }
+    SiyoBytes out = {0};
+    const unsigned char *p = (const unsigned char *)content->data;
+    size_t n = (size_t)content->len;
+    for (size_t i = 0; i < n;) {
+        int len = siyo_rt_seq_len(p[i]);
+        if (len == 3 && siyo_rt_surrogate_at(p + i) != 0) siyo_rt_bytes_byte(&out, '?');
+        else siyo_rt_bytes_put(&out, p + i, (size_t)len);
+        i += (size_t)len;
+    }
+    size_t done = 0;
+    while (done < out.len) {
+        ssize_t wrote = write(fd, out.bytes + done, out.len - done);
+        if (wrote < 0 && errno == EINTR) continue;
+        if (wrote < 0) {
+            int error = errno;
+            close(fd);
+            free(out.bytes);
+            siyo_rt_io_error(error);
+            return;
+        }
+        done += (size_t)wrote;
+    }
+    free(out.bytes);
+    if (close(fd) != 0 && errno != EINTR) siyo_rt_io_error(errno);
+}
+
+void siyo_rt_io_write_file(const SiyoStr *path, const SiyoStr *content) {
+    siyo_rt_write(path, content, 0);
+}
+
+void siyo_rt_io_append_file(const SiyoStr *path, const SiyoStr *content) {
+    siyo_rt_write(path, content, 1);
+}
+
+/* stat of a valid path: File.exists, isFile and isDirectory (links followed). */
+static _Bool siyo_rt_stat(const SiyoStr *s, struct stat *st, _Bool *found) {
+    SiyoPath path;
+    *found = 0;
+    if (!siyo_rt_path(s, &path)) return 0;
+    *found = !path.invalid && stat(path.os, st) == 0;
+    return 1;
+}
+
+_Bool siyo_rt_io_exists(const SiyoStr *path) {
+    struct stat st;
+    _Bool found;
+    siyo_rt_stat(path, &st, &found);
+    return found;
+}
+
+_Bool siyo_rt_io_is_file(const SiyoStr *path) {
+    struct stat st;
+    _Bool found;
+    siyo_rt_stat(path, &st, &found);
+    return found && S_ISREG(st.st_mode);
+}
+
+_Bool siyo_rt_io_is_dir(const SiyoStr *path) {
+    struct stat st;
+    _Bool found;
+    siyo_rt_stat(path, &st, &found);
+    return found && S_ISDIR(st.st_mode);
+}
+
+void siyo_rt_io_eprintln(const SiyoStr *message) {
+    /* System.out flushes each line; flushing here keeps 2>&1 in program order. */
+    fflush(stdout);
+    if (message == NULL) fputs("null", stderr);
+    else siyo_rt_write_str(message, stderr);
+    fputc('\n', stderr);
+}
+
+/* File.mkdirs on os, a normalised path: false when it exists; else mkdir, or
+   make the parent first. */
+static _Bool siyo_rt_mkdirs(char *os) {
+    struct stat st;
+    if (stat(os, &st) == 0) return 0;
+    if (mkdir(os, 0777) == 0) return 1;
+    char *slash = strrchr(os, '/');
+    if (slash == NULL) return 0;
+    if (slash == os) return 0;
+    *slash = '\0';
+    _Bool parent = siyo_rt_mkdirs(os) || stat(os, &st) == 0;
+    *slash = '/';
+    return parent && mkdir(os, 0777) == 0;
+}
+
+void siyo_rt_io_mkdir(const SiyoStr *s) {
+    SiyoPath path;
+    if (!siyo_rt_path(s, &path)) return;
+    if (!path.invalid) siyo_rt_mkdirs(path.os);
+}
+
+_Bool siyo_rt_io_delete(const SiyoStr *s) {
+    SiyoPath path;
+    if (!siyo_rt_path(s, &path)) return 0;
+    return !path.invalid && remove(path.os) == 0;
+}
+
+static int siyo_rt_compare_names(const void *a, const void *b) {
+    return strcmp(*(char *const *)a, *(char *const *)b);
+}
+
+/* The names in a directory, without "." and "..", sorted by their bytes
+   (File.list's order is the file system's, which varies); empty when the path
+   is not a directory that can be read. */
+SiyoArray *siyo_rt_io_list_dir(const SiyoStr *s) {
+    SiyoPath path;
+    if (!siyo_rt_path(s, &path)) return NULL;
+    SiyoArray *result = siyo_rt_array_new(0);
+    if (path.invalid) return result;
+    DIR *dir = opendir(path.os);
+    if (dir == NULL) return result;
+    char **names = NULL;
+    size_t count = 0, cap = 0;
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        if (count == cap) {
+            cap = cap == 0 ? 16 : cap * 2;
+            char **grown = siyo_rt_alloc(cap * sizeof(char *));
+            if (count > 0) memcpy(grown, names, count * sizeof(char *));
+            free(names);
+            names = grown;
+        }
+        size_t len = strlen(entry->d_name);
+        names[count] = siyo_rt_alloc(len + 1);
+        memcpy(names[count], entry->d_name, len + 1);
+        count++;
+    }
+    closedir(dir);
+    if (count > 1) qsort(names, count, sizeof(char *), siyo_rt_compare_names);
+    for (size_t i = 0; i < count; i++) {
+        siyo_rt_array_append(result, siyo_rt_from_os(names[i]));
+        free(names[i]);
+    }
+    free(names);
+    return result;
+}
+
+SiyoArray *siyo_rt_os_args(void) {
+    SiyoArray *args = siyo_rt_array_new(siyo_rt_argc > 1 ? siyo_rt_argc - 1 : 0);
+    for (int i = 1; i < siyo_rt_argc; i++) siyo_rt_array_append(args, siyo_rt_from_os(siyo_rt_argv[i]));
+    return args;
+}
+
+/* System.getenv(name), "" when unset. No variable's name holds '=' or NUL;
+   in the US-ASCII encoding, nor a character past 0x7F (the JVM's decoded
+   names hold U+FFFD there). */
+SiyoStr *siyo_rt_os_env(const SiyoStr *name) {
+    if (name == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    const unsigned char *p = (const unsigned char *)name->data;
+    size_t n = (size_t)name->len;
+    for (size_t i = 0; i < n; i++) {
+        if (p[i] == '=' || p[i] == 0 || (p[i] >= 0x80 && !siyo_rt_jnu_utf8())) return siyo_rt_str_ascii("");
+    }
+    SiyoBytes os = {0};
+    siyo_rt_to_os(&os, p, n);
+    siyo_rt_bytes_byte(&os, 0);
+    const char *value = getenv((const char *)os.bytes);
+    free(os.bytes);
+    return siyo_rt_from_os(value != NULL ? value : "");
+}
+
+/* System.getProperty("user.dir"): the working directory, decoded as the JVM does. */
+SiyoStr *siyo_rt_os_cwd(void) {
+    SiyoBytes buf = {0};
+    siyo_rt_bytes_reserve(&buf, 4096);
+    while (getcwd((char *)buf.bytes, buf.cap) == NULL) {
+        if (errno != ERANGE) {
+            free(buf.bytes);
+            return siyo_rt_str_ascii("");
+        }
+        siyo_rt_bytes_reserve(&buf, buf.cap * 2);
+    }
+    SiyoStr *cwd = siyo_rt_from_os((const char *)buf.bytes);
+    free(buf.bytes);
+    return cwd;
+}
+
+/* System.exit(code): flushes stdout and stderr and ends the process; a
+   pending catch does not see it. */
+_Noreturn void siyo_rt_os_exit(int32_t code) {
+    fflush(NULL);
+    exit(code);
 }

@@ -709,4 +709,60 @@ class IrEmitterTest {
         int m = ir.indexOf("call void @siyo.init_globals()");
         assertTrue(a > 0 && a < b && b < m, ir);
     }
+
+    @Test
+    void stdIoAndOsCallsAreRuntimeIntrinsics() {
+        String ir = emit("""
+                import "std/io"
+                import "std/os"
+                fn main() {
+                  io.writeFile("f", "x")
+                  println(io.readFile("f"))
+                  println(os.args())
+                  os.exit(2)
+                }
+                """);
+        assertTrue(ir.contains("call void @siyo_rt_io_write_file(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_io_read_file(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_os_args()"), ir);
+        assertTrue(ir.contains("call void @siyo_rt_os_exit(i32 2)"), ir);
+        assertFalse(ir.contains("SiyoLLVM intrinsic"), "stub bodies are not emitted: " + ir);
+    }
+
+    @Test
+    void aUsersOwnStdIoIsCompiledAsOrdinaryCode(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir)
+            throws Exception {
+        java.nio.file.Files.createDirectories(dir.resolve("std"));
+        java.nio.file.Files.writeString(dir.resolve("std/io.siyo"),
+                "fn readFile(p: string) -> string { \"mine \" + p }\n");
+        java.nio.file.Path main = dir.resolve("main.siyo");
+        java.nio.file.Files.writeString(main, "import \"std/io\"\nfn main() { println(io.readFile(\"x\")) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, java.nio.file.Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        assertEquals(java.util.List.of(), SubsetValidator.validate(result.program()));
+        String ir = IrEmitter.emit(result.program());
+        assertFalse(ir.contains("call ptr @siyo_rt_io_read_file("), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn."), ir);
+    }
+
+    @Test
+    void everyShippedIoAndOsFunctionIsAStubAndStringsIsCompiled() {
+        FrontendResult result = Frontend.analyze("e.siyo",
+                "import \"std/io\"\nimport \"std/os\"\nimport \"std/strings\"\nfn main() { }\n");
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        siyollvm.frontend.LoweredProgram program = result.program();
+        int io = 0;
+        for (siyollvm.frontend.LoweredProgram.Unit unit : program.units()) {
+            for (codeanalysis.FunctionSymbol function : unit.functions().keySet()) {
+                boolean stub = Intrinsics.isStub(program, function);
+                if (unit.identity().equals("classpath:std/strings.siyo")) {
+                    assertEquals(function.getName().equals("builder"), stub, function.getName());
+                } else if (unit.identity().startsWith("classpath:std/")) {
+                    assertTrue(stub, unit.identity() + " " + function.getName());
+                    io++;
+                }
+            }
+        }
+        assertEquals(19, io);
+    }
 }

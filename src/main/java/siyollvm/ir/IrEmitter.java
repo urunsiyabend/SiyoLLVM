@@ -160,6 +160,8 @@ public final class IrEmitter {
         int index = 0;
         for (LoweredProgram.Unit unit : _program.units()) {
             for (FunctionSymbol function : unit.functions().keySet()) {
+                // A shipped std stub has no code: calls to it go to the runtime.
+                if (Intrinsics.isStub(_program, function)) continue;
                 _functionNames.put(function, "@siyo.fn." + index++);
             }
             for (BoundStatement statement : unit.topLevel().getStatements()) {
@@ -172,6 +174,7 @@ public final class IrEmitter {
         StringBuilder functions = new StringBuilder();
         for (LoweredProgram.Unit unit : _program.units()) {
             for (var entry : unit.functions().entrySet()) {
+                if (!_functionNames.containsKey(entry.getKey())) continue;
                 functions.append(function(entry.getKey(), entry.getValue())).append('\n');
             }
         }
@@ -937,6 +940,8 @@ public final class IrEmitter {
         if (runtime != null) return runtimeCall(runtime, function, call.getArguments());
 
         FunctionSymbol target = _program.target(function);
+        String intrinsic = target == null ? null : Intrinsics.runtime(_program, target);
+        if (intrinsic != null) return intrinsicCall(intrinsic, target, call.getArguments());
         String name = target == null ? null : _functionNames.get(target);
         if (name == null) throw unsupported("call to " + function.getName());
         function = target;
@@ -1049,6 +1054,31 @@ public final class IrEmitter {
         Class<?> result = function.getReturnType();
         String text = "call " + abiType(result) + " " + runtime + "(" + args + ")";
         return new Value(RuntimeIr.RAISING.contains(runtime) ? raisingCall(text) : instruction(text), result);
+    }
+
+    /**
+     * A call to a std/io or std/os function, which the runtime implements:
+     * the arguments coerced to the Siyo signature's parameter types, the
+     * result of its return type (none for a void function).
+     */
+    private Value intrinsicCall(String runtime, FunctionSymbol function, List<BoundExpression> arguments) {
+        List<ParameterSymbol> parameters = function.getParameters();
+        if (arguments.size() != parameters.size()) throw unsupported(function.getName() + " arity");
+        StringBuilder args = new StringBuilder();
+        for (int i = 0; i < parameters.size(); i++) {
+            Value argument = argument(expression(arguments.get(i)), parameters.get(i).getType());
+            if (i > 0) args.append(", ");
+            args.append(abiType(argument.type())).append(' ').append(argument.ref());
+        }
+        Class<?> result = function.getReturnType();
+        boolean raising = RuntimeIr.RAISING.contains(runtime);
+        if (result == null) {
+            instructionNoResult("call void " + runtime + "(" + args + ")");
+            if (raising) checkPending();
+            return new Value(null, null);
+        }
+        String text = "call " + abiType(result) + " " + runtime + "(" + args + ")";
+        return new Value(raising ? raisingCall(text) : instruction(text), result);
     }
 
     /** The type as it crosses into C: {@code _Bool} is {@code zeroext i1}. */

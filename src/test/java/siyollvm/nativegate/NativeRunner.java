@@ -50,7 +50,11 @@ final class NativeRunner {
         return programs;
     }
 
-    /** Builds and runs {@code source} under {@code LC_ALL=C}, then compares with its expectation files. */
+    /**
+     * Builds and runs {@code source} under {@code LC_ALL=C}, then compares with its expectation files.
+     * The program runs in a fresh directory holding a copy of {@code files/} beside the source, if
+     * any, with the lines of {@code <name>.args} beside it, if any, as its arguments.
+     */
     static void buildRunAndCompare(Clang clang, Path source) throws Exception {
         buildRunAndCompare(clang, source, source.getFileName().toString().replace(".siyo", ""));
     }
@@ -81,7 +85,15 @@ final class NativeRunner {
         Files.writeString(ll, ir.ir(), StandardCharsets.UTF_8);
         clang.compile(ll, exe);
 
-        Run run = run(List.of(exe.toString()), work, Map.of("LC_ALL", "C"));
+        Path runDir = freshRunDirectory(work, source.resolveSibling("files"));
+        Path argsFile = sibling(source, ".args");
+        List<String> command = Files.isRegularFile(argsFile)
+                // The shell passes each line's bytes as they are, as the oracle's does.
+                ? List.of("/bin/sh", "-c", "f=$1; exe=$2; set --; "
+                        + "while IFS= read -r l || [ -n \"$l\" ]; do set -- \"$@\" \"$l\"; done < \"$f\"; "
+                        + "exec \"$exe\" \"$@\"", "sh", argsFile.toAbsolutePath().toString(), exe.toString())
+                : List.of(exe.toString());
+        Run run = run(command, runDir, work, Map.of("LC_ALL", "C"));
         assertArrayEquals(expectedStdout, run.stdout(),
                 name + " stdout:\n" + new String(run.stdout(), StandardCharsets.UTF_8));
         assertEquals(expectedStderr, run.stderr(), name + " stderr");
@@ -90,13 +102,38 @@ final class NativeRunner {
 
     record Run(int exitCode, byte[] stdout, String stderr) {}
 
+    /**
+     * An empty {@code run} directory in {@code work}, holding a copy of the
+     * case's {@code files/} fixtures when it has them: the program runs there,
+     * so what it writes never reaches the source tree, and each run starts
+     * afresh. {@code rm} and {@code cp} handle the names byte for byte,
+     * whatever the JVM's file name encoding.
+     */
+    private static Path freshRunDirectory(Path work, Path fixtures) throws Exception {
+        Path runDir = work.resolve("run");
+        Run removed = run(List.of("rm", "-rf", "--", runDir.toString()), work, work, Map.of());
+        assertEquals(0, removed.exitCode(), removed.stderr());
+        Files.createDirectories(runDir);
+        if (Files.isDirectory(fixtures)) {
+            Run copied = run(List.of("cp", "-R", "--", fixtures + "/.", runDir.toString()), work, work, Map.of());
+            assertEquals(0, copied.exitCode(), copied.stderr());
+        }
+        return runDir;
+    }
+
     /** Runs a command with a clean locale ({@code LANG}/{@code LC_*} removed, then {@code extraEnv} added). */
     static Run run(List<String> command, Path directory, Map<String, String> extraEnv) throws Exception {
+        return run(command, directory, directory, extraEnv);
+    }
+
+    /** As above, keeping the captured output in {@code outputDirectory}. */
+    static Run run(List<String> command, Path directory, Path outputDirectory, Map<String, String> extraEnv)
+            throws Exception {
         ProcessBuilder builder = new ProcessBuilder(command).directory(directory.toFile());
         builder.environment().keySet().removeIf(k -> k.equals("LANG") || k.startsWith("LC_"));
         builder.environment().putAll(extraEnv);
-        Path out = Files.createTempFile(directory, "stdout", ".bin");
-        Path err = Files.createTempFile(directory, "stderr", ".txt");
+        Path out = Files.createTempFile(outputDirectory, "stdout", ".bin");
+        Path err = Files.createTempFile(outputDirectory, "stderr", ".txt");
         builder.redirectOutput(out.toFile()).redirectError(err.toFile()).redirectInput(ProcessBuilder.Redirect.from(
                 Path.of("/dev/null").toFile()));
         Process process = builder.start();
