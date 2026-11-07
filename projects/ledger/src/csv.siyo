@@ -1,0 +1,62 @@
+// csv: splits one CSV line into fields, as FORMAT.md "Splitting a row into
+// fields" describes. Scans UTF-16 units left to right.
+
+// The fields of a line, or the quote error that stopped the split
+// (`error` is "" when the split succeeded).
+struct Split { parts: string[], error: string }
+
+fn ok(parts: string[]) -> Split {
+    return Split { parts: parts, error: "" }
+}
+
+fn failed(parts: string[], reason: string) -> Split {
+    return Split { parts: parts, error: reason }
+}
+
+// Splits `line` into its fields. A quoted field keeps its text as written
+// (with "" read as one "); an unquoted field is trimmed.
+fn splitLine(line: string) -> Split {
+    mut parts: string[] = []
+    imut n = len(line)
+    mut i = 0
+    while true {
+        if i < n && line[i] == "\"" {
+            mut text = ""
+            mut j = i + 1
+            mut inField = true
+            while inField {
+                if j >= n {
+                    return failed(parts, "unterminated quote")
+                }
+                imut c = line[j]
+                if c != "\"" {
+                    text += c
+                    j += 1
+                } else if j + 1 == n {
+                    push(parts, text)
+                    return ok(parts)
+                } else if line[j + 1] == "\"" {
+                    text += "\""
+                    j += 2
+                } else if line[j + 1] == "," {
+                    push(parts, text)
+                    i = j + 2
+                    inField = false
+                } else {
+                    return failed(parts, "malformed quotes")
+                }
+            }
+        } else {
+            mut j = i
+            while j < n && line[j] != "," {
+                j += 1
+            }
+            push(parts, trim(substring(line, i, j)))
+            if j >= n {
+                return ok(parts)
+            }
+            i = j + 1
+        }
+    }
+    return ok(parts)
+}

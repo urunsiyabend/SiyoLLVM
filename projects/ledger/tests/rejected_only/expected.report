@@ -1,0 +1,16 @@
+LEDGER REPORT
+source: r.csv
+rows: 0 accepted, 3 rejected, 3 total
+period: none
+
+ACCOUNTS
+ACCOUNT  COUNT        CREDITS         DEBITS            NET
+TOTAL        0           0.00           0.00           0.00
+
+CATEGORIES
+CATEGORY  COUNT            NET
+
+REJECTED
+line 2: invalid amount '1.0'
+line 3: empty account
+line 5: unterminated quote

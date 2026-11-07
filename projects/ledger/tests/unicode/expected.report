@@ -1,0 +1,37 @@
+LEDGER REPORT
+source: u.csv
+rows: 14 accepted, 3 rejected, 17 total
+period: 2025-05-01 to 2025-05-15
+
+ACCOUNTS
+ACCOUNT                        COUNT        CREDITS         DEBITS            NET
+Ziraat                             1           0.00        -312.40        -312.40
+ağaç                               1           0.00         -88.88         -88.88
+zebra                              1           0.00         -12.00         -12.00
+Ünal                               1           0.00          -3.20          -3.20
+İş Bankası                         1       32000.00           0.00       32000.00
+Şirket Hesabı                      1           0.00       -4500.00       -4500.00
+銀行口座                               1           0.00       -1200.00       -1200.00
+🏦 Bank                            2        4500.00          -4.50        4495.50
+😀 quoted, emoji                   1           0.00          -7.77          -7.77
+😀😀😀😀 Emoji Wallet Account      1           0.00        -250.00        -250.00
+Ａ Fullwidth                        2           6.00          -6.00           0.00
+ｱ                                  1           1.00           0.00           1.00
+TOTAL                             14       36507.00       -6384.75       30122.25
+
+CATEGORIES
+CATEGORY            COUNT            NET
+Maaş                    1       32000.00
+ﬀ ligature              1           1.00
+Kira                    2           0.00
+ｶﾌｪ                     2           0.00
+☕ Kahve                 2          -7.70
+Ç, Ö                    1          -7.77
+🎉🎉🎉 Celebration      1        -250.00
+Market/Pazar            2        -324.40
+食品                      2       -1288.88
+
+REJECTED
+line 15: invalid date '２０２５-05-13'
+line 16: invalid amount '１２.００'
+line 18: empty category

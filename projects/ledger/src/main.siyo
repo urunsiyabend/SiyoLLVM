@@ -1,0 +1,66 @@
+// ledger <transactions.csv> <report.txt>
+// Reconciles a CSV of bank transactions into a report; see ../FORMAT.md.
+// Modules: csv (field splitting), model (validation), ledger (aggregation),
+// report (formatting).
+import "std/io"
+import "std/os"
+import "ledger"
+import "report"
+
+imut HEADER = "date,account,category,amount,memo"
+
+// Writes one error line to stderr and exits with status 2.
+fn fail(message: string) {
+    io.eprintln(message)
+    os.exit(2)
+}
+
+fn main() {
+    imut args = os.args()
+    if len(args) != 2 {
+        fail("usage: ledger <transactions.csv> <report.txt>")
+        return
+    }
+    // Elements of an array from another module are `any`: bind them typed.
+    imut source: string = args[0]
+    imut target: string = args[1]
+
+    mut lines: string[] = []
+    try {
+        lines = io.readLines(source)
+    } catch e {
+        fail("ledger: cannot read " + source + ": " + e)
+        return
+    }
+    if len(lines) == 0 {
+        fail("ledger: " + source + ": bad header")
+        return
+    }
+    imut first: string = lines[0]
+    if first != HEADER {
+        fail("ledger: " + source + ": bad header")
+        return
+    }
+
+    imut book = ledger.newBook()
+    for mut i = 1 i < len(lines) i = i + 1 {
+        imut line: string = lines[i]
+        if trim(line) != "" {
+            ledger.record(book, i + 1, line)
+        }
+    }
+
+    imut text = report.render(book, source)
+    try {
+        io.writeFile(target, text)
+    } catch e {
+        fail("ledger: cannot write " + target + ": " + e)
+        return
+    }
+    println("ledger: " + book.accepted + " accepted, " + book.rejected + " rejected")
+    println("net: " + report.money(report.totalNet(book)))
+    println("report: " + target)
+    if book.rejected > 0 {
+        os.exit(3)
+    }
+}

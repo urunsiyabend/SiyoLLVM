@@ -1,0 +1,20 @@
+LEDGER REPORT
+source: le.csv
+rows: 6 accepted, 3 rejected, 9 total
+period: 2025-04-01 to 2025-04-07
+
+ACCOUNTS
+ACCOUNT  COUNT        CREDITS         DEBITS            NET
+Bank         3          20.00           0.00          20.00
+Cash         3           0.00          -6.00          -6.00
+TOTAL        6          20.00          -6.00          14.00
+
+CATEGORIES
+CATEGORY  COUNT            NET
+Pay           3          20.00
+Food          3          -6.00
+
+REJECTED
+line 9: invalid amount 'bad'
+line 10: expected 5 fields, found 2
+line 11: invalid date ''

@@ -1,0 +1,54 @@
+LEDGER REPORT
+source: tx.csv
+rows: 10 accepted, 36 rejected, 46 total
+period: 2025-02-01 to 2025-02-31
+
+ACCOUNTS
+ACCOUNT   COUNT        CREDITS         DEBITS            NET
+Big           3 10001234567.88 -9999999999.99     1234567.89
+Checking      4        1007.10          -6.00        1001.10
+Zero          3           0.05           0.00           0.05
+TOTAL        10 10001235575.03 -10000000005.99     1235569.04
+
+CATEGORIES
+CATEGORY  COUNT            NET
+Food          9     1234569.04
+Salary        1        1000.00
+
+REJECTED
+line 3: unterminated quote
+line 4: malformed quotes
+line 5: expected 5 fields, found 4
+line 6: expected 5 fields, found 6
+line 7: invalid date '2025-13-01'
+line 8: invalid date '2025-00-10'
+line 9: invalid date '2025-02-32'
+line 10: invalid date '2025-02-00'
+line 12: invalid date '2025/02/03'
+line 13: invalid date '25-02-03'
+line 14: invalid date '2025-2-3'
+line 15: invalid date '2025-02-0a'
+line 16: invalid date '20250-02-03'
+line 17: invalid date ''
+line 19: invalid date '2025-02-04 '
+line 20: empty account
+line 21: empty account
+line 22: empty category
+line 23: invalid amount '1.5'
+line 24: invalid amount '12345678901'
+line 28: invalid amount '+5'
+line 29: invalid amount '-'
+line 30: invalid amount ''
+line 31: invalid amount '1.234'
+line 32: invalid amount '.50'
+line 33: invalid amount '5.'
+line 34: invalid amount '1 000'
+line 35: invalid amount 'abc'
+line 36: invalid amount '--5'
+line 37: invalid amount '1e3'
+line 42: invalid amount '٣٤'
+line 43: empty account
+line 44: invalid date 'x'
+line 45: expected 5 fields, found 1
+line 46: expected 5 fields, found 8
+line 47: expected 5 fields, found 2
