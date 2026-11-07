@@ -22,15 +22,15 @@ byte.
 | Bitwise | `& \| ^ << >>` and unary `~` on int; `& \| ^` on bool |
 | Comparison | `== != < <= > >=` on int/long (mixed allowed); `== !=` on bool; `== != < <= > >=` on string (ordering is Java's `compareTo`, over UTF-16 code units) |
 | Logic | `&&`, `\|\|` (short-circuit), `!` |
-| Strings | `+` joining a string with an int, long, bool or string (either side, so `1 + 2 + "x"` is `3x`); interpolation `"$x"`, `"${e}"`; `s += v`; `toString(x)` on every accepted type |
+| Strings | `+` joining a string with an int, long, bool or string (either side, so `1 + 2 + "x"` is `3x`); interpolation `"$x"`, `"${e}"`; `s += v`; `toString(x)` on every accepted type; `s[i]` (Java's `charAt`, as a one-unit string) |
 | Unary | `+`, `-` on int |
 | Assignment | `=`, `+= -= *= /=` |
-| Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `break`, `continue`, `return` |
+| Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `for x in …` over an array (including `range(a, b)` and `split(s, d)`) or a string (its UTF-16 units), `break`, `continue`, `return` |
 | Exceptions | `throw v` of any accepted value (an int, long or bool is boxed); `error(msg)`, which throws its argument; `try { … } catch e { … }` statements, nested anywhere (in loops, in other try and catch bodies), with `break`, `continue` and `return` inside both bodies; the catch variable untyped (`any`) or typed `catch e: int` / `long` / `bool` / `string` / `any` (a checked cast, as for an `any` read); `try` expressions (`imut v = try { parseLong(s) } catch e { 0L - 1L }`) as a statement, a declaration's or assignment's value, a condition, a returned or thrown value, or the first argument of a function or `toString` (also nested: `imut s = f(g(try { … } catch e { … }))`) |
-| Arrays | literals (`[1, 2]`, `["a"]`, `[[1], [2]]`; an empty literal `[]` typed by its declaration, `mut xs: int[] = []`); as variables, globals, parameters, return values, elements of other arrays, `any` values, thrown values, catch variables (`catch e: int[]`) and `try` expression values; `xs[i]` (also on an `any` holding an array, as the JVM backend's checkcast to `List`), `xs[i] = v` and `xs[i] += v`; `len(xs)`, `push(xs, v)`, `pop(xs)`, `removeAt(xs, i)` and their method forms (`xs.push(v)`); printing, `toString`, interpolation (`"$xs"`), `+` with a string when the array is held in an `any`; `==`/`!=` between an `any` holding an array and any value (`List.equals`); `for x in xs` over an array (the binder's desugaring into `len` and indexing; its corpus coverage comes with `for … in` in F3a Task 2) |
+| Arrays | literals (`[1, 2]`, `["a"]`, `[[1], [2]]`; an empty literal `[]` typed by its declaration, `mut xs: int[] = []`); as variables, globals, parameters, return values, elements of other arrays, `any` values, thrown values, catch variables (`catch e: int[]`) and `try` expression values; `xs[i]` (also on an `any` holding an array, as the JVM backend's checkcast to `List`), `xs[i] = v` and `xs[i] += v`; `len(xs)`, `push(xs, v)`, `pop(xs)`, `removeAt(xs, i)` and their method forms (`xs.push(v)`); printing, `toString`, interpolation (`"$xs"`), `+` with a string when the array is held in an `any`; `==`/`!=` between an `any` holding an array and any value (`List.equals`); `range(a, b)` and `split(s, d)`, which make new arrays; `for x in xs` (the binder's desugaring into `len` and indexing) |
 | `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
-| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` and arrays included); `len`, `push`, `pop`, `removeAt` on arrays; on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
+| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` and arrays included); `len`, `push`, `pop`, `removeAt` on arrays; `range(a, b)`; on strings `len`, `s[i]`, `split`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
 | Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
 
 ## Rejected
@@ -40,12 +40,12 @@ and exit status 1, with no output file. This holds anywhere in the file:
 in functions that are never called, and in code after a `return`.
 
 `float` values (also as an operand of `+` on strings or in `"$x"`);
-maps, sets; indexing a string (`s[i]`); index assignment, `push`, `pop`
+maps, sets; index assignment, `push`, `pop`
 and `removeAt` through an `any` value (`push(a[0], 1)` where `a` is
 `any[]`: the reference uses `invokeinterface`, which raises
 `IncompatibleClassChangeError` for a non-list; SiyoLLVM does not reproduce
 that error); `sort`, `map`, `filter`, `reduce` and `forEach` (they take
-lambdas); `range`; `for … in` over an `any`, a map or a set; structs, enums, sum types,
+lambdas); `for … in` over an `any`, a map, a set or a channel; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; a `try` expression
@@ -59,7 +59,7 @@ first. Some other positions work on the reference: a left operand, the
 right operand of `&&`/`||`, a string builtin's first argument and
 `error()`'s argument. SiyoLLVM rejects those too, for now. Also rejected:
 a catch variable of a type outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
-a string or an array; every builtin not listed above, `split` included;
+a string or an array; every builtin not listed above;
 `main`/`init` with parameters or a return value. A `try` expression is
 rejected as an array element, an index, an assigned element or a pushed
 value (the reference's operand stack is not empty there).
@@ -175,6 +175,31 @@ returning one from a function returning `any` (the reference fails with
   program stops with `java.lang.StackOverflowError` (not catchable; see
   Deviations). `==` between `any` values holding arrays compares the elements
   in order (`[1]` holding an int is not equal to `[1L]`).
+- `for x in xs` is the binder's index loop: it walks the array the
+  expression named when the loop began (assigning the variable another
+  array does not change that), and reads `len` before every iteration, so
+  elements pushed during the loop are visited, a `pop` ends it early and
+  removing the current element skips the next one, as on the JVM. The loop
+  variable is read with the checked cast of an element read. Over a string
+  it walks UTF-16 units, each a one-unit string (half of a pair is a lone
+  surrogate).
+- `range(a, b)` is a new array of the ints `a` to `b - 1`, each boxed (only
+  -128..127 come from the static cache), allocated up front: `range(0, 100000)`
+  takes about 2.4 MB before allocator overhead. It is empty when `a >= b`, including reversed bounds.
+- `split(s, d)` is the reference's `s.split(Pattern.quote(d), -1)`: a
+  literal split (`.`, `|`, `*`, `[x]` are plain text) that keeps trailing
+  empty strings. A string without the delimiter gives `[s]`, so `split("", ",")`
+  is `[""]` (length 1; it prints as `[]` like an empty array). An empty
+  delimiter splits between every two UTF-16 units and after the last, not
+  before the first: `split("abc", "")` is `[a, b, c, ""]` and splits surrogate
+  pairs. A delimiter containing a surrogate matches by code point, as
+  `java.util.regex` does, so a lone half never matches half of a pair. Every
+  part is a new string.
+- `s[i]` is `charAt`: one UTF-16 unit as a string, so half of a surrogate
+  pair is a lone surrogate. Out of range it raises
+  `java.lang.StringIndexOutOfBoundsException: Index 5 out of bounds for length 5`
+  (a catch variable gets the message). Like `substring`, it scans a
+  non-ASCII string from the start.
 - String lengths and indexes count UTF-16 code units, as on the JVM:
   `len("çağ😀x")` is 6. `substring` may split a surrogate pair; each half is
   then a lone surrogate (printed as `?`), and joining the halves again, with

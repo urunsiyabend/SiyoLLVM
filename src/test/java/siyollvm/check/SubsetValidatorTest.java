@@ -64,8 +64,6 @@ class SubsetValidatorTest {
             fn main() { mut a = [1.5, 2.5] println(a) }                     | float values are
             fn main() { mut m = {"a": 1} println(m) }                       | maps are
             fn main() { mut f = fn(x: int) -> int { x } println(f(1)) }     | lambdas are
-            fn main() { println(range(0, 3)) }                              | the builtin range() is
-            fn main() { println(split("a,b", ",")) }                        | the builtin split() is
             fn main() { println(len(5)) }                                   | len() on int is
             fn main() { println(len(true)) }                                | len() on bool is
             fn main() { println(toInt(2.5)) }                               | the builtin toInt() is
@@ -298,7 +296,6 @@ class SubsetValidatorTest {
             fn main() { mut xs = [3, 1] println(reduce(xs, fn(a: int, b: int) -> int { return a + b }, 0)) } | the builtin reduce() is
             fn main() { mut xs = [3, 1] forEach(xs, fn(a: int) { println(a) }) }                     | the builtin forEach() is
             fn main() { imut a: any = [1] for x in a { println(x) } }                               | for … in over any values is
-            fn main() { imut s = "abc" println(s[0]) }                                              | indexing strings is
             fn main() { mut xs = [1] println(xs[0] + len(xs[0])) }                                  | len() on int is
             fn main() { mut f = [1.5] println(len(f)) }                                             | float values are
             fn main() { mut xs: float[] = [] push(xs, 1.5) }                                        | float values are
@@ -307,6 +304,40 @@ class SubsetValidatorTest {
             fn main() { mut a: any = [1] println(len(a)) }                                          | len() on any is
             """)
     void unsupportedArrayConstructsAreRejected(String source, String construct) {
+        assertRejected(source, construct);
+    }
+
+    // for … in is the binder's desugaring: a block declaring _colN and a for
+    // loop over _idxN < len(_colN) whose body reads _colN[_idxN]. Over an
+    // array, range(), split() or a string it is only len and indexing.
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', textBlock = """
+            fn main() { for x in [1, 2, 3] { if x == 2 { continue } if x == 3 { break } println(x) } }
+            fn main() { mut xs = [1] for x in xs { if x < 3 { push(xs, x + 1) } } println(xs) }
+            fn main() { for row in [[1], [2, 3]] { for x in row { println(x) } } }
+            fn main() { mut a: any[] = [] push(a, "s") for x in a { println(x) } }
+            fn main() { for s in ["a", "b"] { println(s + "!") } }
+            fn main() { mut t = 0 for i in range(0, 10) { t = t + i } println(t) }
+            fn main() { println(range(3, 0)) imut r: int[] = range(-1, 1) println(len(r)) }
+            fn main() { imut parts = split("a,b,,", ",") println(len(parts)) println(parts[0] + "!") }
+            fn main() { for p in split("a b", " ") { println(len(p)) } }
+            fn main() { imut s = "abc" println(s[0]) println(s[len(s) - 1] + "!") }
+            fn main() { for c in "héy" { println(c) } }
+            fn f(s: string, i: int) -> string { return s[i] } fn main() { println(f("ab", 1)) }
+            mut g = split("x,y", ",")
+            mut h = range(0, 2)
+            """)
+    void forInRangeSplitAndStringIndexingAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            fn main() { imut m = map() for k in m { println(k) } }                    | for … in over maps is
+            fn main() { imut s = set() for v in s { println(v) } }                    | for … in over sets is
+            fn main() { imut a: any = "ab" for c in a { println(c) } }                | for … in over any values is
+            """)
+    void forInOverOtherCollectionsIsRejected(String source, String construct) {
         assertRejected(source, construct);
     }
 

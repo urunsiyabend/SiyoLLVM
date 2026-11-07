@@ -672,6 +672,90 @@ int32_t siyo_rt_ord(const SiyoStr *s) {
     return siyo_rt_next_unit(&it);
 }
 
+SiyoStr *siyo_rt_str_char_at(const SiyoStr *s, int32_t index) {
+    if (s == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    int64_t length = siyo_rt_str_utf16_len(s);
+    if (index < 0 || index >= length) {
+        siyo_rt_raise_format("java.lang.StringIndexOutOfBoundsException", "Index %d out of bounds for length %lld",
+                (int)index, (long long)length);
+        return NULL;
+    }
+    return siyo_rt_str_substring(s, index, index + 1);
+}
+
+static _Bool siyo_rt_is_high(uint16_t unit) {
+    return unit >= 0xD800 && unit <= 0xDBFF;
+}
+
+static _Bool siyo_rt_is_low(uint16_t unit) {
+    return unit >= 0xDC00 && unit <= 0xDFFF;
+}
+
+/* The code point at units[i] of n (a pair, or the unit alone), as Character.codePointAt. */
+static uint32_t siyo_rt_code_point_at(const uint16_t *units, int64_t i, int64_t n) {
+    if (siyo_rt_pair_at(units, i, n)) return 0x10000u + ((units[i] - 0xD800u) << 10) + (units[i + 1] - 0xDC00u);
+    return units[i];
+}
+
+/*
+ * Whether the m units of pat match hay (n units) at i. A pattern holding a
+ * surrogate (cp set) is matched as java.util.regex matches it (StartS and
+ * SliceS): code point by code point, and never from the second half of a pair.
+ */
+static _Bool siyo_rt_split_match(const uint16_t *hay, int64_t n, int64_t i, const uint16_t *pat, int64_t m, _Bool cp) {
+    if (i + m > n) return 0;
+    if (!cp) return memcmp(hay + i, pat, (size_t)m * sizeof(uint16_t)) == 0;
+    if (i > 0 && siyo_rt_is_high(hay[i - 1]) && siyo_rt_is_low(hay[i])) return 0;
+    int64_t x = i;
+    for (int64_t j = 0; j < m;) {
+        if (x >= n) return 0;
+        uint32_t want = siyo_rt_code_point_at(pat, j, m);
+        uint32_t have = siyo_rt_code_point_at(hay, x, n);
+        if (want != have) return 0;
+        int step = want >= 0x10000 ? 2 : 1;
+        j += step;
+        x += step;
+    }
+    return 1;
+}
+
+SiyoArray *siyo_rt_str_split(const SiyoStr *s, const SiyoStr *delim) {
+    if (s == NULL || delim == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    SiyoArray *parts = siyo_rt_array_new(0);
+    int64_t n, m;
+    uint16_t *hay = siyo_rt_to_units(s, &n);
+    uint16_t *needle = siyo_rt_to_units(delim, &m);
+    if (m == 0) {
+        /* An empty match at every index; the one at 0 adds no leading "". */
+        for (int64_t i = 0; i < n; i++) siyo_rt_array_append(parts, siyo_rt_str_from_units(hay + i, 1));
+        siyo_rt_array_append(parts, n == 0 ? (void *)s : siyo_rt_str_from_bytes("", 0, 0));
+    } else {
+        _Bool by_code_point = 0;
+        for (int64_t j = 0; j < m; j++) by_code_point |= siyo_rt_is_high(needle[j]) || siyo_rt_is_low(needle[j]);
+        int64_t index = 0;
+        for (int64_t i = 0; i + m <= n;) {
+            if (siyo_rt_split_match(hay, n, i, needle, m, by_code_point)) {
+                siyo_rt_array_append(parts, siyo_rt_str_from_units(hay + index, i - index));
+                index = i + m;
+                i = index;
+            } else {
+                i++;
+            }
+        }
+        /* No match: the string itself. */
+        siyo_rt_array_append(parts, index == 0 ? (void *)s : siyo_rt_str_from_units(hay + index, n - index));
+    }
+    free(hay);
+    free(needle);
+    return parts;
+}
+
 int32_t siyo_rt_str_compare(const SiyoStr *a, const SiyoStr *b) {
     if (a == NULL || b == NULL) {
         siyo_rt_null_pointer();
@@ -996,6 +1080,10 @@ void siyo_rt_array_push(SiyoArray *array, void *value) {
         siyo_rt_null_pointer();
         return;
     }
+    siyo_rt_array_append(array, value);
+}
+
+void siyo_rt_array_append(SiyoArray *array, void *value) {
     if (array->len == array->cap) {
         /* Only this array points at its items, so the block may move. */
         if (array->cap == INT32_MAX) siyo_rt_fail("java.lang.OutOfMemoryError\n");
@@ -1007,6 +1095,15 @@ void siyo_rt_array_push(SiyoArray *array, void *value) {
         array->cap = (int32_t)cap;
     }
     array->items[array->len++] = value;
+}
+
+SiyoArray *siyo_rt_range(int32_t from, int32_t to) {
+    if (from >= to) return siyo_rt_array_new(0);
+    int64_t n = (int64_t)to - from;
+    if (n > INT32_MAX) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+    SiyoArray *array = siyo_rt_array_new((int32_t)n);
+    for (int64_t i = from; i < to; i++) siyo_rt_array_append(array, siyo_rt_box_int((int32_t)i));
+    return array;
 }
 
 void *siyo_rt_array_get(SiyoArray *array, int32_t index) {

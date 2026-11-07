@@ -1,0 +1,41 @@
+// range(a, b) is a new array of the ints a, a+1, ..., b-1; empty when
+// a >= b, including reversed bounds.
+fn main() {
+    println(range(0, 5))
+    println(range(2, 3))
+    println(range(3, 3))
+    println(len(range(3, 3)))
+    println(range(5, 0))
+    println(len(range(5, 0)))
+    println(range(-3, 2))
+    println(range(-5, -7))
+    println(range(2147483645, 2147483647))
+    println(range(-2147483647 - 1, -2147483646))
+
+    mut r = range(1, 4)
+    push(r, 99)
+    r[0] = -1
+    println(r)
+    println(range(1, 4))
+
+    mut total = 0
+    for i in range(-2, 3) { total = total + i * i }
+    println(total)
+
+    for i in range(10, 0) { println("never " + toString(i)) }
+
+    imut lo = 4
+    imut hi = 7
+    for i in range(lo, hi) {
+        if i == 5 { continue }
+        println(i)
+    }
+
+    imut held: any = range(0, 2)
+    println(held)
+    imut back: int[] = held
+    imut second: int = back[1]
+    println(second + 1)
+    println(range(0, 2) == held)
+    println(range(0, 3) == held)
+}

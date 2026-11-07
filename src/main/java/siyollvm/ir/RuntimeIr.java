@@ -51,6 +51,8 @@ final class RuntimeIr {
                 declare ptr @siyo_rt_chr(i32)
                 declare i32 @siyo_rt_ord(ptr)
                 declare i32 @siyo_rt_str_compare(ptr, ptr)
+                declare ptr @siyo_rt_str_char_at(ptr, i32)
+                declare ptr @siyo_rt_str_split(ptr, ptr)
                 declare i32 @siyo_rt_parse_int(ptr)
                 declare i64 @siyo_rt_parse_long(ptr)
                 declare ptr @siyo_rt_box_int(i32)
@@ -66,6 +68,8 @@ final class RuntimeIr {
                 declare void @siyo_rt_print_any(ptr)
                 declare ptr @siyo_rt_array_new(i32)
                 declare void @siyo_rt_array_push(ptr, ptr)
+                declare void @siyo_rt_array_append(ptr, ptr)
+                declare ptr @siyo_rt_range(i32, i32)
                 declare ptr @siyo_rt_array_get(ptr, i32)
                 declare ptr @siyo_rt_array_set(ptr, i32, ptr)
                 declare ptr @siyo_rt_array_pop(ptr)
@@ -98,7 +102,7 @@ final class RuntimeIr {
             "@siyo_rt_str_len", "@siyo_rt_str_substring", "@siyo_rt_str_index_of", "@siyo_rt_str_contains",
             "@siyo_rt_str_starts_with", "@siyo_rt_str_ends_with", "@siyo_rt_str_replace", "@siyo_rt_str_trim",
             "@siyo_rt_str_to_upper", "@siyo_rt_str_to_lower", "@siyo_rt_chr", "@siyo_rt_ord",
-            "@siyo_rt_str_compare", "@siyo_rt_parse_long",
+            "@siyo_rt_str_compare", "@siyo_rt_parse_long", "@siyo_rt_str_char_at", "@siyo_rt_str_split",
             "@siyo_rt_unbox_int", "@siyo_rt_unbox_long", "@siyo_rt_unbox_bool", "@siyo_rt_cast_str",
             "@siyo_rt_cast_array", "@siyo_rt_array_push", "@siyo_rt_array_get", "@siyo_rt_array_set",
             "@siyo_rt_array_pop", "@siyo_rt_array_remove_at", "@siyo_rt_array_len");

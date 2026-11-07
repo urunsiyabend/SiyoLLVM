@@ -84,6 +84,15 @@ import java.util.Set;
  * to it with invokeinterface, which fails with IncompatibleClassChangeError
  * for a non-list, so those are rejected. A try expression is never an
  * element, an index or a pushed value: the operand stack is not empty there.
+ * Strings are indexed too ({@code charAt}), and {@code range} and
+ * {@code split} make arrays.
+ *
+ * <p>{@code for … in} reaches the validator as the binder's desugaring: a
+ * block declaring {@code _colN}, then a loop (lowered to labels and gotos) on
+ * {@code _idxN < len(_colN)} whose body reads {@code _colN[_idxN]}. Over an
+ * array or a string that is only len and indexing, so it needs nothing of its
+ * own; over a map, a set or an any the binder wraps the collection in a
+ * helper call, which is rejected.
  */
 public final class SubsetValidator {
 
@@ -112,10 +121,10 @@ public final class SubsetValidator {
             BoundBinaryOperatorType.Equals, BoundBinaryOperatorType.NotEquals);
 
     /**
-     * Builtins over strings and numbers whose parameters all have value types;
-     * split needs arrays (F3). Compared by identity: FunctionSymbol.equals
-     * looks at name and arity only, so the overloads of toInt, and a user
-     * function named like a builtin, would otherwise collide.
+     * Builtins over strings and numbers whose parameters all have value types
+     * (range and split return arrays). Compared by identity:
+     * FunctionSymbol.equals looks at name and arity only, so the overloads of
+     * toInt, and a user function named like a builtin, would otherwise collide.
      */
     private static final Set<FunctionSymbol> STRING_BUILTINS = Collections.newSetFromMap(new IdentityHashMap<>());
 
@@ -125,7 +134,8 @@ public final class SubsetValidator {
                 BuiltinFunctions.STARTS_WITH, BuiltinFunctions.ENDS_WITH, BuiltinFunctions.REPLACE,
                 BuiltinFunctions.TRIM, BuiltinFunctions.TO_UPPER, BuiltinFunctions.TO_LOWER,
                 BuiltinFunctions.CHR, BuiltinFunctions.ORD, BuiltinFunctions.PARSE_INT, BuiltinFunctions.PARSE_LONG,
-                BuiltinFunctions.TO_LONG, BuiltinFunctions.TO_INT_LONG, BuiltinFunctions.TO_INT_STR));
+                BuiltinFunctions.TO_LONG, BuiltinFunctions.TO_INT_LONG, BuiltinFunctions.TO_INT_STR,
+                BuiltinFunctions.RANGE, BuiltinFunctions.SPLIT));
     }
 
     /** Array builtins taking the array first; len is checked on its own. */
@@ -314,14 +324,15 @@ public final class SubsetValidator {
         _offset = saved;
     }
 
-    /** An array element read; an any target is checkcast to an array first. */
+    /**
+     * An array element read, or a string's charAt; an any target is checkcast
+     * to an array first.
+     */
     private void validateIndex(BoundIndexExpression index) {
         Class<?> target = index.getTarget().getClassType();
         boolean clean = validatesCleanly(index.getTarget()) & validatesCleanly(index.getIndex());
         if (!clean) return;
-        if (target == String.class) {
-            report("indexing strings is");
-        } else if (target != SiyoArray.class && target != Object.class) {
+        if (target != SiyoArray.class && target != Object.class && target != String.class) {
             report("indexing values of type " + typeName(target) + " is");
         } else {
             requireValueType(index.getClassType(), "values");

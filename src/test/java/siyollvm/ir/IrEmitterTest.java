@@ -329,8 +329,37 @@ class IrEmitterTest {
         String main = function(ir, "@siyo.fn.0");
         assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_array_new\\(i32 2\\)\n"
                 + "  (%t\\d+) = call ptr @siyo_rt_box_int\\(i32 7\\)\n"
-                + "  call void @siyo_rt_array_push\\(ptr \\1, ptr \\2\\)\n").matcher(main).find(), main);
+                + "  call void @siyo_rt_array_append\\(ptr \\1, ptr \\2\\)\n").matcher(main).find(), main);
         assertEquals(2, count(main, "call void @siyo_rt_print_any(ptr "), main);
+        // Appending to the array just made cannot raise: no pending checks.
+        assertEquals(0, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+        assertFalse(main.contains("@siyo_rt_array_push"), main);
+    }
+
+    @Test
+    void stringIndexIsCharAtWithACheck() {
+        String main = function(emit("fn main() { imut s = \"ab\" println(s[1]) }"), "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_str_char_at\\(ptr %t\\d+, i32 1\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n").matcher(main).find(), main);
+        assertFalse(main.contains("@siyo_rt_array_get"), main);
+    }
+
+    @Test
+    void rangeAndSplitCallTheRuntime() {
+        String main = function(emit("fn main() { println(range(1, 4)) println(split(\"a,b\", \",\")) }"),
+                "@siyo.fn.0");
+        assertTrue(main.contains("call ptr @siyo_rt_range(i32 1, i32 4)"), main);
+        assertTrue(main.contains("call ptr @siyo_rt_str_split(ptr @siyo.str.0, ptr @siyo.str.1)"), main);
+        // split raises on a null string or delimiter; range never raises.
+        assertEquals(1, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void forInReadsTheLengthOnEveryIteration() {
+        String main = function(emit("fn main() { mut xs = [1] for x in xs { push(xs, x) } }"), "@siyo.fn.0");
+        // One len call, in the loop's condition block, which every iteration re-enters.
+        assertEquals(1, count(main, "call i32 @siyo_rt_array_len(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_array_get(ptr "), main);
     }
 
     @Test

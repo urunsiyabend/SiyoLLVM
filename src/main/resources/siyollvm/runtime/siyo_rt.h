@@ -146,6 +146,18 @@ SiyoStr *siyo_rt_str_to_lower(const SiyoStr *s);
 SiyoStr *siyo_rt_chr(int32_t code_point);
 /* charAt(0); empty is StringIndexOutOfBoundsException. */
 int32_t siyo_rt_ord(const SiyoStr *s);
+/* s[i], String.charAt as a one-unit string (half of a pair is a lone
+   surrogate); out of range is StringIndexOutOfBoundsException:
+   "Index i out of bounds for length n". */
+SiyoStr *siyo_rt_str_char_at(const SiyoStr *s, int32_t index);
+/*
+ * split(s, delim): s.split(Pattern.quote(delim), -1), a literal split keeping
+ * trailing empty strings; no match gives [s] (so "" gives [""]). An empty
+ * delimiter splits between every two UTF-16 units and after the last, never
+ * before the first. A delimiter holding a surrogate matches by code point, as
+ * java.util.regex does: never half of a pair, never from the middle of one.
+ */
+SiyoArray *siyo_rt_str_split(const SiyoStr *s, const SiyoStr *delim);
 /* compareTo over UTF-16 code units: negative, zero or positive. */
 int32_t siyo_rt_str_compare(const SiyoStr *a, const SiyoStr *b);
 /* Integer.parseInt, 0 for anything it rejects (null included). */
@@ -199,6 +211,11 @@ void siyo_rt_print_any(const void *value);
 SiyoArray *siyo_rt_array_new(int32_t capacity);
 /* List.add: appends value, doubling the room when it is full. */
 void siyo_rt_array_push(SiyoArray *array, void *value);
+/* push onto an array known not to be null (one just made): never raises. */
+void siyo_rt_array_append(SiyoArray *array, void *value);
+/* range(from, to): a new array of the boxed ints from, from+1, ..., to-1;
+   empty when from >= to. Never raises. */
+SiyoArray *siyo_rt_range(int32_t from, int32_t to);
 /* List.get. */
 void *siyo_rt_array_get(SiyoArray *array, int32_t index);
 /* List.set: stores value and returns the element it replaced. */

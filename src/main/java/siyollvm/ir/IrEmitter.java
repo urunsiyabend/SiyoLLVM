@@ -63,7 +63,9 @@ import java.util.Map;
  * are any values, as the JVM backend's arrays are lists of objects: an
  * element is boxed going in, and narrowed coming out to the type the binder
  * gives the read (an element type it tracks, else {@code any}) with the same
- * checked cast. Index errors and a null array raise in the runtime.
+ * checked cast. Index errors and a null array raise in the runtime. A
+ * string's {@code s[i]} is {@code charAt}, a one-unit string. {@code for … in}
+ * arrives desugared into len and indexing, so it has no code of its own.
  *
  * <p>Exceptions never unwind the native stack. A raise (a Siyo {@code throw}
  * or {@code error()}, or a runtime error) records a pending exception in the
@@ -431,6 +433,13 @@ public final class IrEmitter {
             case BoundCallExpression call -> call(call);
             case BoundTryExpression tryExpression -> tryExpression(tryExpression);
             case BoundArrayLiteralExpression array -> arrayLiteral(array);
+            case BoundIndexExpression index when index.getTarget().getClassType() == String.class -> {
+                // charAt, as a one-unit string.
+                Value target = requireType(expression(index.getTarget()), String.class);
+                Value position = requireType(expression(index.getIndex()), Integer.class);
+                String unit = raisingCall("call ptr @siyo_rt_str_char_at(ptr " + target.ref() + ", i32 " + position.ref() + ")");
+                yield coerce(new Value(unit, String.class), index.getClassType());
+            }
             case BoundIndexExpression index -> {
                 // An erased target is checkcast to List first, as the JVM backend does.
                 Value target = coerce(expression(index.getTarget()), SiyoArray.class);
@@ -443,14 +452,18 @@ public final class IrEmitter {
         };
     }
 
-    /** A new array with room for the elements, then each element boxed and appended in order. */
+    /**
+     * A new array with room for the elements, then each element boxed and
+     * appended in order. The array is not null, so the appends (unlike push)
+     * cannot raise and need no pending check; an element's own evaluation
+     * still checks after whatever in it can raise.
+     */
     private Value arrayLiteral(BoundArrayLiteralExpression node) {
         List<BoundExpression> elements = node.getElements();
         String array = instruction("call ptr @siyo_rt_array_new(i32 " + elements.size() + ")");
         for (BoundExpression element : elements) {
             Value item = coerce(expression(element), Object.class);
-            instructionNoResult("call void @siyo_rt_array_push(ptr " + array + ", ptr " + item.ref() + ")");
-            checkPending();
+            instructionNoResult("call void @siyo_rt_array_append(ptr " + array + ", ptr " + item.ref() + ")");
         }
         return new Value(array, SiyoArray.class);
     }
@@ -764,6 +777,8 @@ public final class IrEmitter {
         RUNTIME_BUILTINS.put(BuiltinFunctions.PARSE_INT, "@siyo_rt_parse_int");
         RUNTIME_BUILTINS.put(BuiltinFunctions.TO_INT_STR, "@siyo_rt_parse_int");
         RUNTIME_BUILTINS.put(BuiltinFunctions.PARSE_LONG, "@siyo_rt_parse_long");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.RANGE, "@siyo_rt_range");
+        RUNTIME_BUILTINS.put(BuiltinFunctions.SPLIT, "@siyo_rt_str_split");
     }
 
     /** Calls {@code runtime} with the arguments coerced to the builtin's parameter types. */
