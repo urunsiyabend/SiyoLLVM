@@ -14,8 +14,8 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 | F2 | `any` values; exceptions: try/catch/throw, try expressions, catchable runtime errors | F1 | done | de865b5..0c1c449, pushed at 4f934b2 | `docs/evidence/f2-exceptions/`; CI run 42333036738 green at 4f934b2 |
 | F3a | Arrays, `for … in`, `range`, `split`, `s[i]` | F2 | done | 1d0e5ae..2e5c8dd, pushed at 1abd7b0 | `docs/evidence/f3a-arrays/`; CI run 42336285628 green at 1abd7b0 |
 | F3b | Structs, `impl` methods, enums | F3a | done | ff55202..6c609fa, pushed at 175e760 | `docs/evidence/f3b-structs/`; CI run 42338248852 green at 175e760 |
-| F3c | Maps (insertion-ordered) | F3a | in progress (gates green at 2018ca3; publishing) | e8b52be..2018ca3 | `docs/evidence/f3c-maps/` |
-| F4 | User modules; native `std/io`, `std/os`, `std/strings` | F3a–c | planned | | |
+| F3c | Maps (insertion-ordered) | F3a | done | e8b52be..2018ca3, pushed at 552d5ba | `docs/evidence/f3c-maps/`; CI run 42340020516 green at 552d5ba |
+| F4 | User modules; native `std/io`, `std/os`, `std/strings` | F3a–c | in progress | | |
 | F5 | `projects/ledger` application + independent oracles | F4 | planned | | |
 | — | float, sum types + match, lambdas, sets, GC | after milestone | planned | | |
 
@@ -74,11 +74,9 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Next step (2026-11-07, run boundary): F3c Task 1 (maps) is implemented locally at e8b52be on top of
-  the plan cdc71aa and passed its task review; the whole-feature review, fix wave, final gates and
-  publication are NOT done yet. Resume from the SDD ledger
-  `.superpowers/sdd/2026-11-07-f3c-maps/progress.md`: whole-feature review → one fix wave → `~/.hermes/cache/scratch/siyollvm-probes/tools/final-gates.sh f3c`
-  → `docs/evidence/f3c-maps/` → push → exact-head CI. Then F4 modules (plan not yet written).
+- Next step (2026-11-07, after F3c publish): F4 modules + native std — plan
+  `docs/superpowers/plans/2026-11-07-f4-modules.md`, then SDD. Controller helpers (scratch):
+  `tools/final-gates.sh <label>`, `tools/publish-evidence.sh <label> <dir> <title> <ledger>`.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).

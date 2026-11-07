@@ -19,3 +19,4 @@ Task 1: complete (commits cdc71aa..e8b52be, review clean)
 NEXT: whole-feature F3c review (BASE 3c2c2c7 or 0b04773..HEAD) → one fix wave (incl. minors above + README/ROADMAP) → final-gates.sh f3c → evidence → push → CI
 Final review: no Critical/Important; README maps + optional minors; ONE fix wave 2018ca3; scoped re-review: all addressed
 Final gates at 2018ca3: java 358+2, native 492+2, requires-clang OK, receipts returncode 0 / oom_kill_delta 0
+Published: 552d5ba (remote verified), CI run 42340020516 success (Java + Native)
