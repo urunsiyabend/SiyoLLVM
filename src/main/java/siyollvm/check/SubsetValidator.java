@@ -21,6 +21,7 @@ import codeanalysis.binding.BoundReturnStatement;
 import codeanalysis.binding.BoundStatement;
 import codeanalysis.binding.BoundThrowStatement;
 import codeanalysis.binding.BoundTryCatchStatement;
+import codeanalysis.binding.BoundTryExpression;
 import codeanalysis.binding.BoundUnaryExpression;
 import codeanalysis.binding.BoundUnaryOperatorType;
 import codeanalysis.binding.BoundVariableDeclaration;
@@ -57,6 +58,14 @@ import java.util.Set;
  * are accepted with values of the types above. The lowerer leaves a try
  * statement structured, so both of its bodies (with their nested blocks,
  * labels and gotos) are checked like any other statements.
+ *
+ * <p>A {@code try} expression is accepted where the JVM backend evaluates it
+ * on an empty operand stack: as a statement, a declaration's or assignment's
+ * value, a condition, a returned or thrown value, or the first argument of a
+ * user function or {@code toString} (recursively, so {@code imut s =
+ * f(g(try …))} qualifies). Its exception handler clears the operand stack, so
+ * anywhere else the reference fails verification. Its bodies end in a value,
+ * in no expression at all (the value is null), or in {@code error()}.
  */
 public final class SubsetValidator {
 
@@ -112,7 +121,6 @@ public final class SubsetValidator {
             Map.entry(BoundNodeType.MemberAssignmentExpression, "member assignment is"),
             Map.entry(BoundNodeType.StructLiteralExpression, "structs are"),
             Map.entry(BoundNodeType.UnionLiteralExpression, "sum types are"),
-            Map.entry(BoundNodeType.TryExpression, "try expressions are"),
             Map.entry(BoundNodeType.JavaMethodCallExpression, "Java interop is"),
             Map.entry(BoundNodeType.JavaStaticFieldExpression, "Java interop is"),
             Map.entry(BoundNodeType.CastExpression, "casts are"),
@@ -129,6 +137,11 @@ public final class SubsetValidator {
     private int _offset;
     /** The function being validated; null for the global initialiser. */
     private FunctionSymbol _function;
+    /**
+     * Whether the expression validated next is evaluated, by the JVM backend,
+     * on an empty operand stack; {@link #validateExpression} clears it.
+     */
+    private boolean _emptyStack;
 
     private SubsetValidator(LoweredProgram program) {
         _program = program;
@@ -183,21 +196,27 @@ public final class SubsetValidator {
         switch (statement) {
             case BoundBlockStatement block -> validateBlock(block);
             case BoundVariableDeclaration declaration -> {
+                _emptyStack = true;
                 if (validatesCleanly(declaration.getInitializer())) {
                     requireValueType(declaration.getVariable().getType(), "variables");
                 }
             }
-            case BoundExpressionStatement expression -> validateExpression(expression.getExpression());
+            case BoundExpressionStatement expression -> {
+                _emptyStack = true;
+                validateExpression(expression.getExpression());
+            }
             case BoundLabelStatement ignored -> { }
             case BoundGotoStatement ignored -> { }
             case BoundConditionalGotoStatement conditional -> {
                 // The binder admits an any as a condition; the JVM backend unboxes it.
                 Class<?> type = conditional.getCondition().getClassType();
+                _emptyStack = true;
                 if (validatesCleanly(conditional.getCondition()) && type != Boolean.class) {
                     report("conditions of type " + typeName(type) + " are");
                 }
             }
             case BoundReturnStatement ret -> {
+                _emptyStack = true;
                 if (ret.getExpression() != null && validatesCleanly(ret.getExpression())) {
                     // The JVM backend returns the primitive unboxed, which fails verification.
                     Class<?> type = ret.getExpression().getClassType();
@@ -212,6 +231,7 @@ public final class SubsetValidator {
                 validateStatement(tryCatch.getCatchBody());
             }
             case BoundThrowStatement raise -> {
+                _emptyStack = true;
                 if (validatesCleanly(raise.getExpression())) {
                     requireValueType(raise.getExpression().getClassType(), "values");
                 }
@@ -223,10 +243,13 @@ public final class SubsetValidator {
     private void validateExpression(BoundExpression expression) {
         int saved = _offset;
         if (expression.getSourceOffset() >= 0) _offset = expression.getSourceOffset();
+        boolean emptyStack = _emptyStack;
+        _emptyStack = false;
         switch (expression) {
             case BoundLiteralExpression literal -> validateLiteral(literal);
             case BoundVariableExpression variable -> requireValueType(variable.getVariable().getType(), "variables");
             case BoundAssignmentExpression assignment -> {
+                _emptyStack = emptyStack;
                 if (validatesCleanly(assignment.getExpression())
                         && requireValueType(assignment.getVariable().getType(), "variables")) {
                     // The JVM backend stores the primitive unboxed, which fails verification.
@@ -241,14 +264,18 @@ public final class SubsetValidator {
             case BoundConversionExpression conversion -> {
                 Class<?> from = conversion.getExpression().getClassType();
                 if (from == Integer.class && conversion.getClassType() == Long.class) {
+                    _emptyStack = emptyStack;
                     validateExpression(conversion.getExpression());
                 } else {
                     report("conversions from " + typeName(from) + " to " + typeName(conversion.getClassType()) + " are");
                 }
             }
-            case BoundCallExpression call -> validateCall(call);
+            case BoundCallExpression call -> validateCall(call, emptyStack);
+            case BoundTryExpression tryExpression -> validateTry(tryExpression, emptyStack);
             default -> reportNode(expression);
         }
+        // Set for a first argument that was not there (a call with none).
+        _emptyStack = false;
         _offset = saved;
     }
 
@@ -307,10 +334,15 @@ public final class SubsetValidator {
         }
     }
 
-    private void validateCall(BoundCallExpression call) {
+    private void validateCall(BoundCallExpression call, boolean emptyStack) {
         FunctionSymbol function = call.getFunction();
         boolean builtinPrint = function == BuiltinFunctions.PRINT || function == BuiltinFunctions.PRINTLN;
+        // A user function's or toString's first argument is the first thing the
+        // JVM backend pushes; print and println push System.out before theirs.
+        boolean firstOnEmptyStack = emptyStack
+                && (function == BuiltinFunctions.TO_STRING || _program.functions().containsKey(function));
         if (function == BuiltinFunctions.TO_STRING) {
+            _emptyStack = firstOnEmptyStack;
             for (BoundExpression argument : call.getArguments()) {
                 if (validatesCleanly(argument)) requireValueType(argument.getClassType(), "values");
             }
@@ -336,6 +368,7 @@ public final class SubsetValidator {
             report("the builtin " + function.getName() + "() is");
             return;
         }
+        _emptyStack = firstOnEmptyStack;
         for (BoundExpression argument : call.getArguments()) {
             // A builtin would cast an any argument; only user functions take one.
             if (validatesCleanly(argument) && STRING_BUILTINS.contains(function)
@@ -343,6 +376,34 @@ public final class SubsetValidator {
                 report("arguments of type any to " + function.getName() + "() are");
             }
         }
+    }
+
+    /**
+     * A try expression: its position (see the class comment), its bodies as
+     * statements, and the value each body ends in. The JVM backend boxes that
+     * value and narrows it to the expression's type after the join; a body
+     * ending in a call with no value (other than error(), which never returns)
+     * leaves it nothing to push.
+     */
+    private void validateTry(BoundTryExpression tryExpression, boolean emptyStack) {
+        if (!emptyStack) {
+            report("try expressions here (only as a statement, a declaration's or assignment's value, a condition,"
+                    + " a returned or thrown value, or the first argument of a function or toString) are");
+        }
+        int before = _diagnostics.size();
+        validateStatement(tryExpression.getTryBody());
+        requireValueType(tryExpression.getErrorVariable().getType(), "catch variables");
+        validateStatement(tryExpression.getCatchBody());
+        for (BoundStatement body : List.of(tryExpression.getTryBody(), tryExpression.getCatchBody())) {
+            if (body instanceof BoundBlockStatement block && !block.getStatements().isEmpty()
+                    && block.getStatements().getLast() instanceof BoundExpressionStatement tail
+                    && tail.getExpression().getClassType() == null
+                    && !(tail.getExpression() instanceof BoundCallExpression call
+                            && call.getFunction() == BuiltinFunctions.ERROR)) {
+                report("try expression bodies ending in a call with no value are");
+            }
+        }
+        if (_diagnostics.size() == before) requireValueType(tryExpression.getClassType(), "try expressions");
     }
 
     /**

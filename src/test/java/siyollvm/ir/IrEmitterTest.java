@@ -378,6 +378,65 @@ class IrEmitterTest {
                 """);
     }
 
+    // A try expression's bodies each store their tail value into one slot of
+    // the expression's type, which the join block loads.
+    @Test
+    void tryExpressionJoinsBothBodiesThroughASlot() {
+        String ir = emit("fn main() { imut v = try { parseLong(\"z\") } catch e { 0L - 1L } println(v) }");
+        String main = function(ir, "@siyo.fn.0");
+        Matcher slot = Pattern.compile("(%t\\d+) = alloca i64\n").matcher(main);
+        assertTrue(slot.find(), main);
+        String s = Pattern.quote(slot.group(1));
+        Matcher parse = Pattern.compile("(%t\\d+) = call i64 @siyo_rt_parse_long\\(ptr @siyo\\.str\\.0\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n"
+                + "  %t\\d+ = icmp ne i8 %t\\d+, 0\n"
+                + "  br i1 %t\\d+, label %(catch\\.\\d+), label %(ok\\.\\d+)\n"
+                + "\\3:\n"
+                + "  store i64 \\1, ptr " + s + "\n"
+                + "  br label %(try\\.value\\.\\d+)\n").matcher(main);
+        assertTrue(parse.find(), main);
+        assertTrue(Pattern.compile("\n" + Pattern.quote(parse.group(2)) + ":\n  %t\\d+ = call ptr @siyo_rt_catch\\(\\)\n")
+                .matcher(main).find(), main);
+        assertTrue(Pattern.compile("  (%t\\d+) = sub i64 0, 1\n  store i64 \\1, ptr " + s + "\n  br label %"
+                + Pattern.quote(parse.group(4)) + "\n").matcher(main).find(), main);
+        assertTrue(Pattern.compile("\n" + Pattern.quote(parse.group(4)) + ":\n  %t\\d+ = load i64, ptr " + s + "\n")
+                .matcher(main).find(), main);
+    }
+
+    // As on the JVM, the value is narrowed after the join: a failing cast
+    // raises to the enclosing handler, not to the expression's own catch.
+    @Test
+    void tryExpressionNarrowsItsValueOutsideItsOwnHandler() {
+        String ir = emit("fn main() { try { imut v = try { parseLong(\"x\") } catch e { \"s\" } println(v) }"
+                + " catch outer { println(outer) } }");
+        String main = function(ir, "@siyo.fn.0");
+        // The try statement's catch block is catch.0; the expression's is a later one.
+        assertTrue(Pattern.compile("call i64 @siyo_rt_unbox_long\\(ptr @siyo\\.str\\.\\d+\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n"
+                + "  %t\\d+ = icmp ne i8 %t\\d+, 0\n"
+                + "  br i1 %t\\d+, label %catch\\.0, ").matcher(main).find(), main);
+        assertTrue(Pattern.compile("@siyo_rt_parse_long[^\\n]*\n[^\\n]*\n[^\\n]*\n  br i1 %t\\d+, label %catch\\.[1-9]")
+                .matcher(main).find(), main);
+    }
+
+    // A body ending in a statement gives null, which the JVM unboxes after the
+    // join: the runtime's message, not the null literal's.
+    @Test
+    void tryExpressionBodyWithoutAValueGivesNull() {
+        String ir = emit("fn main() { imut n = try { mut z = 1 } catch e { 5 } println(n) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(main.contains("call i32 @siyo_rt_unbox_int(ptr null)\n"), main);
+        assertFalse(main.contains("unbox_null_literal"), main);
+    }
+
+    @Test
+    void tryExpressionInAGlobalInitialiserKeepsItsLocalsInSlots() {
+        String ir = emit("mut g = try { mut t = \"a\" t + \"b\" } catch e { \"c\" }\nfn main() { println(g) }");
+        String init = function(ir, "@siyo.init_globals");
+        assertFalse(init.contains("ptr null\n"), init);
+        assertTrue(Pattern.compile("store ptr %t\\d+, ptr @siyo\\.g\\.0\n").matcher(init).find(), init);
+    }
+
     @Test
     void refusesNodesItDoesNotKnow() {
         FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut a = [1] }");

@@ -26,7 +26,7 @@ byte.
 | Unary | `+`, `-` on int |
 | Assignment | `=`, `+= -= *= /=` |
 | Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `break`, `continue`, `return` |
-| Exceptions | `throw v` of any accepted value (an int, long or bool is boxed); `error(msg)`, which throws its argument; `try { … } catch e { … }` statements, nested anywhere (in loops, in other try and catch bodies), with `break`, `continue` and `return` inside both bodies; the catch variable untyped (`any`) or typed `catch e: int` / `long` / `bool` / `string` / `any` (a checked cast, as for an `any` read) |
+| Exceptions | `throw v` of any accepted value (an int, long or bool is boxed); `error(msg)`, which throws its argument; `try { … } catch e { … }` statements, nested anywhere (in loops, in other try and catch bodies), with `break`, `continue` and `return` inside both bodies; the catch variable untyped (`any`) or typed `catch e: int` / `long` / `bool` / `string` / `any` (a checked cast, as for an `any` read); `try` expressions (`imut v = try { parseLong(s) } catch e { 0L - 1L }`) as a statement, a declaration's or assignment's value, a condition, a returned or thrown value, or the first argument of a function or `toString` (also nested: `imut s = f(g(try { … } catch e { … }))`) |
 | `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
 | Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` included); on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
@@ -42,9 +42,14 @@ in functions that are never called, and in code after a `return`.
 arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
-functions that capture locals; generic functions; `try` used as an
-expression (`imut x = try { … } catch e { … }`); a catch variable of a type
-outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
+functions that capture locals; generic functions; a `try` expression
+anywhere else (an operand of an operator, `x += try …`, an argument of
+`print`/`println`, of a builtin other than `toString`, or after a function's
+first argument: the reference evaluates it on a non-empty operand stack and
+fails with `VerifyError`, except as a left operand or a string builtin's or
+`error()`'s first argument, which are rejected too), or one whose body ends
+in a call with no value (`try { println(x) } catch e { … }`; the reference
+fails to compile it); a catch variable of a type outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
 a string; every builtin not listed above, `split` included (it returns an
 array); `main`/`init` with parameters or a return value.
 
@@ -80,6 +85,14 @@ returning one from a function returning `any` (the reference fails with
   status 1; no later global, `init()` or `main()` runs. There is no
   `setjmp`/`longjmp`: a raise records a pending exception and returns, and
   the code checks for it after every call that can raise.
+- A `try` expression's value is the last expression of the body that ran;
+  a body ending in a statement (or in `throw`) gives null. The value is
+  narrowed to the expression's type (that of the try body's last expression,
+  else the catch body's, else `any`) as for an `any` read, after the try:
+  `try { parseLong(s) } catch e { "none" }` raises `ClassCastException` to
+  the enclosing handler when `s` does not parse, an int catch value widens
+  to a long, and a null read into an `int` raises
+  `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"`.
 - Stack exhaustion prints `java.lang.StackOverflowError` to stderr and exits
   with status 1; it cannot be caught (see Deviations). The program runs on a thread whose stack SiyoLLVM sizes
   itself (16 MiB), and every function checks the stack pointer against a

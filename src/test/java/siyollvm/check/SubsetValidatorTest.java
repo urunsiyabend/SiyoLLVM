@@ -149,10 +149,71 @@ class SubsetValidatorTest {
             fn main() { throw [1] }                                                | arrays are
             fn main() { error(toString(1.5)) }                                     | float values are
             fn main() { try { println(1) } catch e: int[] { println(1) } }         | catch variables of type array are
-            fn main() { imut x = try { 1 } catch e { 2 } println(x) }              | try expressions are
+            fn main() { imut x = try { 1 } catch e: int[] { 2 } println(x) }      | catch variables of type array are
+            fn main() { imut x = try { 1.5 } catch e { 2.5 } println(x) }          | float values are
             """)
     void unsupportedExceptionConstructsAreRejected(String source, String construct) {
         assertRejected(source, construct);
+    }
+
+    // A try expression is accepted where the reference evaluates it on an
+    // empty operand stack; elsewhere its exception handler mostly fails
+    // verification (VerifyError).
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { imut x = try { parseLong("z") } catch e { 0L - 1L } println(x) }
+            fn main() { imut x = try { 1 } catch e { 2 } println(x) }
+            fn main() { imut s = try { "a" } catch e { "b" + e } println(s) }
+            fn main() { mut x = 0L x = try { parseLong("1") } catch e { 2L } println(x) }
+            fn main() { try { parseLong("z") } catch e { println(e) } }
+            fn main() { if try { 1 / 0 == 0 } catch e { false } { println(1) } }
+            fn main() { throw try { "a" } catch e { "b" } }
+            fn f() -> int { return try { 1 / 0 } catch e { 0 } } fn main() { println(f()) }
+            fn f(x: long, s: string) -> long { return x } fn main() { imut v = f(try { 1L } catch e { 2L }, "s") println(v) }
+            fn main() { imut s = toString(try { 1 } catch e { 2 }) println(s) }
+            fn main() { imut l: long = try { 1 } catch e { 2 } println(l) }
+            fn main() { imut v = try { try { 1 } catch e { 2 } } catch e { 3 } println(v) }
+            fn main() { imut v = try { throw 1 } catch e: int { e } println(v) }
+            fn main() { imut v = try { error("x") } catch e { e } println(v) }
+            fn main() { imut v: string = try { mut z = 1 } catch e { "c" } println(v) }
+            fn main() { imut v = try { parseLong("z") } catch e { "s" } println(v) }
+            mut g = try { mut t = "a" t + "b" } catch e { "c" }
+            """)
+    void tryExpressionsAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    private static final String TRY_POSITION = "try expressions here (only as a statement, a declaration's or"
+            + " assignment's value, a condition, a returned or thrown value, or the first argument of a"
+            + " function or toString) are";
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { println(try { 1 } catch e { 2 }) }
+            fn main() { imut x = 1L + try { 1L } catch e { 2L } println(x) }
+            fn main() { imut s = "a" + try { "b" } catch e { "c" } println(s) }
+            fn f(a: int, b: long) -> long { return b } fn main() { imut x = f(1, try { 1L } catch e { 2L }) println(x) }
+            fn f(x: long) -> long { return x } fn main() { println(f(try { 1L } catch e { 2L })) }
+            fn main() { mut x = 1L x += try { 1L } catch e { 2L } println(x) }
+            fn f() -> long { return 1L } fn g(a: long, b: long) -> long { return a } fn main() { imut x = g(f(), try { 1L } catch e { 2L }) println(x) }
+            fn main() { imut x = try { 1L } catch e { 2L } + 1L println(x) }
+            fn main() { imut s = substring(try { "abc" } catch e { "" }, 0, 1) println(s) }
+            fn main() { error(try { "a" } catch e { "b" }) }
+            """)
+    // The reference fails verification on all but the last three (the left
+    // operand, a string builtin's and error()'s argument), which are not
+    // established positions and are rejected too.
+    void tryExpressionsOutsideTheEmptyStackPositionsAreRejected(String source) {
+        assertRejected(source, TRY_POSITION);
+    }
+
+    @Test
+    void tryExpressionBodyEndingInAVoidCallIsRejected() {
+        // The reference has no value to push and fails to compile the method.
+        assertRejected("fn main() { imut s: string = try { println(1) } catch e { \"c\" } println(s) }",
+                "try expression bodies ending in a call with no value are");
+        assertRejected("fn main() { imut s = try { \"a\" } catch e { println(e) } println(s) }",
+                "try expression bodies ending in a call with no value are");
     }
 
     @ParameterizedTest(name = "{0}")

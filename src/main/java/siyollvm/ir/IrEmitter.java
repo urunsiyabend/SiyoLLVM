@@ -21,6 +21,7 @@ import codeanalysis.binding.BoundReturnStatement;
 import codeanalysis.binding.BoundStatement;
 import codeanalysis.binding.BoundThrowStatement;
 import codeanalysis.binding.BoundTryCatchStatement;
+import codeanalysis.binding.BoundTryExpression;
 import codeanalysis.binding.BoundUnaryExpression;
 import codeanalysis.binding.BoundVariableDeclaration;
 import codeanalysis.binding.BoundVariableExpression;
@@ -64,6 +65,8 @@ import java.util.Map;
  * still pending after the globals, {@code init()} or {@code main()} as
  * uncaught. A try body is emitted in place, so its jumps (break, continue,
  * return) need no unwinding: the handler is a property of where code is.
+ * A {@code try} expression is a try/catch whose bodies each store their last
+ * expression's value into one slot, which the join block loads.
  *
  * <p>Nodes outside the subset throw {@link IllegalStateException}: the
  * emitter never guesses.
@@ -248,7 +251,9 @@ public final class IrEmitter {
             case BoundVariableDeclaration declaration -> {
                 VariableSymbol variable = declaration.getVariable();
                 Value value = coerce(expression(declaration.getInitializer()), variable.getType());
-                String target = _function == null ? _globals.get(variable) : slotFor(variable);
+                // In the global initialiser, a local of a try expression's body has a slot.
+                String target = _function == null && _globals.containsKey(variable)
+                        ? _globals.get(variable) : slotFor(variable);
                 store(value, target);
             }
             case BoundExpressionStatement expression -> {
@@ -313,6 +318,62 @@ public final class IrEmitter {
         startBlock(end);
     }
 
+    /**
+     * As the JVM backend does: each body's last expression is its value (null
+     * if the body ends in a statement), boxed and then narrowed to the
+     * expression's type after the join, outside the try, so a failing cast
+     * raises to the enclosing handler. The narrowing is done at the end of
+     * each body instead, with the enclosing handler, and the value stored
+     * into a slot of the expression's type, so an int or long value whose
+     * type already matches is never boxed.
+     */
+    private Value tryExpression(BoundTryExpression node) {
+        Class<?> type = node.getClassType();
+        String slot = "%t" + _temps++;
+        _allocas.append("  ").append(slot).append(" = alloca ").append(LlvmTypes.of(type)).append('\n');
+        String catchBlock = newBlock("catch");
+        String join = newBlock("try.value");
+
+        _handlers.push(catchBlock);
+        Value tryValue = bodyValue(node.getTryBody());
+        _handlers.pop();
+        storeTail(tryValue, type, slot, join);
+
+        startBlock(catchBlock);
+        VariableSymbol variable = node.getErrorVariable();
+        Value payload = new Value(instruction("call ptr @siyo_rt_catch()"), Object.class);
+        store(coerce(payload, variable.getType()), slotFor(variable));
+        storeTail(bodyValue(node.getCatchBody()), type, slot, join);
+
+        startBlock(join);
+        return new Value(instruction("load " + LlvmTypes.of(type) + ", ptr " + slot), type);
+    }
+
+    /** Emits a lowered body; returns its last expression's value, or null if it ends in a statement. */
+    private Value bodyValue(BoundStatement body) {
+        List<BoundStatement> statements = body instanceof BoundBlockStatement block ? block.getStatements() : List.of(body);
+        if (!statements.isEmpty() && statements.getLast() instanceof BoundExpressionStatement tail) {
+            statements.subList(0, statements.size() - 1).forEach(this::statement);
+            return expression(tail.getExpression());
+        }
+        statements.forEach(this::statement);
+        return new Value("null", Object.class);
+    }
+
+    /** Narrows a body's value to the expression's type and stores it; nothing if the body cannot complete. */
+    private void storeTail(Value value, Class<?> type, String slot, String join) {
+        if (_terminated) return;
+        Value narrowed;
+        if (value.type() == type || type == Object.class || (value.type() == Integer.class && type == Long.class)) {
+            // Boxing then unboxing to the same type, or unboxLong of an Integer, which widens.
+            narrowed = coerce(value, type);
+        } else {
+            narrowed = checkedCast(coerce(value, Object.class), type);
+        }
+        store(narrowed, slot);
+        terminate("br label %" + join);
+    }
+
     /** The block a pending exception goes to from here. */
     private String handler() {
         if (!_handlers.isEmpty()) return _handlers.peek();
@@ -358,6 +419,7 @@ public final class IrEmitter {
             case BoundConversionExpression conversion ->
                     coerce(expression(conversion.getExpression()), conversion.getClassType());
             case BoundCallExpression call -> call(call);
+            case BoundTryExpression tryExpression -> tryExpression(tryExpression);
             default -> throw unsupported(expression.getType().toString());
         };
     }
@@ -700,14 +762,21 @@ public final class IrEmitter {
                     return new Value(LlvmTypes.zero(to), to);
                 }
             }
-            String cast = to == Integer.class ? "call i32 @siyo_rt_unbox_int(ptr "
-                    : to == Long.class ? "call i64 @siyo_rt_unbox_long(ptr "
-                    : to == Boolean.class ? "call zeroext i1 @siyo_rt_unbox_bool(ptr "
-                    : to == String.class ? "call ptr @siyo_rt_cast_str(ptr "
-                    : null;
-            if (cast != null) return new Value(raisingCall(cast + value.ref() + ")"), to);
+            return checkedCast(value, to);
         }
         throw unsupported("conversion from " + from + " to " + to);
+    }
+
+    /** An any narrowed to {@code to} by the runtime's checked unbox or cast, even for the null literal. */
+    private Value checkedCast(Value value, Class<?> to) {
+        requireType(value, Object.class);
+        String cast = to == Integer.class ? "call i32 @siyo_rt_unbox_int(ptr "
+                : to == Long.class ? "call i64 @siyo_rt_unbox_long(ptr "
+                : to == Boolean.class ? "call zeroext i1 @siyo_rt_unbox_bool(ptr "
+                : to == String.class ? "call ptr @siyo_rt_cast_str(ptr "
+                : null;
+        if (cast == null) throw unsupported("conversion from " + value.type() + " to " + to);
+        return new Value(raisingCall(cast + value.ref() + ")"), to);
     }
 
     private static Value requireType(Value value, Class<?> type) {
