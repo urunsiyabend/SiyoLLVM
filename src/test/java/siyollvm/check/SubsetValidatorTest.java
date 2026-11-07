@@ -124,9 +124,52 @@ class SubsetValidatorTest {
         assertRejected("fn main() { try { println(1) } catch e { println(2) } }", "try/catch is");
     }
 
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { mut a: any = 1 println(a) }
+            fn main() { mut a: any = 2L print(a) }
+            fn main() { mut a: any = true println(toString(a)) }
+            fn main() { mut a: any = "s" a = "t" println(a + "!") }
+            fn main() { mut a: any = null a = null println("x" + a) }
+            fn f(x: any) -> any { return x } fn main() { println(f(1)) }
+            fn f(x: any) -> int { return x } fn main() { println(f(1) + 1) }
+            fn f(x: any) -> any { return x } fn main() { imut n: int = f(1) imut l: long = f(2L) imut b: bool = f(true) imut s: string = f("s") println(s) }
+            fn g(n: int, s: string) -> int { return n } fn f(x: any) -> any { return x } fn main() { println(g(f(1), f("s"))) }
+            fn f(x: any) -> any { return x } fn main() { mut n = 0 n = f(3) println(n) }
+            fn main() { mut a: any = 1 println(a == 1) println(a != "s") println(5L == a) println(a == true) }
+            fn main() { mut a: any = 1 mut b: any = 2 println(a == b) println(a != null) }
+            fn f(x: string) -> bool { return x == null } fn main() { println(f("a")) }
+            fn main() { imut s: string = null println(s) println(null) }
+            fn f(x: any) -> any { return x } fn main() { println(f(null) == null) }
+            """)
+    void anyValuesAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
     @Test
-    void nullLiteralIsRejected() {
-        assertRejected("fn f(x: string) -> bool { return x == null } fn main() { println(f(\"a\")) }", "null literals are");
+    void anyGlobalIsSupported() {
+        assertEquals(List.of(), validate("mut g: any = 5\nmut h: any = \"s\"\nfn main() { println(g) h = null println(h) }"));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            fn main() { mut x: any = 1.5 println(x) }                          | float values are
+            fn main() { mut a: any = 1 println(a + 1) }                        | operator Addition on any and int is
+            fn main() { mut a: any = 1 println(a < 2) }                        | operator LessThan on any and int is
+            fn main() { mut a: any = true println(a && true) }                 | operator LogicalAnd on any and bool is
+            fn main() { mut a: any = true println(!a) }                        | unary operator LogicalNegation on any is
+            fn main() { mut a: any = true if a { println(1) } }                | conditions of type any are
+            fn main() { mut a: any = true while a { println(1) } }             | conditions of type any are
+            fn main() { mut a: any = "s" println(len(a)) }                     | len() on any is
+            fn main() { mut a: any = "s" println(trim(a)) }                    | arguments of type any to trim() are
+            fn main() { mut a: any = 1 println(toLong(a)) }                    | arguments of type any to toLong() are
+            fn main() { mut a: any = 1 a = 2 println(a) }                      | assignments of int to any are
+            fn main() { mut a: any = 1 a = true println(a) }                   | assignments of bool to any are
+            fn f() -> any { return 7 } fn main() { println(f()) }              | returning int from a function returning any is
+            fn f() -> any { return 7L } fn main() { println(f()) }             | returning long from a function returning any is
+            """)
+    void unsupportedUsesOfAnyAreRejected(String source, String construct) {
+        assertRejected(source, construct);
     }
 
     @Test

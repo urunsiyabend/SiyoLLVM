@@ -15,8 +15,8 @@ byte.
 
 | Area | Accepted |
 |---|---|
-| Types | `int` (32-bit), `long` (64-bit), `bool`, `string` |
-| Literals | int, long (`5L`, or an int literal too large for `int`), `true`/`false`, strings (escapes `\n \t \r \\ \" \0 \$ \{ \}`, triple-quoted strings) |
+| Types | `int` (32-bit), `long` (64-bit), `bool`, `string`, `any` (`object`) holding one of those or null |
+| Literals | int, long (`5L`, or an int literal too large for `int`), `true`/`false`, strings (escapes `\n \t \r \\ \" \0 \$ \{ \}`, triple-quoted strings), `null` |
 | Variables | `mut`/`imut` locals and parameters; file-level globals |
 | Arithmetic | `+ - * / %` on int and long, and on an int mixed with a long (the int widens) |
 | Bitwise | `& \| ^ << >>` and unary `~` on int; `& \| ^` on bool |
@@ -26,8 +26,9 @@ byte.
 | Unary | `+`, `-` on int |
 | Assignment | `=`, `+= -= *= /=` |
 | Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `break`, `continue`, `return` |
+| `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
-| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type; on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
+| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` included); on strings `len`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
 | Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
 
 ## Rejected
@@ -37,13 +38,19 @@ and exit status 1, with no output file. This holds anywhere in the file:
 in functions that are never called, and in code after a `return`.
 
 `float` values (also as an operand of `+` on strings or in `"$x"`);
-`null`; arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
+arrays, maps, sets, indexing; `for … in`; structs, enums, sum types,
 interfaces, `impl` blocks, actors (even when declared but unused);
 member access; `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; `try`/`catch`/`throw`;
 casts; `import` and `import java`; scope/spawn/send; `len` of anything but
 a string; every builtin not listed above, `split` included (it returns an
 array); `main`/`init` with parameters or a return value.
+
+An `any` value as an operand of arithmetic, ordering, `&&`/`||`, `!`, as a
+condition (`if a`), or as an argument of a string builtin or `len`; assigning
+an int, long or bool to an `any` variable after its declaration, or
+returning one from a function returning `any` (the reference fails with
+`VerifyError` on both).
 
 ## Runtime behaviour
 
@@ -78,6 +85,16 @@ array); `main`/`init` with parameters or a return value.
 - `toString` and `+` write int and long in decimal and bool as
   `true`/`false`, as Java's `String.valueOf` does.
 - `&&` and `||` evaluate their right operand only when needed.
+- An `any` holding an int, long or bool holds it boxed, as `Integer`, `Long`
+  or `Boolean` on the JVM: it prints and joins as the value would, and `==`
+  is `Objects.equals`, so an `any` holding `5L` is not equal to `5`, and null
+  equals only null. Reading an `any` into an `int`, `bool` or `string` needs
+  a value of exactly that type; reading into a `long` also takes an int,
+  which widens. Otherwise the program raises
+  `java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')`
+  (with the classes involved). Null reads into a `string` as null and into an
+  `int`, `long` or `bool` raises `java.lang.NullPointerException` (for `long`:
+  `Cannot invoke "java.lang.Long.longValue()" because "value" is null`).
 - String lengths and indexes count UTF-16 code units, as on the JVM:
   `len("çağ😀x")` is 6. `substring` may split a surrogate pair; each half is
   then a lone surrogate (printed as `?`), and joining the halves again, with
@@ -124,6 +141,7 @@ array); `main`/`init` with parameters or a return value.
 | stdout closed early (e.g. piped into `head`) | keeps running, exit 0 | killed by SIGPIPE (exit 141 from the shell), as C programs are |
 | A `bool`/`long`/`string` function falling off its end without `return` | `VerifyError` at class load (`int` functions return 0) | returns the type's default (`false`, `0L`, null) |
 | `fn main() -> int` | crashes with `NoSuchMethodError` | rejected at compile time |
+| Null `any` read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part |
 | String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException` |
 | `toUpper` of characters whose Java upper case is several characters, other than `ß` | one-to-many mapping from Unicode SpecialCasing | the character is kept, or mapped to a single character (see below) |
 | `toLower` of `Σ` ending a word | final `ς` | `σ` |

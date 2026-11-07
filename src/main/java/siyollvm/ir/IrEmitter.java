@@ -44,6 +44,12 @@ import java.util.Map;
  * undefined), shift counts are masked, and falling off the end of a
  * value-returning function returns the type's default.
  *
+ * <p>A value of static type {@code any} ({@code Object}) is a {@code ptr} to
+ * a tagged heap object or null: a string as it is, an int, long or bool boxed
+ * by the runtime. Where the binder lets an {@code any} meet a declared type
+ * (declaration, assignment, argument, return) the value is boxed, or unboxed
+ * and cast with the runtime's check, as the JVM backend's checkcast does.
+ *
  * <p>Nodes outside the subset throw {@link IllegalStateException}: the
  * emitter never guesses.
  */
@@ -269,7 +275,7 @@ public final class IrEmitter {
             case Long l -> new Value(l.toString(), Long.class);
             case Boolean b -> new Value(b.toString(), Boolean.class);
             case String s -> new Value(_strings.nameOf(s), String.class);
-            case null -> throw unsupported("null literal");
+            case null -> new Value("null", Object.class);
             default -> throw unsupported(value.getClass().getSimpleName() + " literal");
         };
     }
@@ -297,6 +303,17 @@ public final class IrEmitter {
             String l = text(left).ref();
             String r = text(right).ref();
             return new Value(instruction("call ptr @siyo_rt_str_concat(ptr " + l + ", ptr " + r + ")"), String.class);
+        }
+        if (left.type() == Object.class || right.type() == Object.class) {
+            // Objects.equals over both values boxed, as the JVM backend compares an erased operand.
+            if (op != BoundBinaryOperatorType.Equals && op != BoundBinaryOperatorType.NotEquals) {
+                throw unsupported("operator " + op + " on any");
+            }
+            String l = coerce(left, Object.class).ref();
+            String r = coerce(right, Object.class).ref();
+            String equal = instruction("call zeroext i1 @siyo_rt_any_equals(ptr " + l + ", ptr " + r + ")");
+            return op == BoundBinaryOperatorType.Equals ? new Value(equal, Boolean.class)
+                    : new Value(instruction("xor i1 " + equal + ", true"), Boolean.class);
         }
         if (left.type() == String.class || right.type() == String.class) {
             requireType(left, String.class);
@@ -421,12 +438,14 @@ public final class IrEmitter {
         if (function == BuiltinFunctions.PRINT || function == BuiltinFunctions.PRINTLN) {
             if (call.getArguments().size() != 1) throw unsupported(function.getName() + " arity");
             Value value = expression(call.getArguments().get(0));
-            String printer = switch (LlvmTypes.of(value.type())) {
-                case "i32" -> "@siyo_rt_print_int(i32 ";
-                case "i64" -> "@siyo_rt_print_long(i64 ";
-                case "i1" -> "@siyo_rt_print_bool(i1 zeroext ";
-                default -> "@siyo_rt_print_str(ptr ";
-            };
+            Class<?> type = value.type();
+            String printer = type == Integer.class ? "@siyo_rt_print_int(i32 "
+                    : type == Long.class ? "@siyo_rt_print_long(i64 "
+                    : type == Boolean.class ? "@siyo_rt_print_bool(i1 zeroext "
+                    : type == String.class ? "@siyo_rt_print_str(ptr "
+                    : type == Object.class ? "@siyo_rt_print_any(ptr "
+                    : null;
+            if (printer == null) throw unsupported("printing " + type);
             instructionNoResult("call void " + printer + value.ref() + ")");
             if (function == BuiltinFunctions.PRINTLN) instructionNoResult("call void @siyo_rt_print_newline()");
             return new Value(null, null);
@@ -524,9 +543,9 @@ public final class IrEmitter {
 
     /**
      * {@code value} as a string operand of {@code +}: Java's decimal form for
-     * int and long, {@code true}/{@code false} for bool. A string is kept as
-     * is, null included; concatenation reads null as {@code "null"}. Any other
-     * type is refused.
+     * int and long, {@code true}/{@code false} for bool, {@code String.valueOf}
+     * for an any. A string is kept as is, null included; concatenation reads
+     * null as {@code "null"}. Any other type is refused.
      */
     private Value text(Value value) {
         if (value.type() == String.class) return value;
@@ -537,18 +556,44 @@ public final class IrEmitter {
             call = "call ptr @siyo_rt_str_from_long(i64 ";
         } else if (value.type() == Boolean.class) {
             call = "call ptr @siyo_rt_str_from_bool(i1 zeroext ";
+        } else if (value.type() == Object.class) {
+            call = "call ptr @siyo_rt_any_to_string(ptr ";
         } else {
             throw unsupported("conversion of " + value.type() + " to text");
         }
         return new Value(instruction(call + value.ref() + ")"), String.class);
     }
 
+    /**
+     * {@code value} as type {@code to}: int widens to long; a value becomes an
+     * any by boxing (a string already is one); an any becomes a declared type
+     * through the runtime's checked unbox or cast.
+     */
     private Value coerce(Value value, Class<?> to) {
-        if (value.type() == to) return value;
-        if (value.type() == Integer.class && to == Long.class) {
+        Class<?> from = value.type();
+        if (from == to) return value;
+        if (from == Integer.class && to == Long.class) {
             return new Value(instruction("sext i32 " + value.ref() + " to i64"), Long.class);
         }
-        throw unsupported("conversion from " + value.type() + " to " + to);
+        if (to == Object.class) {
+            String box = from == Integer.class ? "call ptr @siyo_rt_box_int(i32 "
+                    : from == Long.class ? "call ptr @siyo_rt_box_long(i64 "
+                    : from == Boolean.class ? "call ptr @siyo_rt_box_bool(i1 zeroext "
+                    : null;
+            if (from == String.class) return new Value(value.ref(), Object.class);
+            if (box != null) return new Value(instruction(box + value.ref() + ")"), Object.class);
+        }
+        if (from == Object.class) {
+            // The null literal is a string already; anything else is checked.
+            if (to == String.class && value.ref().equals("null")) return new Value("null", String.class);
+            String cast = to == Integer.class ? "call i32 @siyo_rt_unbox_int(ptr "
+                    : to == Long.class ? "call i64 @siyo_rt_unbox_long(ptr "
+                    : to == Boolean.class ? "call zeroext i1 @siyo_rt_unbox_bool(ptr "
+                    : to == String.class ? "call ptr @siyo_rt_cast_str(ptr "
+                    : null;
+            if (cast != null) return new Value(instruction(cast + value.ref() + ")"), to);
+        }
+        throw unsupported("conversion from " + from + " to " + to);
     }
 
     private static Value requireType(Value value, Class<?> type) {

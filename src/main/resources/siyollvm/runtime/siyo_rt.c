@@ -205,7 +205,7 @@ static void siyo_rt_null_pointer(void) {
 /* Raises java_class with a short ASCII message formatted from format. */
 __attribute__((format(printf, 2, 3)))
 static void siyo_rt_raise_format(const char *java_class, const char *format, ...) {
-    char text[128];
+    char text[256];
     va_list args;
     va_start(args, format);
     int len = vsnprintf(text, sizeof text, format, args);
@@ -758,6 +758,147 @@ int64_t siyo_rt_parse_long(const SiyoStr *s) {
         return 0;
     }
     return value;
+}
+
+/* --- any values ------------------------------------------------------------ */
+
+static void *siyo_rt_box(uint32_t tag, int64_t value) {
+    SiyoBox *box = siyo_rt_alloc(sizeof(SiyoBox));
+    box->tag = tag;
+    box->value = value;
+    return box;
+}
+
+void *siyo_rt_box_int(int32_t value) {
+    return siyo_rt_box(SIYO_TAG_INT, value);
+}
+
+void *siyo_rt_box_long(int64_t value) {
+    return siyo_rt_box(SIYO_TAG_LONG, value);
+}
+
+void *siyo_rt_box_bool(_Bool value) {
+    return siyo_rt_box(SIYO_TAG_BOOL, value ? 1 : 0);
+}
+
+static uint32_t siyo_rt_tag_of(const void *value) {
+    return *(const uint32_t *)value;
+}
+
+static int64_t siyo_rt_box_value(const void *value) {
+    return ((const SiyoBox *)value)->value;
+}
+
+/* The Java class a non-null any value is an instance of on the JVM. */
+static const char *siyo_rt_java_class_of(const void *value) {
+    switch (siyo_rt_tag_of(value)) {
+    case SIYO_TAG_STR: return "java.lang.String";
+    case SIYO_TAG_INT: return "java.lang.Integer";
+    case SIYO_TAG_LONG: return "java.lang.Long";
+    case SIYO_TAG_BOOL: return "java.lang.Boolean";
+    default: siyo_rt_fail("SiyoLLVM runtime: a value has an unknown type tag\n");
+    }
+}
+
+/* checkcast failing between two java.base classes, worded as HotSpot does. */
+static void siyo_rt_class_cast(const void *value, const char *target) {
+    const char *from = siyo_rt_java_class_of(value);
+    siyo_rt_raise_format("java.lang.ClassCastException",
+            "class %s cannot be cast to class %s (%s and %s are in module java.base of loader 'bootstrap')",
+            from, target, from, target);
+}
+
+/*
+ * The JVM's helpful message for unboxing null names where the null came from
+ * (a call, a local, a field), which the runtime does not know; for int and
+ * bool it keeps the part that does not depend on that. unboxLong's message is
+ * always the same, as the null is its own parameter.
+ */
+int32_t siyo_rt_unbox_int(const void *value) {
+    if (value == NULL) {
+        siyo_rt_raise_format("java.lang.NullPointerException", "%s", "Cannot invoke \"java.lang.Integer.intValue()\"");
+        return 0;
+    }
+    if (siyo_rt_tag_of(value) != SIYO_TAG_INT) {
+        siyo_rt_class_cast(value, "java.lang.Integer");
+        return 0;
+    }
+    return (int32_t)siyo_rt_box_value(value);
+}
+
+int64_t siyo_rt_unbox_long(const void *value) {
+    if (value == NULL) {
+        siyo_rt_raise_format("java.lang.NullPointerException", "%s",
+                "Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null");
+        return 0;
+    }
+    uint32_t tag = siyo_rt_tag_of(value);
+    if (tag != SIYO_TAG_INT && tag != SIYO_TAG_LONG) {
+        siyo_rt_class_cast(value, "java.lang.Long");
+        return 0;
+    }
+    return siyo_rt_box_value(value);
+}
+
+_Bool siyo_rt_unbox_bool(const void *value) {
+    if (value == NULL) {
+        siyo_rt_raise_format("java.lang.NullPointerException", "%s",
+                "Cannot invoke \"java.lang.Boolean.booleanValue()\"");
+        return 0;
+    }
+    if (siyo_rt_tag_of(value) != SIYO_TAG_BOOL) {
+        siyo_rt_class_cast(value, "java.lang.Boolean");
+        return 0;
+    }
+    return siyo_rt_box_value(value) != 0;
+}
+
+const SiyoStr *siyo_rt_cast_str(const void *value) {
+    if (value != NULL && siyo_rt_tag_of(value) != SIYO_TAG_STR) {
+        siyo_rt_class_cast(value, "java.lang.String");
+        return NULL;
+    }
+    return value;
+}
+
+SiyoStr *siyo_rt_any_to_string(const void *value) {
+    if (value == NULL) return siyo_rt_str_from_bytes("null", 4, 4);
+    switch (siyo_rt_tag_of(value)) {
+    case SIYO_TAG_STR: return (SiyoStr *)value;
+    case SIYO_TAG_INT:
+    case SIYO_TAG_LONG: return siyo_rt_str_from_long(siyo_rt_box_value(value));
+    case SIYO_TAG_BOOL: return siyo_rt_str_from_bool(siyo_rt_box_value(value) != 0);
+    default: siyo_rt_java_class_of(value); return NULL;
+    }
+}
+
+_Bool siyo_rt_any_equals(const void *a, const void *b) {
+    if (a == b) return 1;
+    if (a == NULL || b == NULL) return 0;
+    uint32_t tag = siyo_rt_tag_of(a);
+    if (tag != siyo_rt_tag_of(b)) return 0;
+    switch (tag) {
+    case SIYO_TAG_STR: return siyo_rt_str_eq(a, b);
+    case SIYO_TAG_INT:
+    case SIYO_TAG_LONG:
+    case SIYO_TAG_BOOL: return siyo_rt_box_value(a) == siyo_rt_box_value(b);
+    default: siyo_rt_java_class_of(a); return 0;
+    }
+}
+
+/* Prints without allocating, so printing in a loop does not grow memory. */
+void siyo_rt_print_any(const void *value) {
+    if (value == NULL) {
+        fputs("null", stdout);
+        return;
+    }
+    switch (siyo_rt_tag_of(value)) {
+    case SIYO_TAG_STR: siyo_rt_print_str(value); return;
+    case SIYO_TAG_INT:
+    case SIYO_TAG_LONG: siyo_rt_print_long(siyo_rt_box_value(value)); return;
+    case SIYO_TAG_BOOL: siyo_rt_print_bool(siyo_rt_box_value(value) != 0); return;
+    default: siyo_rt_java_class_of(value); return;
+    }
 }
 
 _Noreturn void siyo_rt_div_by_zero(void) {

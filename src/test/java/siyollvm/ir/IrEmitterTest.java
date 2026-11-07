@@ -224,6 +224,49 @@ class IrEmitterTest {
         emit("fn f(a: int) -> int { return 2 mut b = a / 0 b = b % a return b } fn main() { println(f(1)) }");
     }
 
+    // An any value is a pointer to a tagged heap object (a string is one already) or null.
+    @Test
+    void anyIsAPointerAndPrimitivesAreBoxedIntoIt() {
+        String ir = emit("mut g: any = 1\nfn f(x: any) -> any { return x }\n"
+                + "fn main() { println(f(2L)) print(f(true)) println(f(\"s\")) println(f(null)) println(g) }");
+        assertTrue(ir.contains("@siyo.g.0 = internal global ptr null"), ir);
+        assertTrue(ir.contains("define internal ptr @siyo.fn.0(ptr %p0)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_int(i32 1)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_long(i64 2)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_bool(i1 zeroext true)"), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn.0(ptr @siyo.str.0)"), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn.0(ptr null)"), ir);
+        assertEquals(5, count(ir, "call void @siyo_rt_print_any(ptr "), ir);
+    }
+
+    @Test
+    void anyIsUnboxedOrCastWithACheck() {
+        String ir = emit("fn f(x: any) -> any { return x }\nfn r(x: any) -> bool { return x }\n"
+                + "fn main() { imut n: int = f(1) imut l: long = f(2L) imut s: string = f(\"s\") println(r(true))"
+                + " mut m = 0 m = f(3) println(n + l + m + s) }");
+        assertTrue(ir.contains("call i32 @siyo_rt_unbox_int(ptr "), ir);
+        assertTrue(ir.contains("call i64 @siyo_rt_unbox_long(ptr "), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_unbox_bool(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_cast_str(ptr "), ir);
+        assertEquals(2, count(ir, "call i32 @siyo_rt_unbox_int(ptr "), ir);
+    }
+
+    @Test
+    void equalityWithAnAnyOperandIsObjectsEquals() {
+        String ir = emit("fn f(x: any) -> any { return x }\n"
+                + "fn main() { println(f(5L) == 5) println(f(\"a\") != \"a\") println(f(1) == f(1)) }");
+        assertEquals(3, count(ir, "call zeroext i1 @siyo_rt_any_equals(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_int(i32 5)"), ir);
+        assertFalse(ir.contains("call zeroext i1 @siyo_rt_str_eq("), ir);
+    }
+
+    @Test
+    void anyInTextIsStringValueOf() {
+        String ir = emit("fn f(x: any) -> any { return x }\nfn main() { println(\"a\" + f(1)) println(toString(f(2))) }");
+        assertEquals(2, count(ir, "call ptr @siyo_rt_any_to_string(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_concat(ptr @siyo.str.0, ptr "), ir);
+    }
+
     @Test
     void refusesNodesItDoesNotKnow() {
         FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut a = [1] }");

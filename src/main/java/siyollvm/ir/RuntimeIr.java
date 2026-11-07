@@ -9,8 +9,9 @@ package siyollvm.ir;
  *
  * <p>A Siyo string is a pointer to the runtime's {@code SiyoStr},
  * {@code { i32 tag, i32 utf16 length, i64 byte length, ptr data, ptr buffer }}
- * (the buffer is null for a literal), or null for Siyo's null. C {@code _Bool}
- * crosses the boundary as {@code zeroext i1}.
+ * (the buffer is null for a literal), or null for Siyo's null. An {@code any}
+ * is a pointer to a string or to a {@code SiyoBox} {@code { i32 tag, i64 value }},
+ * or null. C {@code _Bool} crosses the boundary as {@code zeroext i1}.
  */
 final class RuntimeIr {
     private RuntimeIr() {}
@@ -43,6 +44,16 @@ final class RuntimeIr {
                 declare i32 @siyo_rt_str_compare(ptr, ptr)
                 declare i32 @siyo_rt_parse_int(ptr)
                 declare i64 @siyo_rt_parse_long(ptr)
+                declare ptr @siyo_rt_box_int(i32)
+                declare ptr @siyo_rt_box_long(i64)
+                declare ptr @siyo_rt_box_bool(i1 zeroext)
+                declare i32 @siyo_rt_unbox_int(ptr)
+                declare i64 @siyo_rt_unbox_long(ptr)
+                declare zeroext i1 @siyo_rt_unbox_bool(ptr)
+                declare ptr @siyo_rt_cast_str(ptr)
+                declare ptr @siyo_rt_any_to_string(ptr)
+                declare zeroext i1 @siyo_rt_any_equals(ptr, ptr)
+                declare void @siyo_rt_print_any(ptr)
                 declare void @siyo_rt_div_by_zero() noreturn cold
                 declare void @siyo_rt_stack_overflow() noreturn cold
 

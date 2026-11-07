@@ -9,12 +9,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* First word of every heap object. Tags 2-8 are reserved for later features. */
+/* First word of every heap object. Tags 5-8 are reserved for later features. */
 enum {
     SIYO_TAG_STR = 1,
-    SIYO_TAG_BOXED_INT = 2,
-    SIYO_TAG_BOXED_LONG = 3,
-    SIYO_TAG_BOXED_BOOL = 4,
+    SIYO_TAG_INT = 2,
+    SIYO_TAG_LONG = 3,
+    SIYO_TAG_BOOL = 4,
     SIYO_TAG_ARRAY = 5,
     SIYO_TAG_MAP = 6,
     SIYO_TAG_STRUCT = 7,
@@ -55,6 +55,18 @@ _Static_assert(offsetof(SiyoStr, len) == 8, "SiyoStr layout must match the IR");
 _Static_assert(offsetof(SiyoStr, data) == 16, "SiyoStr layout must match the IR");
 _Static_assert(offsetof(SiyoStr, buf) == 24, "SiyoStr layout must match the IR");
 _Static_assert(sizeof(SiyoStr) == 32, "SiyoStr layout must match the IR");
+
+/*
+ * A boxed int, long or bool (tag SIYO_TAG_INT, _LONG or _BOOL): what a
+ * primitive becomes where the static type is any, as java.lang.Integer, Long
+ * and Boolean on the JVM. A bool's value is 0 or 1.
+ */
+typedef struct SiyoBox {
+    uint32_t tag;
+    int64_t value;
+} SiyoBox;
+
+_Static_assert(offsetof(SiyoBox, value) == 8, "SiyoBox layout");
 
 /* Lowest stack address a Siyo function may start at; set on the program thread. */
 extern uint64_t siyo_rt_stack_limit;
@@ -123,6 +135,32 @@ int32_t siyo_rt_str_compare(const SiyoStr *a, const SiyoStr *b);
 int32_t siyo_rt_parse_int(const SiyoStr *s);
 /* Long.parseLong; rejected input, null included, is NumberFormatException. */
 int64_t siyo_rt_parse_long(const SiyoStr *s);
+
+/*
+ * any values. An any is a pointer to a tagged heap object (a SiyoStr or a
+ * SiyoBox) or NULL for null. Boxing allocates; values are never shared or
+ * mutated, so identity is never observable (== is Objects.equals).
+ */
+void *siyo_rt_box_int(int32_t value);
+void *siyo_rt_box_long(int64_t value);
+void *siyo_rt_box_bool(_Bool value);
+/*
+ * Checked unboxing, as the JVM backend's checkcast + intValue(): a value of
+ * another type raises java.lang.ClassCastException with HotSpot's message,
+ * null raises java.lang.NullPointerException. unbox_long also takes a boxed
+ * int (SiyoRuntime.unboxLong widens it).
+ */
+int32_t siyo_rt_unbox_int(const void *value);
+int64_t siyo_rt_unbox_long(const void *value);
+_Bool siyo_rt_unbox_bool(const void *value);
+/* checkcast java/lang/String: the string itself, null passes. */
+const SiyoStr *siyo_rt_cast_str(const void *value);
+/* String.valueOf(Object): "null" for null, a string itself. */
+SiyoStr *siyo_rt_any_to_string(const void *value);
+/* Objects.equals: same type and value, so a boxed 5L is not equal to a boxed 5. */
+_Bool siyo_rt_any_equals(const void *a, const void *b);
+/* PrintStream.print(Object). */
+void siyo_rt_print_any(const void *value);
 
 /* Uncaught Java errors: flush stdout, print the exception line to stderr, exit 1. */
 _Noreturn void siyo_rt_div_by_zero(void);

@@ -42,10 +42,25 @@ import java.util.Set;
  * checked, and anything not listed here is reported. The emitter only runs
  * on programs this accepts, so a construct the backend does not implement
  * can never be compiled into something else.
+ *
+ * <p>{@code any} ({@code Object}) values are accepted where the JVM backend
+ * gives them a meaning SiyoLLVM reproduces: stored, passed, returned, printed,
+ * joined to a string, compared with {@code ==}/{@code !=} (Objects.equals),
+ * and narrowed back to a declared type with a checked cast. The binder also
+ * lets an any reach arithmetic, ordering, logic, conditions and the string
+ * builtins, where the JVM backend unboxes it to the other operand's type; those
+ * are rejected.
  */
 public final class SubsetValidator {
 
-    private static final Set<Class<?>> VALUE_TYPES = Set.of(Integer.class, Long.class, Boolean.class, String.class);
+    private static final Set<Class<?>> VALUE_TYPES =
+            Set.of(Integer.class, Long.class, Boolean.class, String.class, Object.class);
+
+    /**
+     * Types an any holds boxed. The JVM backend boxes them when declaring an
+     * any or passing one, but not when assigning or returning one.
+     */
+    private static final Set<Class<?>> PRIMITIVES = Set.of(Integer.class, Long.class, Boolean.class);
 
     private static final Set<BoundBinaryOperatorType> ARITHMETIC = EnumSet.of(
             BoundBinaryOperatorType.Addition, BoundBinaryOperatorType.Subtraction,
@@ -107,6 +122,8 @@ public final class SubsetValidator {
     private final LoweredProgram _program;
     private final List<SourceDiagnostic> _diagnostics = new ArrayList<>();
     private int _offset;
+    /** The function being validated; null for the global initialiser. */
+    private FunctionSymbol _function;
 
     private SubsetValidator(LoweredProgram program) {
         _program = program;
@@ -121,9 +138,11 @@ public final class SubsetValidator {
 
     private void run() {
         _offset = -1;
+        _function = null;
         validateBlock(_program.globals());
         for (var entry : _program.functions().entrySet()) {
             FunctionSymbol function = entry.getKey();
+            _function = function;
             _offset = _program.declarationOffsets().getOrDefault(function, -1);
             validateSignature(function);
             validateBlock(entry.getValue());
@@ -166,9 +185,21 @@ public final class SubsetValidator {
             case BoundExpressionStatement expression -> validateExpression(expression.getExpression());
             case BoundLabelStatement ignored -> { }
             case BoundGotoStatement ignored -> { }
-            case BoundConditionalGotoStatement conditional -> validateExpression(conditional.getCondition());
+            case BoundConditionalGotoStatement conditional -> {
+                // The binder admits an any as a condition; the JVM backend unboxes it.
+                Class<?> type = conditional.getCondition().getClassType();
+                if (validatesCleanly(conditional.getCondition()) && type != Boolean.class) {
+                    report("conditions of type " + typeName(type) + " are");
+                }
+            }
             case BoundReturnStatement ret -> {
-                if (ret.getExpression() != null) validateExpression(ret.getExpression());
+                if (ret.getExpression() != null && validatesCleanly(ret.getExpression())) {
+                    // The JVM backend returns the primitive unboxed, which fails verification.
+                    Class<?> type = ret.getExpression().getClassType();
+                    if (_function != null && _function.getReturnType() == Object.class && PRIMITIVES.contains(type)) {
+                        report("returning " + typeName(type) + " from a function returning any is");
+                    }
+                }
             }
             default -> reportNode(statement);
         }
@@ -181,8 +212,13 @@ public final class SubsetValidator {
             case BoundLiteralExpression literal -> validateLiteral(literal);
             case BoundVariableExpression variable -> requireValueType(variable.getVariable().getType(), "variables");
             case BoundAssignmentExpression assignment -> {
-                if (validatesCleanly(assignment.getExpression())) {
-                    requireValueType(assignment.getVariable().getType(), "variables");
+                if (validatesCleanly(assignment.getExpression())
+                        && requireValueType(assignment.getVariable().getType(), "variables")) {
+                    // The JVM backend stores the primitive unboxed, which fails verification.
+                    Class<?> type = assignment.getExpression().getClassType();
+                    if (assignment.getVariable().getType() == Object.class && PRIMITIVES.contains(type)) {
+                        report("assignments of " + typeName(type) + " to any are");
+                    }
                 }
             }
             case BoundUnaryExpression unary -> validateUnary(unary);
@@ -204,7 +240,8 @@ public final class SubsetValidator {
     private void validateLiteral(BoundLiteralExpression literal) {
         Object value = literal.getValue();
         if (value == null) {
-            report("null literals are");
+            // null is an any; its uses are checked where it is used.
+            return;
         } else if (!requireValueType(value.getClass(), "literals")) {
             return;
         } else if (value instanceof String text && hasUnpairedSurrogate(text)) {
@@ -229,13 +266,15 @@ public final class SubsetValidator {
         Class<?> left = binary.getLeft().getClassType();
         Class<?> right = binary.getRight().getClassType();
         boolean supported;
-        if (left == String.class || right == String.class) {
-            if (op == BoundBinaryOperatorType.Addition) {
-                // Concatenation joins a string with any value type, either side.
-                boolean operandsClean = validatesCleanly(binary.getLeft()) & validatesCleanly(binary.getRight());
-                if (operandsClean && requireValueType(left, "values")) requireValueType(right, "values");
-                return;
-            }
+        if ((left == String.class || right == String.class) && op == BoundBinaryOperatorType.Addition) {
+            // Concatenation joins a string with any value type, either side.
+            boolean operandsClean = validatesCleanly(binary.getLeft()) & validatesCleanly(binary.getRight());
+            if (operandsClean && requireValueType(left, "values")) requireValueType(right, "values");
+            return;
+        } else if (left == Object.class || right == Object.class) {
+            // Objects.equals; anything else would unbox to the other side's type.
+            supported = op == BoundBinaryOperatorType.Equals || op == BoundBinaryOperatorType.NotEquals;
+        } else if (left == String.class || right == String.class) {
             // == and != compare values; < <= > >= follow compareTo.
             supported = left == right && COMPARISON.contains(op);
         } else if (isInteger(left) && isInteger(right)) {
@@ -276,7 +315,11 @@ public final class SubsetValidator {
             return;
         }
         for (BoundExpression argument : call.getArguments()) {
-            validateExpression(argument);
+            // A builtin would cast an any argument; only user functions take one.
+            if (validatesCleanly(argument) && STRING_BUILTINS.contains(function)
+                    && argument.getClassType() == Object.class) {
+                report("arguments of type any to " + function.getName() + "() are");
+            }
         }
     }
 
