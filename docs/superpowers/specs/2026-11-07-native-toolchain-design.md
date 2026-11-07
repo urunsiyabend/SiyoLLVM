@@ -135,11 +135,14 @@ exit 1. Stack overflow stays fatal (not catchable); documented.
 
 ### 5. Modules
 
-Covered in its own section once F4 is designed against the binder's
-`ModuleHandler` (see the roadmap). The constraint fixed now: `import`
-resolution is done by the snapshot binder unchanged; SiyoLLVM supplies its own
-`std/*` sources from its jar (an isolated adaptation, never an edit of the
-snapshot), whose bodies call native runtime primitives.
+Implemented (F4). The snapshot binder resolves `import`s unchanged and
+reports each import's absolute path; SiyoLLVM compiles the resulting units in
+the binder's registry order into one program. Qualified symbols (`x.f`,
+`y.f` under an alias) map to units by key, and a collision of module class
+names or a silently dropped import is rejected. `std/io`, `std/os` and
+`std/strings` are SiyoLLVM's own sources on the classpath (`src/main/resources/std`),
+keyed by module identity; io and os bodies are native intrinsics. Details are
+in `docs/superpowers/plans/2026-11-07-f4-modules.md` and `docs/SUBSET.md`.
 
 ## Features (vertical slices)
 

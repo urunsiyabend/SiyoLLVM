@@ -27,8 +27,19 @@ and `range(a, b)`, `split`, and string indexing `s[i]`. Structs (literals, field
 statements, and `try` expressions in the positions SUBSET.md lists; runtime
 errors (`/ by zero`, a failed cast, `parseLong` of bad input, an index out
 of range, …) are catchable, and an uncaught one prints the JVM's exception
-line and exits with status 1. Everything else is rejected
-with a diagnostic, including code that is never reached.
+line and exits with status 1. Multi-file programs: `import "x"`, `import "dir/x"`
+and `import "x" as y` of user modules, plus the native std modules `std/io`
+(file I/O), `std/os` (arguments, exit) and `std/strings`. Everything else is
+rejected with a diagnostic, including code that is never reached (and
+`import java`).
+
+Building a multi-file program and running it with arguments (imports resolve
+relative to the importing file, as in `siyoc`):
+
+```
+$ bin/siyollvm build path/to/main.siyo -o app
+$ ./app input.csv out.txt     # read in the program with os.args()
+```
 
 ## Requirements
 
@@ -108,14 +119,16 @@ UTF-8 bytes.
 
 | Path | What |
 |---|---|
-| `src/main/java/siyollvm/frontend` | runs the snapshot frontend; rejects imports and type declarations before binding |
+| `src/main/java/siyollvm/frontend` | runs the snapshot frontend; binds imports (rejects only `import java`), checks module class-name collisions and dropped imports, and builds multi-unit programs |
 | `src/main/java/siyollvm/check` | `SubsetValidator`: whitelist over every lowered statement and expression |
 | `src/main/java/siyollvm/ir` | `IrEmitter` and the runtime declarations |
-| `src/main/resources/siyollvm/runtime` | the C11 runtime (`siyo_rt.c`, `siyo_rt.h`): `main`, program thread, stack guard, printing, strings and string builtins |
+| `src/main/resources/siyollvm/runtime` | the C11 runtime (`siyo_rt.c`, `siyo_rt.h`): `main`, program thread, stack guard, printing, strings and string builtins, file I/O |
+| `src/main/resources/std` | SiyoLLVM's own std sources (`io`, `os`, `strings`); io and os are native intrinsics |
 | `src/main/java/siyollvm/toolchain` | finding and running clang; writing out the runtime source |
 | `src/main/java/siyollvm/cli` | the `siyollvm` command |
 | `upstream/siyocompiler` | the frontend snapshot, its provenance and checksums |
 | `examples/` | example programs with expected output |
+| `src/test/resources/modules` | directory corpus of multi-file programs, incl. `main.args`, `main.locale` and file fixtures |
 | `src/test/resources/native` | semantics corpus (expected output from `siyoc run` 0.9.0) |
 
 ## Frontend snapshot
