@@ -89,8 +89,9 @@ backend copes through runtime classes; the native backend does the same:
   value, struct field, `object` variable, thrown value) is boxed; reading it
   back at a primitive static type unboxes with a tag check that raises
   `java.lang.ClassCastException` as the JVM would.
-- Strings are immutable `{tag, i64 byte length, i32 utf16 length (or -1 until
-  computed), bytes}` in **WTF-8** (UTF-8 that may hold lone surrogates), so
+- Strings are immutable, with an exact UTF-16 length always recorded in the
+  header (layout in the next bullet), and their bytes are **WTF-8** (UTF-8
+  that may hold lone surrogates), so
   every Java `String` value, including a substring that splits a surrogate
   pair, has an exact representation. All index-based operations (`len`,
   `substring`, `indexOf`, `ord`, comparison order) use UTF-16 code units as
