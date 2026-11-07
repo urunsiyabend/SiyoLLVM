@@ -881,16 +881,17 @@ public final class IrEmitter {
             if (!call.getArguments().isEmpty()) throw unsupported("map arity");
             return new Value(instruction("call ptr @siyo_rt_map_new()"), SiyoMap.class);
         }
-        if (function == BuiltinFunctions.MAP_KEYS || (function == BuiltinFunctions.LEN && call.getArguments().size() == 1
-                && call.getArguments().get(0).getClassType() == SiyoMap.class)) {
-            // for k in m iterates over $mapKeys(m), a fresh array of the keys;
-            // len(m) is 0 for a null map, as SiyoRuntime.lengthOf is.
-            if (call.getArguments().size() != 1) throw unsupported(function.getName() + " arity");
+        if (function == BuiltinFunctions.MAP_KEYS) {
+            // for k in m iterates over $mapKeys(m), a fresh array of the keys.
+            if (call.getArguments().size() != 1) throw unsupported("$mapKeys arity");
             Value map = requireType(expression(call.getArguments().get(0)), SiyoMap.class);
-            if (function == BuiltinFunctions.LEN) {
-                return new Value(instruction("call i32 @siyo_rt_map_len(ptr " + map.ref() + ")"), Integer.class);
-            }
             return new Value(raisingCall("call ptr @siyo_rt_map_keys(ptr " + map.ref() + ")"), SiyoArray.class);
+        }
+        if (function == BuiltinFunctions.LEN && call.getArguments().size() == 1
+                && call.getArguments().get(0).getClassType() == SiyoMap.class) {
+            // len(m) is 0 for a null map, as SiyoRuntime.lengthOf is.
+            Value map = requireType(expression(call.getArguments().get(0)), SiyoMap.class);
+            return new Value(instruction("call i32 @siyo_rt_map_len(ptr " + map.ref() + ")"), Integer.class);
         }
         Value arrayResult = arrayBuiltin(call);
         if (arrayResult != null) return arrayResult;

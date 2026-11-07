@@ -495,6 +495,7 @@ class SubsetValidatorTest {
             fn main() { mut m = {"a": 1} println(m.getInt("a")) }               | map method getInt() is
             fn main() { mut m = {"a": 1} println(m.getStr("a")) }               | map method getStr() is
             fn main() { mut m = {"a": 1} println(m.getBool("a")) }              | map method getBool() is
+            fn main() { mut m = {"a": 1} println(m.getLong("a")) }              | map method getLong() is
             fn main() { mut s = #{1} println(s) }                               | sets are
             fn main() { imut s = set() for v in s { println(v) } }              | for … in over sets is
             fn main() { imut a: any = {"a": 1} a[0] = 2 }                       | index assignment on any values is
