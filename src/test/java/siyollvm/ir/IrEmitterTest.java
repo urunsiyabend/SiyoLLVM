@@ -355,7 +355,7 @@ class IrEmitterTest {
     }
 
     @Test
-    void forInReadsTheLengthOnEveryIteration() {
+    void forInEmitsOneLengthReadAndOneElementRead() {
         String main = function(emit("fn main() { mut xs = [1] for x in xs { push(xs, x) } }"), "@siyo.fn.0");
         // One len call, in the loop's condition block, which every iteration re-enters.
         assertEquals(1, count(main, "call i32 @siyo_rt_array_len(ptr "), main);

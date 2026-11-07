@@ -21,7 +21,9 @@ What it accepts, how programs behave, and where the behaviour differs from
 checked casts back), `null`, all statement-level control flow,
 functions and recursion, `print`/`println`, string concatenation and
 interpolation, and the string builtins (`len`, `substring`, `indexOf`, … with
-Java's UTF-16 indexing). Exceptions: `throw`, `error()`, `try`/`catch`
+Java's UTF-16 indexing). Arrays (`T[]`, literals, indexing with
+bounds errors, `push`/`pop`/`removeAt`/`len`), `for … in` over arrays, strings
+and `range(a, b)`, `split`, and string indexing `s[i]`. Exceptions: `throw`, `error()`, `try`/`catch`
 statements, and `try` expressions in the positions SUBSET.md lists; runtime
 errors (`/ by zero`, a failed cast, `parseLong` of bad input, an index out
 of range, …) are catchable, and an uncaught one prints the JVM's exception

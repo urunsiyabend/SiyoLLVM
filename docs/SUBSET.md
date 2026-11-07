@@ -183,6 +183,9 @@ returning one from a function returning `any` (the reference fails with
   variable is read with the checked cast of an element read. Over a string
   it walks UTF-16 units, each a one-unit string (half of a pair is a lone
   surrogate).
+  The loop variable is typed `any` there, as in the reference, so `len(c)` and
+  `ord(c)` on it are rejected; copy it first with a typed declaration
+  (`imut s: string = c`), after which the string builtins work.
 - `range(a, b)` is a new array of the ints `a` to `b - 1`, each boxed (only
   -128..127 come from the static cache), allocated up front: `range(0, 100000)`
   takes about 2.4 MB before allocator overhead. It is empty when `a >= b`, including reversed bounds.

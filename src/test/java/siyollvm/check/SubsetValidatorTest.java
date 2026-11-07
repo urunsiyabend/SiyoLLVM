@@ -297,6 +297,8 @@ class SubsetValidatorTest {
             fn main() { mut xs = [3, 1] forEach(xs, fn(a: int) { println(a) }) }                     | the builtin forEach() is
             fn main() { imut a: any = [1] for x in a { println(x) } }                               | for … in over any values is
             fn main() { mut xs = [1] println(xs[0] + len(xs[0])) }                                  | len() on int is
+            fn main() { for c in "ab" { println(len(c)) } }   | len() on any is
+            fn main() { for c in "ab" { println(ord(c)) } }   | arguments of type any to ord() are
             fn main() { mut f = [1.5] println(len(f)) }                                             | float values are
             fn main() { mut xs: float[] = [] push(xs, 1.5) }                                        | float values are
             fn main() { mut xs: float[] = [] println(pop(xs)) }                                     | float values are
@@ -323,6 +325,7 @@ class SubsetValidatorTest {
             fn main() { for p in split("a b", " ") { println(len(p)) } }
             fn main() { imut s = "abc" println(s[0]) println(s[len(s) - 1] + "!") }
             fn main() { for c in "héy" { println(c) } }
+            fn main() { for c in "ab" { imut s: string = c println(len(s) + ord(s)) } }
             fn f(s: string, i: int) -> string { return s[i] } fn main() { println(f("ab", 1)) }
             mut g = split("x,y", ",")
             mut h = range(0, 2)
@@ -336,6 +339,7 @@ class SubsetValidatorTest {
             fn main() { imut m = map() for k in m { println(k) } }                    | for … in over maps is
             fn main() { imut s = set() for v in s { println(v) } }                    | for … in over sets is
             fn main() { imut a: any = "ab" for c in a { println(c) } }                | for … in over any values is
+            fn main() { imut ch = channel() for m in ch { println(m) } }              | the builtin channel() is
             """)
     void forInOverOtherCollectionsIsRejected(String source, String construct) {
         assertRejected(source, construct);
