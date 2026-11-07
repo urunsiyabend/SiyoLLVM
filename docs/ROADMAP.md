@@ -74,8 +74,8 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Next step (2026-11-07, F4 in progress): Task 1 (user modules) done and reviewed locally at b42fbad;
-  Task 2 (native std/io, std/os, std/strings) next, then F4 whole-feature review → fix wave →
+- Next step (2026-11-07, F4 in progress): Tasks 1 (user modules) and 2 (native std) done and reviewed
+  locally (b42fbad, 04f9dca); next F4 whole-feature review → fix wave →
   `tools/final-gates.sh f4` → `tools/publish-evidence.sh f4 f4-modules ...`. Ledger:
   `.superpowers/sdd/2026-11-07-f4-modules/progress.md`. Then F5 application.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
