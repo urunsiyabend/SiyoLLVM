@@ -2,7 +2,8 @@
 
 `ledger` reconciles a CSV file of bank transactions into a per-account and per-category report. It is
 SiyoLLVM's milestone application: a multi-module Siyo program that SiyoLLVM compiles to a native executable,
-checked case by case against the JVM reference (`siyoc run`) on the same sources.
+checked case by case against committed expectations produced by the JVM reference (`siyoc run`, via
+`tools/oracle-jvm.sh`) on the same sources.
 
 The behaviour contract is [FORMAT.md](FORMAT.md).
 
@@ -86,22 +87,20 @@ ten times (56 001 lines, 3 131 104 bytes; generated in scratch, not committed).
 
 Exit 3 is expected (the inputs have rejected rows). For each input the native and JVM stdout and reports are
 byte-identical, and the native report on large equals `tests/large/expected.report`. Native peak RSS grows
-roughly linearly with the input (×9.5 for ×10 input) because nothing is freed; the JVM's garbage collector keeps
-it nearly flat. Commands (from the repository root `$REPO`; `B` is the bounded helper; `$S` is a scratch
+roughly linearly with the input (×9.5 for ×10 input) because nothing is freed; the JVM's RSS grows far less
+(67 → 101 MB). Commands (from the repository root `$REPO`; `$S` is a scratch
 directory holding copies of `large.csv` in `native/` and `jvm/`):
 
 ```sh
-B="python3 $HOME/.hermes/automation/siyollvm/bounded.py --"
-$B bin/siyollvm build projects/ledger/src/main.siyo -o $S/ledger
-cd $S/native && env -u LANG LC_ALL=C $B /usr/bin/time -v ../ledger large.csv out.txt
-cd $S/jvm && env -u LANG LC_ALL=C $B /usr/bin/time -v \
+bin/siyollvm build projects/ledger/src/main.siyo -o $S/ledger
+cd $S/native && env -u LANG LC_ALL=C /usr/bin/time -v ../ledger large.csv out.txt
+cd $S/jvm && env -u LANG LC_ALL=C /usr/bin/time -v \
     java -jar ~/.cache/siyollvm-oracle/siyoc-02c2262/target/siyo-compiler-0.9.0.jar \
     run "$REPO/projects/ledger/src/main.siyo" large.csv out.txt
 # large ×10:
 { cat large.csv; for i in 2 3 4 5 6 7 8 9 10; do tail -n +2 large.csv; done; } > large10.csv
 ```
 
-Bounded evidence (receipts: child return code 3, `oom_kill_delta` 0), under
-`~/.hermes/automation/siyollvm/bounded-runs/`: build `20261107-090806-d40a1dd1…`, native large
-`20261107-090812-d2412243…`, JVM large `20261107-090812-205b58a0…`, native ×10 `20261107-090813-643982cc…`,
-JVM ×10 `20261107-090813-2329d870…`.
+On the measuring host each command ran inside a 768 MiB bounded scope. The `/usr/bin/time -v` outputs and the
+bounded receipts (child return code 3, `oom_kill_delta` 0) are in
+[docs/evidence/f5-ledger/resources/](../../docs/evidence/f5-ledger/resources/README.md).

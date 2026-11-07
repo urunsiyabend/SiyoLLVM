@@ -417,8 +417,9 @@ none of these characters.
 
 ## Platform
 
-Linux with glibc on x86_64 or aarch64. The IR declares only functions of the
+Linux with glibc, tested on x86_64 only (aarch64 is intended but untested). The IR declares only functions of the
 SiyoLLVM C runtime (`siyo_rt_*`), which clang compiles from C11 source shipped
 in the jar and links with the program; the runtime uses libc (including
 pthreads) only. The IR leaves the target triple to clang. clang 15 or newer is required
-(opaque pointers); clang 19 is what CI and the native gate use.
+(opaque pointers) but only clang 19 is tested (CI ubuntu-24.04 and local 19.1.7); clang 15–18 are intended
+but untested.

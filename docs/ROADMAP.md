@@ -75,14 +75,15 @@ after it; F5's status is in the table above.
 - **Typing gaps met by the application** (accepted by the reference, rejected here or untyped): array elements
   returned from another module and struct values read through a map local inferred from a field are `any`;
   each needs a typed local or a struct-typed parameter (docs/SUBSET.md, "Accepted").
-- **Error message deviations:** `NullPointerException` messages lack the JVM's "helpful" `because …` part;
-  uncaught exceptions print no stack trace (docs/SUBSET.md, "Deviations").
+- **Error message deviations:** some `NullPointerException` messages lack the JVM's helpful `because …` text (see
+  docs/SUBSET.md, Deviations); uncaught exceptions print no stack trace. The Deviations table lists further
+  deviations (e.g. `toUpper`/`toLower` Unicode tables).
 - **Stack overflow cannot be caught:** it ends the program as an uncaught error, on a fixed 16 MiB program
   stack.
 - **Quadratic non-ASCII index scans:** on strings with non-ASCII characters, `substring`, `indexOf` and
   other index operations scan from the start of the string, so a per-character loop over long non-ASCII text
   is quadratic (see the F1 follow-up above; not needed by the ledger's input sizes).
-- **Platform:** Linux with glibc only (x86_64, aarch64), clang 15 or newer; no Windows or macOS.
+- **Platform:** Linux with glibc, tested on x86_64 with clang 19 (CI ubuntu-24.04 and local 19.1.7); aarch64 and clang 15–18 are intended but untested (the code requires clang ≥ 15 for opaque pointers); no Windows or macOS.
 - **Single-threaded:** programs run on one program thread; no concurrency primitives.
 
 ## Known limitations (current)
@@ -96,14 +97,13 @@ See `docs/SUBSET.md`. Updated as features land.
   copied on every concatenation (~3.6 GB RSS). Fixed by appendable string
   buffers (8ece096; peak RSS 7.8 MB). Since then all Maven, oracle and native
   runs go through the automation's 768 MiB bounded wrapper
-  (`~/.hermes/automation/siyollvm/BOUNDED.md`).
+  (the automation's BOUNDED.md).
 
 ## Continuity notes
 
-- Next step (2026-11-07, F5 in progress): ledger app (134bd0d, reviewed) and independent Python
-  oracle (c6ceebe, 16/16 agreement) are local. Remaining: Task 2 review, Task 3 (fixture-gap fix wave,
-  large-input measurement, fresh-clone gates, docs incl. remaining limitations, whole-feature review,
-  final gates, publish, CI). Ledger: `.superpowers/sdd/2026-11-07-f5-ledger/progress.md`.
+- Next step (2026-11-07, F5 in progress): ledger app and independent Python oracle
+  (27/27 agreement) are done and the measurements are done. Remaining (controller): final gates, publish,
+  exact-head CI, fresh-clone gates, milestone status. Ledger: `.superpowers/sdd/2026-11-07-f5-ledger/progress.md`.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).

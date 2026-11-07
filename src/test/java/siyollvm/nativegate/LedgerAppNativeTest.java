@@ -34,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code LC_ALL=C}), and {@code expected.stdout}, {@code expected.stderr},
  * {@code expected.exit} and, when the run writes the report (the second
  * argument), {@code expected.report}. Without {@code expected.report} the
- * report file must not exist after the run.
+ * report file must not exist after the run, unless the case provides the
+ * report path as a directory, which must then still be a directory.
  *
  * <p>clang is mandatory: without it the build fails, so every case fails.
  */

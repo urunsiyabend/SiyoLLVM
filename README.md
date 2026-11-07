@@ -46,7 +46,7 @@ $ ./app input.csv out.txt     # read in the program with os.args()
 [`projects/ledger`](projects/ledger/README.md) is a multi-module Siyo program (about 520 lines in five
 modules) that reconciles a CSV file of bank transactions into a per-account and per-category report. Its
 behaviour is specified in [FORMAT.md](projects/ledger/FORMAT.md); the native executable is checked case by case
-against the JVM reference and an independent Python oracle (`LedgerAppNativeTest`, `LedgerOracleNativeTest` in
+against committed expectations produced by the JVM reference (`tools/oracle-jvm.sh`) and an independent Python oracle (`LedgerAppNativeTest`, `LedgerOracleNativeTest` in
 the native gate). After `mvn package`:
 
 ```
@@ -57,9 +57,10 @@ $ ./ledger projects/ledger/tests/clean/files/in.csv report.txt
 ## Requirements
 
 - Java 21 and Maven 3.9 to build.
-- clang 15 or newer to produce executables (CI uses clang 19). `emit-llvm`
-  works without clang.
-- Linux (glibc), x86_64 or aarch64.
+- clang to produce executables (`emit-llvm` works without clang). Tested with clang 19 (CI
+  ubuntu-24.04 and local 19.1.7); clang 15–18 are intended but untested (the code requires clang ≥ 15 for
+  opaque pointers).
+- Linux (glibc), tested on x86_64; aarch64 is intended but untested.
 
 ## Build
 

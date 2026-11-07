@@ -28,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Each case runs in a fresh directory holding a copy of its {@code files/}, under
  * {@code LC_ALL=C}, with the arguments from {@code args} (one per line). stdout, stderr,
  * the exit code and the report must match byte for byte; without {@code expected.report}
- * the report must not exist.
+ * the report must not exist, unless the case provides the report path as a
+ * directory, which must then still be a directory.
  *
  * <p>{@code python3} is mandatory: when it is not on {@code PATH} the test fails.
  */
