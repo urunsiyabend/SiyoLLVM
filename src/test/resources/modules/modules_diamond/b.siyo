@@ -1,0 +1,5 @@
+import "d"
+
+fn init() { d.hit("b init") }
+
+fn touch() { d.hit("b") }

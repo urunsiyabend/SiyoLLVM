@@ -1,0 +1,8 @@
+mut hits = 0
+
+fn init() { println("d init") }
+
+fn hit(who: string) {
+    hits += 1
+    println(who + " -> " + toString(hits))
+}

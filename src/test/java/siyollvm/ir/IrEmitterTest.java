@@ -682,4 +682,31 @@ class IrEmitterTest {
         while (m.find()) n++;
         return n;
     }
+
+    @Test
+    void sameNamedFunctionsOfTwoModulesAreTwoIrFunctions(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir)
+            throws Exception {
+        java.nio.file.Files.writeString(dir.resolve("a.siyo"), "mut n = 1\nfn helper() -> int { n }\n");
+        java.nio.file.Files.writeString(dir.resolve("b.siyo"), "mut n = 2\nfn helper() -> int { n }\n");
+        java.nio.file.Path main = dir.resolve("main.siyo");
+        java.nio.file.Files.writeString(main, "import \"a\"\nimport \"b\"\nfn helper() -> int { 3 }\n"
+                + "fn main() { println(a.helper() + b.helper() + helper() + a.n + b.n) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, java.nio.file.Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        assertEquals(java.util.List.of(), SubsetValidator.validate(result.program()));
+        String ir = IrEmitter.emit(result.program());
+        IrStructure.assertWellFormed(ir);
+        // a.helper, b.helper, main's helper and main: four functions, three of them called.
+        assertEquals(4, Pattern.compile("(?m)^define internal (i32|void) @siyo\\.fn\\.\\d+\\(").matcher(ir).results().count());
+        assertTrue(ir.contains("call i32 @siyo.fn.0()"), ir);
+        assertTrue(ir.contains("call i32 @siyo.fn.1()"), ir);
+        assertTrue(ir.contains("call i32 @siyo.fn.2()"), ir);
+        // Two module globals, each with its own initialiser, run before the main file's.
+        assertTrue(ir.contains("@siyo.g.0 = internal global i32 0"), ir);
+        assertTrue(ir.contains("@siyo.g.1 = internal global i32 0"), ir);
+        int a = ir.indexOf("call void @siyo.init_globals.0()");
+        int b = ir.indexOf("call void @siyo.init_globals.1()");
+        int m = ir.indexOf("call void @siyo.init_globals()");
+        assertTrue(a > 0 && a < b && b < m, ir);
+    }
 }

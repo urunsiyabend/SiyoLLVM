@@ -364,6 +364,11 @@ void *siyo_rt_catch(void);
 /* Flushes stdout, prints "codeanalysis.SiyoThrow: <String.valueOf(payload)>"
    or "<java_class>[: <message>]" to stderr and exits with status 1. */
 _Noreturn void siyo_rt_uncaught(void);
+/* An exception escaping a module's globals or init(): the JVM runs those in
+   the module class's initialiser, so the first line it prints is
+   "java.lang.ExceptionInInitializerError". Flushes stdout, prints that to
+   stderr and exits with status 1. */
+_Noreturn void siyo_rt_uncaught_in_initializer(void);
 /* Raises java.lang.ArithmeticException: / by zero. */
 void siyo_rt_div_by_zero(void);
 /* The null literal unboxed to int (tag SIYO_TAG_INT) or bool (SIYO_TAG_BOOL):

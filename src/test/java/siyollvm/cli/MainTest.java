@@ -318,4 +318,19 @@ class MainTest {
         assertFalse(Files.exists(exe));
         assertEquals(java.util.List.of(), leftovers());
     }
+
+    @Test
+    void multiFileProgramResolvesImportsBesideTheSourceNotTheWorkingDirectory() throws Exception {
+        Files.createDirectories(dir.resolve("proj/lib"));
+        Files.writeString(dir.resolve("proj/lib/util.siyo"), "fn twice(x: int) -> int { x * 2 }\n");
+        Path file = source("proj/main.siyo", "import \"lib/util\"\nfn main() { println(util.twice(4)) }\n");
+        // The test JVM's working directory is the project, not proj/.
+        assertEquals(0, run("emit-llvm", file.toString()), stderr());
+        assertTrue(stdout().contains("define void @siyo_program()"), stdout());
+        Files.writeString(dir.resolve("proj/lib/util.siyo"), "fn twice(x: int) -> int {\n  x * nope\n}\n");
+        out.reset();
+        err.reset();
+        assertEquals(1, run("emit-llvm", file.toString()));
+        assertTrue(stderr().startsWith("lib/util.siyo(2, 7): "), stderr());
+    }
 }

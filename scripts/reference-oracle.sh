@@ -9,6 +9,8 @@
 # stderr, as SiyoLLVM prints no Java stack trace; omitted when empty) and
 # <case>.expected-exit (omitted when 0), running under LC_ALL=C from the
 # program's directory. Review every generated file before committing it.
+# A multi-file case is a directory: `run <dir>/main.siyo` runs it from <dir>,
+# so its imports resolve there, and writes <dir>/main.expected(-stderr|-exit).
 #
 # Environment: SIYOC_CHECKOUT (default ../SiyoCompiler; only read with
 # `git archive`), ORACLE_HOME (default ~/.cache/siyollvm-oracle).

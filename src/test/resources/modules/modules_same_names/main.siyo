@@ -1,0 +1,23 @@
+// Two modules each declare helper() and count; the importer has its own too.
+// Each call reaches its own module's function, and the globals stay separate.
+import "alpha"
+import "beta"
+
+mut count = 100
+
+fn helper() -> string { "main" }
+
+fn main() {
+    println(helper())
+    println(alpha.helper())
+    println(beta.helper())
+    alpha.bump()
+    alpha.bump()
+    beta.bump()
+    count += 1
+    println(alpha.count)
+    println(beta.count)
+    println(count)
+    println(alpha.viaHelper())
+    println(beta.viaHelper())
+}

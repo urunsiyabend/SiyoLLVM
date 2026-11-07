@@ -2,6 +2,10 @@ package siyollvm.frontend;
 
 import codeanalysis.FunctionSymbol;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.util.List;
 
@@ -25,14 +29,73 @@ class FrontendTest {
     }
 
     @Test
-    void importIsRejectedBeforeBinding() {
-        FrontendResult result = Frontend.analyze("imp.siyo", "import \"std/math\"\nfn main() { println(1) }");
+    void missingModuleIsTheBindersDiagnosticAtTheImport(@TempDir Path dir) throws Exception {
+        Path main = write(dir, "imp.siyo", "fn main() { println(1) }\nimport \"nowhere/math\"\n");
+        FrontendResult result = Frontend.analyze("imp.siyo", main, Files.readString(main));
         assertNull(result.program());
-        assertEquals(1, result.diagnostics().size());
+        assertEquals(1, result.diagnostics().size(), result.diagnostics().toString());
         SourceDiagnostic d = result.diagnostics().get(0);
-        assertEquals("imports are not supported by SiyoLLVM", stripPrefix(d.message()));
-        assertEquals(1, d.line());
-        assertEquals(1, d.column());
+        assertEquals("imp.siyo", d.file());
+        assertEquals(2, d.line());
+        assertTrue(d.message().contains("nowhere/math"), d.message());
+    }
+
+    @Test
+    void modulesAreUnitsInInitialisationOrderWithTheMainFileLast(@TempDir Path dir) throws Exception {
+        write(dir, "d.siyo", "mut n = 1\nfn init() { }\nfn get() -> int { n }\n");
+        write(dir, "lib/inner.siyo", "fn get() -> int { 2 }\n");
+        write(dir, "lib/b.siyo", "import \"inner\"\nfn twice() -> int { inner.get() * 2 }\n");
+        Path main = write(dir, "main.siyo",
+                "import \"lib/b\"\nimport \"d\" as dd\nfn main() { println(b.twice() + dd.get() + dd.n) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        LoweredProgram program = result.program();
+        assertEquals(List.of("lib/inner.siyo", "lib/b.siyo", "d.siyo", "main.siyo"),
+                program.units().stream().map(LoweredProgram.Unit::file).toList());
+        LoweredProgram.Unit d = program.units().get(2);
+        assertNotNull(d.init());
+        assertEquals("init", d.init().getName());
+        assertNull(program.units().get(1).init());
+        // The main unit holds only its own functions; the imported ones resolve to the modules'.
+        assertEquals(List.of("main"), program.functions().keySet().stream().map(FunctionSymbol::getName).toList());
+        for (LoweredProgram.Unit unit : program.units()) {
+            for (FunctionSymbol function : unit.functions().keySet()) {
+                assertTrue(program.unitOf(function) == unit, function.getName());
+            }
+        }
+        FunctionSymbol get = d.functions().keySet().stream().filter(f -> f.getName().equals("get")).findFirst().orElseThrow();
+        assertTrue(program.target(get) == get);
+    }
+
+    @Test
+    void diagnosticsInAModuleNameTheModuleFile(@TempDir Path dir) throws Exception {
+        write(dir, "lib/util.siyo", "fn ok() -> int { 1 }\nfn bad() {\n  println(nope)\n}\n");
+        Path main = write(dir, "main.siyo", "import \"lib/util\"\nfn main() { println(util.ok()) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertNull(result.program());
+        assertFalse(result.diagnostics().isEmpty());
+        SourceDiagnostic d = result.diagnostics().get(0);
+        assertEquals("lib/util.siyo", d.file(), result.diagnostics().toString());
+        assertEquals(3, d.line());
+        assertEquals(11, d.column());
+        assertTrue(d.format().startsWith("lib/util.siyo(3, 11): "), d.format());
+    }
+
+    @Test
+    void unsupportedDeclarationsInAModuleAreReportedInIt(@TempDir Path dir) throws Exception {
+        write(dir, "shapes.siyo", "type R = Good(int) | Stop\nfn f() -> int { 1 }\n");
+        Path main = write(dir, "main.siyo", "import \"shapes\"\nfn main() { println(shapes.f()) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertNull(result.program());
+        SourceDiagnostic d = result.diagnostics().get(0);
+        assertEquals("shapes.siyo(1, 1): [llvm] type declarations are not supported by SiyoLLVM", d.format());
+    }
+
+    private static Path write(Path dir, String name, String text) throws Exception {
+        Path file = dir.resolve(name);
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, text);
+        return file;
     }
 
     @Test

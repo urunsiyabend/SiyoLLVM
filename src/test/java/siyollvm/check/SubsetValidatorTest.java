@@ -1,6 +1,7 @@
 package siyollvm.check;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import siyollvm.frontend.Frontend;
@@ -515,5 +516,17 @@ class SubsetValidatorTest {
                 "method calls on a struct whose type the binder cannot tell are");
         assertRejected(decl + "fn main() { imut a: any = Point.new(1)\n mut q: Point = a\n println(q.sum()) }",
                 "method calls on a struct whose type the binder cannot tell are");
+    }
+
+    @Test
+    void importsAreAcceptedAndModuleCodeIsCheckedInItsOwnFile(@TempDir java.nio.file.Path dir) throws Exception {
+        java.nio.file.Files.writeString(dir.resolve("m.siyo"), "fn ok(x: int) -> int { x }\nfn f() {\n  println(1.5)\n}\n");
+        java.nio.file.Path main = dir.resolve("main.siyo");
+        java.nio.file.Files.writeString(main, "import \"m\"\nimport \"m\" as mm\nfn main() { println(m.ok(1) + mm.ok(2)) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, java.nio.file.Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        List<SourceDiagnostic> diagnostics = SubsetValidator.validate(result.program());
+        assertEquals(1, diagnostics.size(), diagnostics.toString());
+        assertEquals("m.siyo(3, 11): [llvm] float values are not supported by SiyoLLVM", diagnostics.get(0).format());
     }
 }

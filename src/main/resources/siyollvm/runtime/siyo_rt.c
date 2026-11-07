@@ -1357,6 +1357,10 @@ _Noreturn void siyo_rt_uncaught(void) {
     exit(1);
 }
 
+_Noreturn void siyo_rt_uncaught_in_initializer(void) {
+    siyo_rt_fail("java.lang.ExceptionInInitializerError\n");
+}
+
 void siyo_rt_div_by_zero(void) {
     SIYO_RT_STATIC_STR(message, "/ by zero");
     siyo_rt_raise_java("java.lang.ArithmeticException", &message);

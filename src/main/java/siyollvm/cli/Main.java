@@ -151,7 +151,7 @@ public final class Main {
 
             String text = readUtf8(sourcePath, err);
             if (text == null) return FAILED;
-            Compiler.IrResult result = Compiler.toIr(sourcePath.getFileName().toString(), text);
+            Compiler.IrResult result = Compiler.toIr(sourcePath.getFileName().toString(), sourcePath.toAbsolutePath(), text);
             if (!result.diagnostics().isEmpty()) {
                 for (SourceDiagnostic diagnostic : result.diagnostics()) err.println(diagnostic.format());
                 return FAILED;

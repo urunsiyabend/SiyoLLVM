@@ -1,0 +1,17 @@
+// b and c both import d; main imports d plainly and under an alias. d is
+// initialised once, before everything that uses it, and all share its state.
+import "b"
+import "c"
+import "d"
+import "d" as dd
+
+fn init() { println("main init " + toString(d.hits)) }
+
+fn main() {
+    b.touch()
+    c.touch()
+    d.hit("main")
+    dd.hit("alias")
+    println(d.hits)
+    println(dd.hits)
+}

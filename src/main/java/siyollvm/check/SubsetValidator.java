@@ -212,6 +212,8 @@ public final class SubsetValidator {
 
     private final LoweredProgram _program;
     private final List<SourceDiagnostic> _diagnostics = new ArrayList<>();
+    /** The file being validated. */
+    private LoweredProgram.Unit _unit;
     private int _offset;
     /** The function being validated; null for the global initialiser. */
     private FunctionSymbol _function;
@@ -232,16 +234,20 @@ public final class SubsetValidator {
         return validator._diagnostics;
     }
 
+    /** Every file in turn, each reported against itself: its top level, then its functions. */
     private void run() {
-        _offset = -1;
-        _function = null;
-        validateBlock(_program.globals());
-        for (var entry : _program.functions().entrySet()) {
-            FunctionSymbol function = entry.getKey();
-            _function = function;
-            _offset = _program.declarationOffsets().getOrDefault(function, -1);
-            validateSignature(function);
-            validateBlock(entry.getValue());
+        for (LoweredProgram.Unit unit : _program.units()) {
+            _unit = unit;
+            _offset = -1;
+            _function = null;
+            validateBlock(unit.topLevel());
+            for (var entry : unit.functions().entrySet()) {
+                FunctionSymbol function = entry.getKey();
+                _function = function;
+                _offset = unit.declarationOffsets().getOrDefault(function, -1);
+                validateSignature(function);
+                validateBlock(entry.getValue());
+            }
         }
     }
 
@@ -257,8 +263,11 @@ public final class SubsetValidator {
         if (returnType != null && !VALUE_TYPES.contains(returnType)) {
             report("return values of type " + typeName(returnType) + " are");
         }
-        boolean entryName = function.getModuleName() == null
-                && (function.getName().equals("main") || function.getName().equals("init"));
+        // The main file's main and init, and a module's own init, are run by the entry point.
+        boolean mainFile = _unit == _program.main();
+        boolean entryName = function.getModuleName() == null && (mainFile
+                ? function.getName().equals("main") || function.getName().equals("init")
+                : function == _unit.init());
         if (entryName && !function.getParameters().isEmpty()) report("entry points with parameters are");
         if (entryName && returnType != null) report("entry points returning a value are");
     }
@@ -513,7 +522,7 @@ public final class SubsetValidator {
         // A user function's or toString's first argument is the first thing the
         // JVM backend pushes; print and println push System.out before theirs.
         boolean firstOnEmptyStack = emptyStack
-                && (function == BuiltinFunctions.TO_STRING || _program.functions().containsKey(function));
+                && (function == BuiltinFunctions.TO_STRING || _program.target(function) != null);
         if (function == BuiltinFunctions.TO_STRING) {
             _emptyStack = firstOnEmptyStack;
             for (BoundExpression argument : call.getArguments()) {
@@ -574,7 +583,7 @@ public final class SubsetValidator {
             report(FOR_IN_HELPERS.get(function));
             return;
         }
-        if (!builtinPrint && !STRING_BUILTINS.contains(function) && !_program.functions().containsKey(function)) {
+        if (!builtinPrint && !STRING_BUILTINS.contains(function) && _program.target(function) == null) {
             report("the builtin " + function.getName() + "() is");
             return;
         }
@@ -657,7 +666,7 @@ public final class SubsetValidator {
     }
 
     private void report(String constructIsOrAre) {
-        _diagnostics.add(SourceDiagnostic.unsupported(_program.file(), _program.text(), _offset, constructIsOrAre));
+        _diagnostics.add(SourceDiagnostic.unsupported(_unit.file(), _unit.text(), _offset, constructIsOrAre));
     }
 
     static String typeName(Class<?> type) {

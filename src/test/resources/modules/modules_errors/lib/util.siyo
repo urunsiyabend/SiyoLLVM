@@ -1,0 +1,6 @@
+fn check(x: int) {
+    if x < 0 { error("negative: " + toString(x)) }
+    println("ok " + toString(x))
+}
+
+fn divide(a: int, b: int) -> int { a / b }

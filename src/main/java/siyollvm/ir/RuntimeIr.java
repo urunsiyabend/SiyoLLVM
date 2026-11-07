@@ -106,6 +106,7 @@ final class RuntimeIr {
                 declare void @siyo_rt_throw(ptr)
                 declare ptr @siyo_rt_catch()
                 declare void @siyo_rt_uncaught() noreturn cold
+                declare void @siyo_rt_uncaught_in_initializer() noreturn cold
                 declare void @siyo_rt_div_by_zero() cold
                 declare void @siyo_rt_unbox_null_literal(i32) cold
                 declare void @siyo_rt_stack_overflow() noreturn cold

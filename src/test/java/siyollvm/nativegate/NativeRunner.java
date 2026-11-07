@@ -52,7 +52,15 @@ final class NativeRunner {
 
     /** Builds and runs {@code source} under {@code LC_ALL=C}, then compares with its expectation files. */
     static void buildRunAndCompare(Clang clang, Path source) throws Exception {
-        String name = source.getFileName().toString().replace(".siyo", "");
+        buildRunAndCompare(clang, source, source.getFileName().toString().replace(".siyo", ""));
+    }
+
+    /**
+     * As above, naming the work directory {@code name}: a multi-file case is a
+     * directory whose {@code main.siyo} imports the rest, so it is named after
+     * the directory. Imports resolve beside the source.
+     */
+    static void buildRunAndCompare(Clang clang, Path source, String name) throws Exception {
         Path expectedOut = sibling(source, ".expected");
         assertTrue(Files.isRegularFile(expectedOut), "missing " + expectedOut);
         byte[] expectedStdout = Files.readAllBytes(expectedOut);
@@ -61,7 +69,8 @@ final class NativeRunner {
         Path exitFile = sibling(source, ".expected-exit");
         int expectedExit = Files.isRegularFile(exitFile) ? Integer.parseInt(Files.readString(exitFile).strip()) : 0;
 
-        Compiler.IrResult ir = Compiler.toIr(source.getFileName().toString(), Files.readString(source));
+        Compiler.IrResult ir = Compiler.toIr(source.getFileName().toString(), source.toAbsolutePath(),
+                Files.readString(source));
         assertTrue(ir.diagnostics().isEmpty(), name + ": " + ir.diagnostics());
         assertNotNull(ir.ir());
         IrStructure.assertWellFormed(ir.ir());

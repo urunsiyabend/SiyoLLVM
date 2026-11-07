@@ -113,7 +113,9 @@ import java.util.Map;
 public final class IrEmitter {
     private final LoweredProgram _program;
     private final StringConstants _strings = new StringConstants();
-    private final Map<FunctionSymbol, String> _functionNames = new LinkedHashMap<>();
+    /** Every unit's functions, by identity: two modules' {@code helper()} are equal symbols. */
+    private final Map<FunctionSymbol, String> _functionNames = new IdentityHashMap<>();
+    /** Every unit's globals in order (VariableSymbol compares by identity). */
     private final Map<VariableSymbol, String> _globals = new LinkedHashMap<>();
     /** Definitions of the struct literals' field-name arrays, {@code @siyo.fields.N}. */
     private final List<String> _fieldNames = new java.util.ArrayList<>();
@@ -156,20 +158,26 @@ public final class IrEmitter {
 
     private String module() {
         int index = 0;
-        for (FunctionSymbol function : _program.functions().keySet()) {
-            _functionNames.put(function, "@siyo.fn." + index++);
-        }
-        for (BoundStatement statement : _program.globals().getStatements()) {
-            if (statement instanceof BoundVariableDeclaration declaration) {
-                _globals.put(declaration.getVariable(), "@siyo.g." + _globals.size());
+        for (LoweredProgram.Unit unit : _program.units()) {
+            for (FunctionSymbol function : unit.functions().keySet()) {
+                _functionNames.put(function, "@siyo.fn." + index++);
+            }
+            for (BoundStatement statement : unit.topLevel().getStatements()) {
+                if (statement instanceof BoundVariableDeclaration declaration) {
+                    _globals.put(declaration.getVariable(), "@siyo.g." + _globals.size());
+                }
             }
         }
 
         StringBuilder functions = new StringBuilder();
-        for (var entry : _program.functions().entrySet()) {
-            functions.append(function(entry.getKey(), entry.getValue())).append('\n');
+        for (LoweredProgram.Unit unit : _program.units()) {
+            for (var entry : unit.functions().entrySet()) {
+                functions.append(function(entry.getKey(), entry.getValue())).append('\n');
+            }
         }
-        functions.append(globalsInitialiser()).append('\n');
+        for (int i = 0; i < _program.units().size(); i++) {
+            functions.append(globalsInitialiser(_program.units().get(i), initialiserName(i))).append('\n');
+        }
         functions.append(entryPoint());
 
         StringBuilder ir = new StringBuilder();
@@ -246,10 +254,15 @@ public final class IrEmitter {
                 + "}\n";
     }
 
-    /** Runs the file-level declarations in source order, storing into globals. */
-    private String globalsInitialiser() {
+    /** The main file's is {@code @siyo.init_globals}; module {@code i}'s {@code @siyo.init_globals.i}. */
+    private String initialiserName(int unit) {
+        return unit == _program.units().size() - 1 ? "@siyo.init_globals" : "@siyo.init_globals." + unit;
+    }
+
+    /** Runs a file's file-level declarations in source order, storing into globals. */
+    private String globalsInitialiser(LoweredProgram.Unit unit, String name) {
         begin(null);
-        for (BoundStatement statement : _program.globals().getStatements()) {
+        for (BoundStatement statement : unit.topLevel().getStatements()) {
             statement(statement);
         }
         if (!_terminated) terminate("ret void");
@@ -257,28 +270,46 @@ public final class IrEmitter {
             startBlock("unwind");
             terminate("ret void");
         }
-        return "define internal void @siyo.init_globals() {\nentry:\n" + _allocas
+        return "define internal void " + name + "() {\nentry:\n" + _allocas
                 + "  br label %body\nbody:\n" + _body + "}\n";
     }
 
     /**
      * {@code siyo_program}, which the C runtime's {@code main} runs on a thread
-     * of known stack size after setting the stack limit: the globals, then the
-     * file's {@code init()} and {@code main()} if declared. An exception still
-     * pending after any of them is uncaught: the runtime reports it and exits.
+     * of known stack size after setting the stack limit: each module's
+     * globals then its {@code init()}, in initialisation order, then the main
+     * file's globals, {@code init()} and {@code main()} if declared. An
+     * exception still pending after any of them is uncaught: the runtime
+     * reports it and exits. A module runs in the JVM's class initialiser, so
+     * one escaping a module is reported as the JVM reports a failed class
+     * initialiser.
      */
     private String entryPoint() {
         StringBuilder program = new StringBuilder("define void @siyo_program() {\nentry:\n");
         List<String> calls = new java.util.ArrayList<>();
-        calls.add("@siyo.init_globals");
+        List<Boolean> inModule = new java.util.ArrayList<>();
+        List<LoweredProgram.Unit> units = _program.units();
+        for (int i = 0; i < units.size() - 1; i++) {
+            calls.add(initialiserName(i));
+            inModule.add(true);
+            FunctionSymbol init = units.get(i).init();
+            if (init != null) {
+                if (init.getReturnType() != null) throw new IllegalStateException("module init returns a value");
+                calls.add(_functionNames.get(init));
+                inModule.add(true);
+            }
+        }
+        calls.add(initialiserName(units.size() - 1));
+        inModule.add(false);
         for (String name : List.of("init", "main")) {
-            for (FunctionSymbol function : _functionNames.keySet()) {
+            for (FunctionSymbol function : _program.main().functions().keySet()) {
                 if (function.getModuleName() == null && function.getName().equals(name)
                         && function.getParameters().isEmpty()) {
                     if (function.getReturnType() != null) {
                         throw new IllegalStateException("entry point " + name + " returns a value");
                     }
                     calls.add(_functionNames.get(function));
+                    inModule.add(false);
                 }
             }
         }
@@ -286,14 +317,21 @@ public final class IrEmitter {
             program.append("  call void ").append(calls.get(i)).append("()\n")
                     .append("  %pending.").append(i).append(" = load i8, ptr @siyo_rt_pending_flag\n")
                     .append("  %raised.").append(i).append(" = icmp ne i8 %pending.").append(i).append(", 0\n")
-                    .append("  br i1 %raised.").append(i).append(", label %uncaught, label %ran.").append(i).append('\n')
+                    .append("  br i1 %raised.").append(i).append(", label %")
+                    .append(inModule.get(i) ? "uncaught.module" : "uncaught")
+                    .append(", label %ran.").append(i).append('\n')
                     .append("ran.").append(i).append(":\n");
         }
         program.append("  ret void\n")
                 .append("uncaught:\n")
                 .append("  call void @siyo_rt_uncaught()\n")
-                .append("  unreachable\n}\n");
-        return program.toString();
+                .append("  unreachable\n");
+        if (inModule.contains(true)) {
+            program.append("uncaught.module:\n")
+                    .append("  call void @siyo_rt_uncaught_in_initializer()\n")
+                    .append("  unreachable\n");
+        }
+        return program.append("}\n").toString();
     }
 
     // --- statements ----------------------------------------------------------
@@ -898,8 +936,10 @@ public final class IrEmitter {
         String runtime = RUNTIME_BUILTINS.get(function);
         if (runtime != null) return runtimeCall(runtime, function, call.getArguments());
 
-        String name = _functionNames.get(function);
+        FunctionSymbol target = _program.target(function);
+        String name = target == null ? null : _functionNames.get(target);
         if (name == null) throw unsupported("call to " + function.getName());
+        function = target;
         StringBuilder args = new StringBuilder();
         List<ParameterSymbol> parameters = function.getParameters();
         for (int i = 0; i < parameters.size(); i++) {
@@ -1120,7 +1160,7 @@ public final class IrEmitter {
     private String addressOf(VariableSymbol variable) {
         String slot = _slots.get(variable);
         if (slot != null) return slot;
-        String global = _globals.get(variable);
+        String global = _globals.get(_program.target(variable));
         if (global != null) return global;
         throw unsupported("variable '" + variable.getName() + "' with no storage");
     }

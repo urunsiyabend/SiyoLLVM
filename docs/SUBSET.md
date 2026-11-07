@@ -8,7 +8,8 @@ accepts.
 
 The reference semantics are those of `siyoc run` (the JVM backend) at
 SiyoCompiler `02c226298296fb4379f7251a9dfba19b7e887f3d`. Every program in
-`examples/` and `src/test/resources/native/` is checked against it byte for
+`examples/` and `src/test/resources/native/`, and every multi-file program in
+`src/test/resources/modules/` (a directory per case, run from its `main.siyo`), is checked against it byte for
 byte.
 
 ## Accepted
@@ -35,7 +36,8 @@ byte.
 | `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
 | Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any`, arrays, structs and maps included); `typeName(x)`; `len`, `push`, `pop`, `removeAt` on arrays; `len` and `map()` for maps; `range(a, b)`; on strings `len`, `s[i]`, `split`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
-| Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
+| Modules | `import "x"`, `import "lib/x"`, `import "x" as y` of user modules, resolved by the binder exactly as `siyoc` resolves them, from the main file's directory: `x.siyo` beside the importing file, then `x/index.siyo`, `x/x.siyo`, then the working directory. Each module's functions (`x.f()`, or `y.f()` under an alias), globals (`x.n`, read and written), structs, enums and `impl` methods (by their bare names, `Point.new(1, 2)`) are usable by the importer. A module imported several times, by several files or under several names, is one module with one set of globals. Two modules may declare functions and globals of the same name; each call reaches its own module's function. Code in a module is checked against the subset like the main file's, and diagnostics in it name it relative to the main file's directory (`lib/util.siyo(3, 11): …`); a missing module is the binder's diagnostic at the importing `import` |
+| Entry | each imported module, dependencies first (the binder's registry order, as the JVM's class initialisation runs them), has its file-level globals initialised and then its own `init()` run; then the main file's globals are initialised in source order, then its `init()` runs, then `main()`; `init` and `main` optional, with no parameters and no return value. An exception escaping a module's globals or `init()` ends the program before `main` with `java.lang.ExceptionInInitializerError` and exit status 1, as the JVM's failed class initialiser does |
 
 ## Rejected
 
@@ -65,7 +67,7 @@ string builtin's argument after the first, an argument after a function's
 first. Some other positions work on the reference: a left operand, the
 right operand of `&&`/`||`, a string builtin's first argument and
 `error()`'s argument. SiyoLLVM rejects those too, for now. Also rejected:
-a catch variable of a type outside the subset; casts; `import` and `import java`; scope/spawn/send; `len` of anything but
+a catch variable of a type outside the subset; casts; `import java` (in the main file before binding; in a module, its Java calls are rejected); `std/…` modules (SiyoLLVM ships no standard library yet: `Module 'std/io' not found`); a module that imports its importer (the binder's circular import diagnostic); in a module, the type declarations rejected in the main file (sum types, interfaces, actors), reported against the module's file; scope/spawn/send; `len` of anything but
 a string or an array; every builtin not listed above;
 `main`/`init` with parameters or a return value. A `try` expression is
 rejected as an array element, an index, an assigned element or a pushed
