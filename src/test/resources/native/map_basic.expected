@@ -1,0 +1,38 @@
+{b: 3, a: 2}
+2
+null
+2
+[b, a]
+{one: 1, two: 2}
+{5: five, 1: one}
+{10000000000: true, 2: false}
+{true: 1, false: 0}
+{s: 1, 2: t, true: null}
+five!
+false
+2
+{}
+0
+v
+2
+true
+false
+{1: 2}
+1
+{inner: {x: 1}, xs: [1, 2]}
+[1, 2, 3]
+{xs: [1, 2, 3]}
+{p: P { x: 1, y: 2 }}
+{a: {b: 1, c: 2}}
+{a: 3, b: 2, c: 1}
+size 2 {one: 1, two: 2}
+text {5: five, 1: one} {one: 1, two: 2}
+{b: 3, a: 2}
+{one: 1, two: 2}
+2
+true
+
+{init: 0, main: 1}
+[init, main]
+init=0
+main=1

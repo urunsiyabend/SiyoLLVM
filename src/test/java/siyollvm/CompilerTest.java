@@ -11,7 +11,7 @@ class CompilerTest {
     void supportedProgramGivesIr() {
         Compiler.IrResult result = Compiler.toIr("ok.siyo", "fn main() { println(1) }");
         assertTrue(result.diagnostics().isEmpty());
-        assertTrue(result.ir().contains("define i32 @main()"));
+        assertTrue(result.ir().contains("define void @siyo_program()"));
     }
 
     @Test

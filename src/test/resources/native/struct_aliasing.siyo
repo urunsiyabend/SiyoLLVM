@@ -1,0 +1,57 @@
+// Structs are references: assignment, passing, array elements and fields
+// all share one object.
+struct Point {
+    x: int,
+    y: int
+}
+
+struct Holder {
+    p: Point,
+    label: string
+}
+
+fn bump(p: Point) {
+    p.x += 10
+}
+
+fn replaceLocal(p: Point) {
+    mut local = p
+    local = Point { x: -5, y: -5 }
+    local.x = -6
+}
+
+fn main() {
+    imut p = Point { x: 1, y: 2 }
+    imut q = p
+    q.x = 2
+    println(p.x)
+    bump(p)
+    println(q.x)
+    replaceLocal(p)
+    println(p)
+
+    imut ps = [p, Point { x: 7, y: 8 }]
+    ps[0].y = 50
+    println(p.y)
+    p.y = 51
+    println(ps[0].y)
+    println(ps)
+
+    imut r = Point { x: 0, y: 0 }
+    imut b = Holder { p: r, label: "b" }
+    b.p.x = 99
+    println(r.x)
+    r.y = 98
+    println(b.p)
+    imut c = Holder { p: b.p, label: "c" }
+    c.p.y = 1
+    println(b)
+    println(c)
+
+    mut copies: any[] = []
+    push(copies, r)
+    push(copies, r)
+    imut first: Point = copies[0]
+    first.x = 3
+    println(copies)
+}

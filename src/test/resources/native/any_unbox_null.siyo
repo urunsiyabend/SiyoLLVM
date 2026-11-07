@@ -1,0 +1,9 @@
+// Unboxing a null any to long raises NullPointerException; the JVM's message
+// comes from SiyoRuntime.unboxLong, so it does not depend on the call site.
+fn f(x: any) -> any { return x }
+
+fn main() {
+  println("before")
+  imut n: long = f(null)
+  println(n)
+}

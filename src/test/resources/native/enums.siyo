@@ -1,0 +1,34 @@
+// Enum members are int constants: implicit values count from 0 or from the
+// previous explicit value; members compare and drive conditions.
+enum Color { Red, Green, Blue }
+enum Code { A = 10, B, C = -3, D }
+
+fn name(c: int) -> string {
+    if c == Color.Red {
+        return "red"
+    } else if c == Color.Green {
+        return "green"
+    }
+    return "other"
+}
+
+fn main() {
+    println(Color.Red)
+    println(Color.Green)
+    println(Color.Blue)
+    println(Code.A)
+    println(Code.B)
+    println(Code.C)
+    println(Code.D)
+    println(name(Color.Green))
+    println(name(Color.Blue))
+    println(Color.Blue > Color.Red)
+    println(Code.C < Code.D)
+    mut c = Color.Red
+    while c != Color.Blue {
+        println(name(c))
+        c = c + 1
+    }
+    println("done " + c)
+    println(typeName(Color.Red))
+}

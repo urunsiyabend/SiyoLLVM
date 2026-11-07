@@ -1,0 +1,9 @@
+import "std/io"
+
+// Opening a read-only file for writing. Root may write it regardless, so
+// ModulesNativeTest skips this case when it runs as root (euid 0).
+fn main() {
+    try { io.writeFile("/proc/version", "x") } catch e { println("write " + e) }
+    try { io.appendFile("/proc/version", "x") } catch e { println("append " + e) }
+    println(io.readFile("/proc/version") != "")
+}

@@ -1,0 +1,57 @@
+// split is a literal (not regex) split keeping trailing empty strings.
+// Each result is shown with its length, as [""] and [] print alike, and
+// each part with its own length.
+fn show(label: string, parts: string[]) {
+    mut lens = ""
+    for p in parts { lens = lens + toString(len(p)) + " " }
+    println(label + " -> " + toString(len(parts)) + " " + toString(parts) + " lens: " + lens)
+}
+
+fn main() {
+    show("empty input", split("", ","))
+    show("empty both", split("", ""))
+    show("empty delimiter", split("abc", ""))
+    show("single", split("a", ""))
+    show("no match", split("abc", ","))
+    show("whole", split("abc", "abc"))
+    show("trailing", split("a,b,,", ","))
+    show("leading", split(",a,b", ","))
+    show("only delimiters", split(",,", ","))
+    show("one delimiter", split(",", ","))
+    show("multi-char", split("a::b::c", "::"))
+    show("multi-char overlap", split("a:::b", "::"))
+    show("longer than input", split("ab", "abc"))
+    show("regex dot", split("a.b.c", "."))
+    show("regex pipe", split("a|b|", "|"))
+    show("regex star", split("a*b", "*"))
+    show("regex class", split("a[x]b[x]", "[x]"))
+    show("backslash", split("a\\b", "\\"))
+    show("caret plus", split("^a+^", "^+"))
+    show("caret", split("^a^", "^"))
+    show("space", split(" a  b ", " "))
+    show("non-ASCII delimiter", split("héllo wörld", "ö"))
+    show("non-ASCII parts", split("ça,va,été", ","))
+    show("pair delimiter", split("x😀y😀", "😀"))
+    show("pair input", split("a😀b", ","))
+    show("pair empty delimiter", split("a😀b", ""))
+    // A delimiter holding a surrogate matches by code point (java.util.regex):
+    // never half of a pair. The empty delimiter still splits pairs.
+    imut pair = "a😀b😀"
+    show("high half delimiter", split(pair, pair[1]))
+    show("low half delimiter", split(pair, pair[2]))
+    show("lone halves", split(pair[1] + "x" + pair[1], pair[1]))
+    show("low then high", split(pair[2] + pair[1] + "z" + pair[2], pair[2]))
+    show("swapped halves empty", split(pair[2] + pair[1], ""))
+    show("nul delimiter", split("a\0b\0", "\0"))
+    show("nul parts", split("\0,\0", ","))
+    show("newline", split("l1\nl2\n", "\n"))
+
+    imut parts = split("k=v=w", "=")
+    println(parts[0] + "|" + parts[2])
+    mut grown = split("1,2", ",")
+    push(grown, "3")
+    println(grown)
+    for word in split("the quick fox", " ") {
+        println(word + " " + toString(len(word)))
+    }
+}

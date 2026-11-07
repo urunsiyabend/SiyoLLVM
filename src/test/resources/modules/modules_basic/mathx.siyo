@@ -1,0 +1,13 @@
+mut calls = 0
+imut version = "mathx " + toString(square(3))
+
+fn square(x: int) -> int { x * x }
+
+fn add(a: int, b: int) -> int { a + b }
+
+fn record(x: int) {
+    calls += 1
+    println("record " + toString(x) + " after " + toString(calls))
+}
+
+fn describe() -> string { "calls=" + toString(calls) + " sq=" + toString(square(calls)) }

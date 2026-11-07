@@ -1,0 +1,25 @@
+LEDGER REPORT
+source: ./in.csv
+rows: 10 accepted, 0 rejected, 10 total
+period: 2024-12-31 to 2025-01-31
+
+ACCOUNTS
+ACCOUNT      COUNT        CREDITS         DEBITS            NET
+Checking         5        2500.00        -702.22        1797.78
+Credit Card      3          12.50         -63.73         -51.23
+Savings          2         500.42           0.00         500.42
+TOTAL           10        3012.92        -765.95        2246.97
+
+CATEGORIES
+CATEGORY   COUNT            NET
+Salary         1        2500.00
+Refund         1          12.50
+Interest       1           0.42
+Fees           1           0.00
+Transfer       2           0.00
+Dining         1         -45.90
+Groceries      2        -100.00
+Utilities      1        -120.05
+
+REJECTED
+none

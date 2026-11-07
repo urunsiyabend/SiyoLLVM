@@ -1,0 +1,6 @@
+2
+caught [a]
+class java.lang.String cannot be cast to class java.util.List (java.lang.String and java.util.List are in module java.base of loader 'bootstrap')
+[1, 2]
+[0]
+[[1], [2]]

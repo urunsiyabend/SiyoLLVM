@@ -96,15 +96,46 @@ public final class Clang {
     }
 
     /**
-     * Compiles textual IR at {@code ll} to an executable at {@code exe}. The IR
-     * verifier is switched on: release builds of clang skip it, and malformed
-     * IR would then crash clang or be miscompiled instead of being reported.
+     * Compiles textual IR at {@code ll}, together with the C runtime, to an
+     * executable at {@code exe}. The runtime is written to a temporary
+     * directory beside {@code exe} and removed afterwards, whatever the outcome.
+     * The IR verifier is switched on: release builds of clang skip it, and
+     * malformed IR would then crash clang or be miscompiled instead of being
+     * reported.
      */
     public void compile(Path ll, Path exe) throws ToolchainException {
-        Result result = run(List.of(_executable.toString(), "-O1", "-fverify-intermediate-code", "-w", "-x", "ir", ll.toString(), "-pthread", "-o", exe.toString()),
-                _timeouts.compile());
-        if (result.exitCode() != 0) {
-            throw new ToolchainException("clang failed (exit " + result.exitCode() + "):\n" + result.output().strip());
+        Path runtimeDirectory;
+        try {
+            runtimeDirectory = Files.createTempDirectory(exe.toAbsolutePath().getParent(), ".siyo-rt");
+        } catch (IOException e) {
+            throw new ToolchainException("could not create a directory for the runtime next to " + exe + ": " + e.getMessage());
+        }
+        try {
+            Path runtime;
+            try {
+                runtime = RuntimeSource.writeTo(runtimeDirectory);
+            } catch (IOException e) {
+                throw new ToolchainException("could not write the runtime source: " + e.getMessage());
+            }
+            Result result = run(List.of(_executable.toString(), "-O1", "-fverify-intermediate-code", "-w",
+                    "-x", "ir", ll.toString(), "-x", "c", "-std=c11", runtime.toString(),
+                    "-pthread", "-o", exe.toString()), _timeouts.compile());
+            if (result.exitCode() != 0) {
+                throw new ToolchainException("clang failed (exit " + result.exitCode() + "):\n" + result.output().strip());
+            }
+        } finally {
+            deleteTree(runtimeDirectory);
+        }
+    }
+
+    /** Best effort: a leftover runtime copy is harmless and must not hide the compile's outcome. */
+    private static void deleteTree(Path directory) {
+        try (var entries = Files.walk(directory)) {
+            for (Path path : entries.sorted(java.util.Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(path);
+            }
+        } catch (IOException | java.io.UncheckedIOException ignored) {
+            // Nothing more to do.
         }
     }
 

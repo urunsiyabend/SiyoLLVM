@@ -1,0 +1,199 @@
+// report: money formatting, sorting, padding and the report text
+// (FORMAT.md "Money format" and "Report file").
+import "ledger"
+import "std/strings"
+
+// [-]<integer>.<two digits>
+fn money(cents: long) -> string {
+    imut negative = cents < 0L
+    mut value = cents
+    if negative {
+        value = 0L - cents
+    }
+    imut whole = value / 100L
+    imut fraction = value % 100L
+    mut text = toString(whole) + "."
+    if fraction < 10L {
+        text += "0"
+    }
+    text += toString(fraction)
+    if negative {
+        text = "-" + text
+    }
+    return text
+}
+
+fn pad(s: string, width: int) -> string {
+    return strings.padRight(s, width, " ")
+}
+
+fn lpad(s: string, width: int) -> string {
+    return strings.padLeft(s, width, " ")
+}
+
+// Insertion sort by UTF-16 order, ascending. Hand-written: the `sort`
+// builtin takes a lambda, which SiyoLLVM does not support.
+fn sortNames(names: string[]) {
+    for mut i = 1 i < len(names) i = i + 1 {
+        imut name = names[i]
+        mut j = i - 1
+        while j >= 0 && names[j] > name {
+            names[j + 1] = names[j]
+            j -= 1
+        }
+        names[j + 1] = name
+    }
+}
+
+// These helpers take the struct read from a map as a struct parameter, which
+// keeps its field reads typed (SUBSET.md, maps).
+fn accountRow(account: Account, width: int) -> string {
+    return accountLine(account.name, width, toString(account.count), money(account.credits), money(account.debits),
+        money(account.credits + account.debits))
+}
+
+fn countOf(account: Account) -> int {
+    return account.count
+}
+
+fn creditsOf(account: Account) -> long {
+    return account.credits
+}
+
+fn debitsOf(account: Account) -> long {
+    return account.debits
+}
+
+fn categoryRow(category: Category, width: int) -> string {
+    return categoryLine(category.name, width, toString(category.count), money(category.net))
+}
+
+fn netOf(category: Category) -> long {
+    return category.net
+}
+
+// Whether category `a` comes before `b`: net descending, then name ascending.
+fn categoryBefore(categories: Map<string, Category>, a: string, b: string) -> bool {
+    imut netA = netOf(categories[a])
+    imut netB = netOf(categories[b])
+    if netA != netB {
+        return netA > netB
+    }
+    return a < b
+}
+
+// Insertion sort of category names into report order (see sortNames).
+fn sortCategories(categories: Map<string, Category>, names: string[]) {
+    for mut i = 1 i < len(names) i = i + 1 {
+        imut name = names[i]
+        mut j = i - 1
+        while j >= 0 && categoryBefore(categories, name, names[j]) {
+            names[j + 1] = names[j]
+            j -= 1
+        }
+        names[j + 1] = name
+    }
+}
+
+// The keys of a map as a string[] (`keys()` gives `any` elements, so each is
+// bound to a typed variable).
+fn accountNames(accounts: Map<string, Account>) -> string[] {
+    mut names: string[] = []
+    for k in accounts.keys() {
+        imut name: string = k
+        push(names, name)
+    }
+    return names
+}
+
+fn categoryNames(categories: Map<string, Category>) -> string[] {
+    mut names: string[] = []
+    for k in categories.keys() {
+        imut name: string = k
+        push(names, name)
+    }
+    return names
+}
+
+fn accountLine(name: string, width: int, count: string, credits: string, debits: string, net: string) -> string {
+    return pad(name, width) + " " + lpad(count, 6) + " " + lpad(credits, 14) + " " + lpad(debits, 14) + " "
+        + lpad(net, 14) + "\n"
+}
+
+fn categoryLine(name: string, width: int, count: string, net: string) -> string {
+    return pad(name, width) + " " + lpad(count, 6) + " " + lpad(net, 14) + "\n"
+}
+
+// The net total of every accepted row.
+fn totalNet(book: Book) -> long {
+    mut net = 0L
+    for k in book.accounts.keys() {
+        imut name: string = k
+        net += creditsOf(book.accounts[name]) + debitsOf(book.accounts[name])
+    }
+    return net
+}
+
+// The whole report text; `source` is the input argument as given.
+fn render(book: Book, source: string) -> string {
+    mut out = "LEDGER REPORT\n"
+    out += "source: " + source + "\n"
+    out += "rows: " + book.accepted + " accepted, " + book.rejected + " rejected, " + ledger.total(book) + " total\n"
+    if book.accepted == 0 {
+        out += "period: none\n"
+    } else {
+        out += "period: " + book.minDate + " to " + book.maxDate + "\n"
+    }
+
+    imut accounts = book.accounts
+    imut names = accountNames(accounts)
+    sortNames(names)
+    mut width = 7
+    for n in names {
+        imut name: string = n
+        if len(name) > width {
+            width = len(name)
+        }
+    }
+    out += "\nACCOUNTS\n"
+    out += accountLine("ACCOUNT", width, "COUNT", "CREDITS", "DEBITS", "NET")
+    mut count = 0
+    mut credits = 0L
+    mut debits = 0L
+    for n in names {
+        imut name: string = n
+        out += accountRow(accounts[name], width)
+        count += countOf(accounts[name])
+        credits += creditsOf(accounts[name])
+        debits += debitsOf(accounts[name])
+    }
+    out += accountLine("TOTAL", width, toString(count), money(credits), money(debits), money(credits + debits))
+
+    imut categories = book.categories
+    imut catNames = categoryNames(categories)
+    sortCategories(categories, catNames)
+    mut catWidth = 8
+    for n in catNames {
+        imut name: string = n
+        if len(name) > catWidth {
+            catWidth = len(name)
+        }
+    }
+    out += "\nCATEGORIES\n"
+    out += categoryLine("CATEGORY", catWidth, "COUNT", "NET")
+    for n in catNames {
+        imut name: string = n
+        out += categoryRow(categories[name], catWidth)
+    }
+
+    out += "\nREJECTED\n"
+    if book.rejected == 0 {
+        out += "none\n"
+    } else {
+        for r in book.rejections {
+            imut text: string = r
+            out += text + "\n"
+        }
+    }
+    return out
+}

@@ -1,0 +1,43 @@
+// toString of a struct lists its fields in the order the literal wrote
+// them, nested values by String.valueOf.
+struct Point {
+    x: int,
+    y: int
+}
+
+struct Shape {
+    name: string,
+    corners: Point[],
+    center: Point,
+    tags: any
+}
+
+fn main() {
+    imut a = Point { y: 2, x: 1 }
+    imut b = Point { x: 1, y: 2 }
+    println(a)
+    println(b)
+    mut tags: any[] = []
+    push(tags, "t")
+    push(tags, 1)
+    push(tags, null)
+    push(tags, true)
+    imut s = Shape { center: a, name: "tri", corners: [a, b, Point { x: 0, y: 0 }], tags: tags }
+    println(s)
+    print(s)
+    println("")
+    println("shape: $s")
+    println("point: " + toString(a))
+    imut boxed: any = s
+    println(boxed)
+    println("boxed=" + boxed)
+    mut pts: any[] = []
+    push(pts, a)
+    push(pts, null)
+    push(pts, "str")
+    push(pts, b)
+    println(pts)
+    imut empty = Shape { name: "none" }
+    println(empty)
+    println(toString(Shape { tags: null, name: "", corners: [] }))
+}

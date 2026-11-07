@@ -45,10 +45,48 @@ class MainTest {
     }
 
     @Test
+    void emitRuntimeWritesBothFiles() throws Exception {
+        Path target = dir.resolve("rt/nested");
+        assertEquals(0, run("emit-runtime", target.toString()));
+        assertTrue(Files.readString(target.resolve("siyo_rt.c")).contains("siyo_program"));
+        assertTrue(Files.isRegularFile(target.resolve("siyo_rt.h")));
+        assertEquals("", stderr());
+        Files.writeString(target.resolve("siyo_rt.c"), "stale");
+        assertEquals(0, run("emit-runtime", target.toString()));
+        assertTrue(Files.readString(target.resolve("siyo_rt.c")).contains("siyo_program"));
+    }
+
+    @Test
+    void emitRuntimeWithoutDirectoryIsUsageError() {
+        assertEquals(2, run("emit-runtime"));
+        assertTrue(stderr().contains("emit-runtime needs a directory"), stderr());
+    }
+
+    @Test
+    void emitRuntimeRejectsOptionsAndExtraArguments() {
+        assertEquals(2, run("emit-runtime", "-o"));
+        assertEquals(2, run("emit-runtime", dir.resolve("a").toString(), dir.resolve("b").toString()));
+        assertFalse(Files.exists(dir.resolve("a")));
+    }
+
+    @Test
+    void emitRuntimeOntoARegularFileFails() throws Exception {
+        Path file = source("occupied", "x");
+        assertEquals(1, run("emit-runtime", file.toString()));
+        assertTrue(stderr().startsWith("error:"), stderr());
+    }
+
+    @Test
+    void helpListsEmitRuntime() {
+        assertEquals(0, run("--help"));
+        assertTrue(stdout().contains("emit-runtime <directory>"));
+    }
+
+    @Test
     void emitLlvmWritesIrToStdout() throws Exception {
         Path file = source("hello.siyo", "fn main() { println(\"hi\") }");
         assertEquals(0, run("emit-llvm", file.toString()));
-        assertTrue(stdout().contains("define i32 @main()"), stdout());
+        assertTrue(stdout().contains("define void @siyo_program()"), stdout());
         assertEquals("", stderr());
     }
 
@@ -57,17 +95,17 @@ class MainTest {
         Path file = source("hello.siyo", "fn main() { println(\"hi\") }");
         Path ll = dir.resolve("out.ll");
         assertEquals(0, run("emit-llvm", file.toString(), "-o", ll.toString()));
-        assertTrue(Files.readString(ll).contains("define i32 @main()"));
+        assertTrue(Files.readString(ll).contains("define void @siyo_program()"));
         assertEquals("", stdout());
     }
 
     @Test
     void unsupportedProgramReportsAndWritesNothing() throws Exception {
-        Path file = source("bad.siyo", "fn main() {\n  println(1.5)\n  mut a = [1]\n}");
+        Path file = source("bad.siyo", "fn main() {\n  println(1.5)\n  mut a = #{1}\n}");
         Path ll = dir.resolve("bad.ll");
         assertEquals(1, run("emit-llvm", file.toString(), "-o", ll.toString()));
         assertEquals("bad.siyo(2, 11): [llvm] float values are not supported by SiyoLLVM\n"
-                + "bad.siyo(3, 11): [llvm] arrays are not supported by SiyoLLVM\n", stderr());
+                + "bad.siyo(3, 11): [llvm] sets are not supported by SiyoLLVM\n", stderr());
         assertFalse(Files.exists(ll));
         assertEquals("", stdout());
     }
@@ -214,7 +252,7 @@ class MainTest {
         Path file = source("ok.siyo", "fn main() { println(1) }");
         Path ll = Files.writeString(dir.resolve("old.ll"), "old");
         assertEquals(0, run("emit-llvm", file.toString(), "-o", ll.toString()));
-        assertTrue(Files.readString(ll).contains("define i32 @main()"));
+        assertTrue(Files.readString(ll).contains("define void @siyo_program()"));
     }
 
     private Path fakeClang(String compileBody) throws Exception {
@@ -279,5 +317,20 @@ class MainTest {
         assertTrue(stderr().contains("did not finish"), stderr());
         assertFalse(Files.exists(exe));
         assertEquals(java.util.List.of(), leftovers());
+    }
+
+    @Test
+    void multiFileProgramResolvesImportsBesideTheSourceNotTheWorkingDirectory() throws Exception {
+        Files.createDirectories(dir.resolve("proj/lib"));
+        Files.writeString(dir.resolve("proj/lib/util.siyo"), "fn twice(x: int) -> int { x * 2 }\n");
+        Path file = source("proj/main.siyo", "import \"lib/util\"\nfn main() { println(util.twice(4)) }\n");
+        // The test JVM's working directory is the project, not proj/.
+        assertEquals(0, run("emit-llvm", file.toString()), stderr());
+        assertTrue(stdout().contains("define void @siyo_program()"), stdout());
+        Files.writeString(dir.resolve("proj/lib/util.siyo"), "fn twice(x: int) -> int {\n  x * nope\n}\n");
+        out.reset();
+        err.reset();
+        assertEquals(1, run("emit-llvm", file.toString()));
+        assertTrue(stderr().startsWith("lib/util.siyo(2, 7): "), stderr());
     }
 }

@@ -1,0 +1,9 @@
+// An uncaught throw of an int in init(): main never runs.
+fn init() {
+    println("init")
+    throw 42
+}
+
+fn main() {
+    println("main")
+}

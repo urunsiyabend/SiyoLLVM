@@ -1,0 +1,291 @@
+{
+ "java-surefire": {
+  "suites": 11,
+  "tests": 379,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "per_suite": [
+   [
+    "siyollvm.CompilerTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.ExamplesCompileTest",
+    6,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.SnapshotManifestTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.check.SubsetValidatorTest",
+    230,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.cli.CliProcessTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.cli.MainTest",
+    26,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.frontend.FrontendTest",
+    25,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.ir.IrEmitterTest",
+    64,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.ir.RuntimeIrTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.toolchain.ClangTest",
+    14,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.toolchain.RuntimeSourceTest",
+    2,
+    0,
+    0,
+    0
+   ]
+  ]
+ },
+ "java-failsafe": {
+  "suites": 1,
+  "tests": 2,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "per_suite": [
+   [
+    "siyollvm.cli.LauncherIT",
+    2,
+    0,
+    0,
+    0
+   ]
+  ]
+ },
+ "java-receipt": {
+  "accepted": "True",
+  "evidence": "/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261107-084205-c57b4a69b49848f0ada1e99dbda26bdf",
+  "returncode": 0,
+  "oom_kill_delta": 0
+ },
+ "java-exit": "0",
+ "native-surefire": {
+  "suites": 21,
+  "tests": 529,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "per_suite": [
+   [
+    "siyollvm.CompilerTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.ExamplesCompileTest",
+    6,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.SnapshotManifestTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.check.SubsetValidatorTest",
+    230,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.cli.CliProcessTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.cli.MainTest",
+    26,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.frontend.FrontendTest",
+    25,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.ir.IrEmitterTest",
+    64,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.ir.RuntimeIrTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.CliNativeTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.MapNullNativeTest",
+    11,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.ModulesNativeTest",
+    15,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.NativeCorpusTest",
+    86,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.NativeExamplesTest",
+    6,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.RuntimeArraysNativeTest",
+    2,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.RuntimeBuildNativeTest",
+    2,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.RuntimeStringsNativeTest",
+    2,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.StackGuardNativeTest",
+    3,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.nativegate.StringBuiltinsNativeTest",
+    20,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.toolchain.ClangTest",
+    14,
+    0,
+    0,
+    0
+   ],
+   [
+    "siyollvm.toolchain.RuntimeSourceTest",
+    2,
+    0,
+    0,
+    0
+   ]
+  ]
+ },
+ "native-failsafe": {
+  "suites": 1,
+  "tests": 2,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "per_suite": [
+   [
+    "siyollvm.cli.LauncherIT",
+    2,
+    0,
+    0,
+    0
+   ]
+  ]
+ },
+ "native-receipt": {
+  "accepted": "True",
+  "evidence": "/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261107-084212-ee93e0b6a0494183bda69054d2e6e1df",
+  "returncode": 0,
+  "oom_kill_delta": 0
+ },
+ "native-exit": "0",
+ "requires-clang-exit": "0"
+}

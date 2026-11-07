@@ -1,0 +1,101 @@
+// impl methods: instance methods take self first, static ones (new) are plain
+// calls; methods call each other on self, recurse, and are called on array
+// elements and fields.
+struct Point {
+    x: int,
+    y: int
+}
+
+struct Counter {
+    n: int,
+    label: string
+}
+
+impl Point {
+    fn new(x: int, y: int) -> Point {
+        return Point { x: x, y: y }
+    }
+
+    fn sum(self) -> int {
+        return self.x + self.y
+    }
+
+    fn twice(self) -> int {
+        return self.sum() * 2
+    }
+
+    fn show(self) -> string {
+        return "(" + self.x + ", " + self.y + ")"
+    }
+
+    fn moved(self, dx: int, dy: int) -> Point {
+        return Point.new(self.x + dx, self.y + dy)
+    }
+
+    fn shift(self, dx: int) {
+        self.x = self.x + dx
+    }
+
+    fn countdown(self, k: int) -> int {
+        if k <= 0 {
+            return self.x
+        }
+        return self.countdown(k - 1) + 1
+    }
+
+    fn isOrigin(self) -> bool {
+        return self.x == 0 && self.y == 0
+    }
+}
+
+impl Counter {
+    fn bump(self) -> int {
+        self.n += 1
+        return self.n
+    }
+
+    fn describe(self) -> string {
+        return self.label + "=" + self.n
+    }
+}
+
+fn fact(n: int) -> int {
+    if n <= 1 {
+        return 1
+    }
+    return n * fact(n - 1)
+}
+
+fn main() {
+    imut p = Point.new(3, 4)
+    println(p.sum())
+    println(p.twice())
+    println(p.show())
+    imut q = p.moved(1, -1)
+    println(q.show())
+    println(p.show())
+    p.shift(10)
+    println(p.show())
+    println(p.countdown(5))
+    println(p.isOrigin())
+    println(Point.new(0, 0).isOrigin())
+    imut ps = [Point.new(1, 2), Point.new(5, 6)]
+    println(ps[0].show())
+    println(ps[1].sum())
+    ps[0].shift(100)
+    println(ps[0].show())
+    mut total = 0
+    for pt in ps {
+        total = total + pt.twice()
+    }
+    println(total)
+    imut c = Counter { n: 0, label: "hits" }
+    c.bump()
+    c.bump()
+    println(c.bump())
+    println(c.describe())
+    println(fact(5))
+    println(p)
+    println(p.x = 5)
+    println(p.show())
+}

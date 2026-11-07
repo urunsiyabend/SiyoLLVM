@@ -1,0 +1,39 @@
+// < <= > >= on strings follow Java's compareTo over UTF-16 code units, so a
+// supplementary character (a surrogate pair, D800-DFFF) sorts below
+// U+E000-U+FFFF even though its code point is larger.
+fn cmp(a: string, b: string) {
+    println("" + (a < b) + " " + (a <= b) + " " + (a > b) + " " + (a >= b))
+}
+
+fn main() {
+    cmp("a", "b")
+    cmp("b", "a")
+    cmp("a", "a")
+    cmp("", "")
+    cmp("", "a")
+    cmp("a", "")
+    cmp("ab", "abc")
+    cmp("abc", "ab")
+    cmp("B", "a")
+    cmp("Z", "a")
+    cmp("a\0", "a")
+    cmp("a\0b", "a" + chr(1))
+    cmp("\0", "")
+    cmp("é", "z")
+    cmp("é", "ê")
+    cmp("€", "é")
+    cmp("😀", "€")
+    cmp("￿", "😀")
+    cmp("", "😀")
+    cmp("퟿", "😀")
+    cmp("😀", "😁")
+    cmp("😀", "🎉")
+    cmp("😀a", "😀")
+    cmp(substring("😀", 0, 1), "😀")
+    cmp(substring("😀", 1, 2), "😀")
+    cmp(substring("😀", 1, 2), "")
+    cmp(substring("😀", 0, 1), "퟿")
+    println("apple" < "banana" && "banana" < "cherry")
+    mut x = "m"
+    println(x >= "m" && x <= "m")
+}

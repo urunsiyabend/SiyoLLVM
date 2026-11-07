@@ -1,0 +1,57 @@
+// Splitting a surrogate pair with substring and joining the halves again
+// gives back the original character; a lone half prints as '?'.
+fn main() {
+    mut emoji = "😀"
+    mut high = substring(emoji, 0, 1)
+    mut low = substring(emoji, 1, 2)
+    println(high)
+    println(low)
+    println(len(high))
+    println(len(low))
+    println(ord(high))
+    println(ord(low))
+    mut joined = high + low
+    println(joined)
+    println(joined == emoji)
+    println(len(joined))
+    println(low + high)
+    println(low + high == emoji)
+    println(len(low + high))
+    println(chr(55357) + chr(56832) == emoji)
+    println(chr(55357) == high)
+    println(chr(56832) == low)
+
+    // Halves of different strings.
+    mut text = "x😀y🎉z"
+    mut left = substring(text, 0, 2)
+    mut right = substring(text, 2, 7)
+    println(left)
+    println(right)
+    println(left + right == text)
+    println(len(left))
+    println(len(right))
+    println(substring(text, 1, 5))
+    println(substring(text, 2, 5) + substring(text, 5, 6))
+    println(substring(text, 4, 5) + substring(text, 5, 7))
+
+    // replace removing the text between two halves joins them.
+    mut apart = high + "--" + low
+    println(apart)
+    println(len(apart))
+    mut together = replace(apart, "--", "")
+    println(together)
+    println(together == emoji)
+    println(len(together))
+    println(replace(high + "x", "x", low) == emoji)
+
+    // Building a pair one half at a time with +=.
+    mut s = "a"
+    s += high
+    println(len(s))
+    s += low
+    println(s)
+    println(s == "a😀")
+    println(endsWith(s, emoji))
+    println(indexOf(s, emoji))
+    println(trim(" " + high) + low == emoji)
+}

@@ -1,0 +1,11 @@
+2
+12
+Point { x: 12, y: 2 }
+50
+51
+[Point { x: 12, y: 51 }, Point { x: 7, y: 8 }]
+99
+Point { x: 99, y: 98 }
+Holder { p: Point { x: 99, y: 1 }, label: b }
+Holder { p: Point { x: 99, y: 1 }, label: c }
+[Point { x: 3, y: 1 }, Point { x: 3, y: 1 }]

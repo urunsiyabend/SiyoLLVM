@@ -1,0 +1,83 @@
+// any (object) values: boxing, printing, String.valueOf, Objects.equals and
+// checked unboxing. Assigning an int/long/bool to an existing any variable,
+// or returning one from an any function, fails JVM verification in the
+// reference, so primitives enter an any by declaration or argument here.
+mut g: any = 41
+mut h: any = "global"
+
+fn f(x: any) -> any { return x }
+
+fn asInt(x: any) -> int { return x }
+
+fn describe(x: any) -> string { return "<" + x + ">" }
+
+fn main() {
+  mut i: any = 7
+  mut l: any = 8000000000L
+  mut b: any = true
+  mut s: any = "str"
+  mut n: any = null
+  println(i)
+  println(l)
+  println(b)
+  println(s)
+  println(n)
+  print(f(false))
+  print(" ")
+  print(f(null))
+  println("")
+  println(g)
+  println(h)
+  h = null
+  println(h)
+  h = "again"
+  println(h)
+  s = null
+  println(s)
+  s = "str"
+
+  println(toString(i) + "!" + f(2) + f(3L) + f(true) + f("x") + f(null))
+  println(f(1) + "x" + i)
+  println("v=$i, ${f(l)}, $n")
+  println(describe(i) + describe(s) + describe(n) + toString(n))
+
+  println(s == "str")
+  println(f("str") == s)
+  println("str" != s)
+  println(f(5L) == 5)
+  println(f(5) == 5)
+  println(f(5) == 5L)
+  println(f(5L) == 5L)
+  println(f(5) != f(5))
+  println(f(5) == f(5L))
+  println(f(true) == true)
+  println(f(true) == false)
+  println(f(1) == f("1"))
+  println(f(1) == true)
+  println(n == null)
+  println(null == n)
+  println(f(null) == null)
+  println(i == null)
+  println(i != n)
+  println(s == n)
+
+  imut back: int = f(i)
+  println(back + 1)
+  imut wide: long = f(i)
+  println(wide * 1000000000L)
+  imut big: long = l
+  println(big + 1L)
+  imut flag: bool = b
+  println(!flag)
+  imut text: string = s
+  println(text + "!" + len(text))
+  imut none: string = n
+  println(none)
+  mut m = 0
+  m = f(40)
+  println(m + 2)
+  println(asInt(g) + asInt(1))
+  mut t = "t"
+  t = f("u")
+  println(t)
+}

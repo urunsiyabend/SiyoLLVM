@@ -1,0 +1,4 @@
+fn init() {
+    println("boot init")
+    error("boot failed")
+}

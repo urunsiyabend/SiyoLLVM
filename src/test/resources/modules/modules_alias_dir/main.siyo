@@ -1,0 +1,10 @@
+// A module in a subdirectory, imported under an alias; a directory module
+// found through its index.siyo, which imports a module beside itself.
+import "lib/util" as u
+import "pkg"
+
+fn main() {
+    println(u.twice(21))
+    println(pkg.greet("siyo"))
+    println(u.label)
+}

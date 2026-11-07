@@ -1,0 +1,19 @@
+// range(0, 100000) walked by for … in: 10^5 boxed ints (only -128..127 are
+// cached), summed with int wrap-around and in a long.
+fn main() {
+    mut total = 0
+    mut wide = 0L
+    mut count = 0
+    for i in range(0, 100000) {
+        total = total + i
+        wide = wide + i
+        count = count + 1
+    }
+    println(total)
+    println(wide)
+    println(count)
+    imut r = range(0, 100000)
+    println(len(r))
+    println(r[99999])
+    println(r[127] + r[128])
+}

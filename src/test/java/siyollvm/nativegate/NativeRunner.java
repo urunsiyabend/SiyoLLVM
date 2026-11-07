@@ -50,9 +50,22 @@ final class NativeRunner {
         return programs;
     }
 
-    /** Builds and runs {@code source} under {@code LC_ALL=C}, then compares with its expectation files. */
+    /**
+     * Builds and runs {@code source} under {@code LC_ALL=C}, or the locale named in
+     * {@code <name>.locale} beside it, then compares with its expectation files.
+     * The program runs in a fresh directory holding a copy of {@code files/} beside the source, if
+     * any, with the lines of {@code <name>.args} beside it, if any, as its arguments.
+     */
     static void buildRunAndCompare(Clang clang, Path source) throws Exception {
-        String name = source.getFileName().toString().replace(".siyo", "");
+        buildRunAndCompare(clang, source, source.getFileName().toString().replace(".siyo", ""));
+    }
+
+    /**
+     * As above, naming the work directory {@code name}: a multi-file case is a
+     * directory whose {@code main.siyo} imports the rest, so it is named after
+     * the directory. Imports resolve beside the source.
+     */
+    static void buildRunAndCompare(Clang clang, Path source, String name) throws Exception {
         Path expectedOut = sibling(source, ".expected");
         assertTrue(Files.isRegularFile(expectedOut), "missing " + expectedOut);
         byte[] expectedStdout = Files.readAllBytes(expectedOut);
@@ -61,7 +74,8 @@ final class NativeRunner {
         Path exitFile = sibling(source, ".expected-exit");
         int expectedExit = Files.isRegularFile(exitFile) ? Integer.parseInt(Files.readString(exitFile).strip()) : 0;
 
-        Compiler.IrResult ir = Compiler.toIr(source.getFileName().toString(), Files.readString(source));
+        Compiler.IrResult ir = Compiler.toIr(source.getFileName().toString(), source.toAbsolutePath(),
+                Files.readString(source));
         assertTrue(ir.diagnostics().isEmpty(), name + ": " + ir.diagnostics());
         assertNotNull(ir.ir());
         IrStructure.assertWellFormed(ir.ir());
@@ -72,22 +86,58 @@ final class NativeRunner {
         Files.writeString(ll, ir.ir(), StandardCharsets.UTF_8);
         clang.compile(ll, exe);
 
-        Run run = run(List.of(exe.toString()), work, Map.of("LC_ALL", "C"));
+        Path runDir = freshRunDirectory(work, source.resolveSibling("files"));
+        Path argsFile = sibling(source, ".args");
+        List<String> command = Files.isRegularFile(argsFile)
+                // The shell passes each line's bytes as they are, as the oracle's does.
+                ? List.of("/bin/sh", "-c", "f=$1; exe=$2; set --; "
+                        + "while IFS= read -r l || [ -n \"$l\" ]; do set -- \"$@\" \"$l\"; done < \"$f\"; "
+                        + "exec \"$exe\" \"$@\"", "sh", argsFile.toAbsolutePath().toString(), exe.toString())
+                : List.of(exe.toString());
+        Path localeFile = sibling(source, ".locale");
+        String locale = Files.isRegularFile(localeFile) ? Files.readString(localeFile).strip() : "C";
+        Run run = run(command, runDir, work, Map.of("LC_ALL", locale));
         assertArrayEquals(expectedStdout, run.stdout(),
                 name + " stdout:\n" + new String(run.stdout(), StandardCharsets.UTF_8));
         assertEquals(expectedStderr, run.stderr(), name + " stderr");
         assertEquals(expectedExit, run.exitCode(), name + " exit code; stderr: " + run.stderr());
     }
 
-    record Run(int exitCode, byte[] stdout, String stderr) {}
+    /** {@code stderr} is the captured stderr decoded as UTF-8; {@code stderrBytes} is the same output as bytes. */
+    record Run(int exitCode, byte[] stdout, String stderr, byte[] stderrBytes) {}
+
+    /**
+     * An empty {@code run} directory in {@code work}, holding a copy of the
+     * case's {@code files/} fixtures when it has them: the program runs there,
+     * so what it writes never reaches the source tree, and each run starts
+     * afresh. {@code rm} and {@code cp} handle the names byte for byte,
+     * whatever the JVM's file name encoding.
+     */
+    private static Path freshRunDirectory(Path work, Path fixtures) throws Exception {
+        Path runDir = work.resolve("run");
+        Run removed = run(List.of("rm", "-rf", "--", runDir.toString()), work, work, Map.of());
+        assertEquals(0, removed.exitCode(), removed.stderr());
+        Files.createDirectories(runDir);
+        if (Files.isDirectory(fixtures)) {
+            Run copied = run(List.of("cp", "-R", "--", fixtures + "/.", runDir.toString()), work, work, Map.of());
+            assertEquals(0, copied.exitCode(), copied.stderr());
+        }
+        return runDir;
+    }
 
     /** Runs a command with a clean locale ({@code LANG}/{@code LC_*} removed, then {@code extraEnv} added). */
     static Run run(List<String> command, Path directory, Map<String, String> extraEnv) throws Exception {
+        return run(command, directory, directory, extraEnv);
+    }
+
+    /** As above, keeping the captured output in {@code outputDirectory}. */
+    static Run run(List<String> command, Path directory, Path outputDirectory, Map<String, String> extraEnv)
+            throws Exception {
         ProcessBuilder builder = new ProcessBuilder(command).directory(directory.toFile());
         builder.environment().keySet().removeIf(k -> k.equals("LANG") || k.startsWith("LC_"));
         builder.environment().putAll(extraEnv);
-        Path out = Files.createTempFile(directory, "stdout", ".bin");
-        Path err = Files.createTempFile(directory, "stderr", ".txt");
+        Path out = Files.createTempFile(outputDirectory, "stdout", ".bin");
+        Path err = Files.createTempFile(outputDirectory, "stderr", ".txt");
         builder.redirectOutput(out.toFile()).redirectError(err.toFile()).redirectInput(ProcessBuilder.Redirect.from(
                 Path.of("/dev/null").toFile()));
         Process process = builder.start();
@@ -95,7 +145,8 @@ final class NativeRunner {
             process.destroyForcibly();
             fail(command + " did not finish within " + RUN_TIMEOUT_SECONDS + " s");
         }
-        return new Run(process.exitValue(), Files.readAllBytes(out), Files.readString(err, StandardCharsets.UTF_8));
+        return new Run(process.exitValue(), Files.readAllBytes(out), Files.readString(err, StandardCharsets.UTF_8),
+                Files.readAllBytes(err));
     }
 
     private static Path sibling(Path source, String suffix) {

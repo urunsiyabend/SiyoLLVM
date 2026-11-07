@@ -1,0 +1,1 @@
+java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "codeanalysis.SiyoMap.get(Object)" is null

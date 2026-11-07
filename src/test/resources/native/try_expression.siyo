@@ -1,0 +1,90 @@
+// try used as an expression: the value is the last expression of the body
+// that ran, narrowed to the expression's type after the join.
+mut g: long = try { parseLong("7") } catch e { 0L }
+mut h = try { mut tmp = "q" tmp + "!" } catch e { "none" }
+
+fn show(x: long) -> string { return "<" + toString(x) + ">" }
+fn id(s: string, n: int) -> string { return s + toString(n) }
+fn half(n: int) -> int { return try { 10 / n } catch e { 0 - 1 } }
+fn deep(n: int) -> long {
+    if n == 0 { throw "bottom" }
+    return deep(n - 1) + 1L
+}
+
+fn main() {
+    println(g)
+    println(h)
+
+    imut v = try { parseLong("zz") } catch e { 0L - 1L }
+    println(v)
+    imut ok = try { parseLong("12") } catch e { 0L - 1L }
+    println(ok)
+    imut s = try { substring("abc", 5, 9) } catch e { "fallback: " + e }
+    println(s)
+    imut fine = try { "body ran" } catch e { "catch ran" }
+    println(fine)
+
+    // As the first argument of a function, and of toString.
+    imut shown = show(try { parseLong("x1") } catch e { 42L })
+    println(shown)
+    imut joined = id(try { substring("abc", 0, 9) } catch e { "c:" + e }, 4)
+    println(joined)
+    imut text = toString(try { parseLong("8") } catch e { 1L })
+    println(text)
+    println(half(5))
+    println(half(0))
+
+    // Assigned, as a condition, as a statement, thrown, returned.
+    mut x = 0L
+    x = try { parseLong("5") } catch e { 1L }
+    println(x)
+    g = try { parseLong("bad") } catch e { 9L }
+    println(g)
+    if try { parseLong("1") == 1L } catch e { false } { println("condition") }
+    try { parseLong("zz") } catch e { println("statement: " + e) }
+    try { throw try { "tx" } catch e { "cx" } } catch e { println("thrown " + e) }
+
+    // Raised deep in a call chain; nested try expressions.
+    imut d = try { deep(3) } catch e { 0L - 100L }
+    println(d)
+    imut n = try { try { parseLong("a") } catch e { parseLong("b") } } catch e { 0L - 5L }
+    println(n)
+    imut typed = try { throw 3 } catch e: int { e * 2 }
+    println(typed)
+    imut any1 = try { throw 4 } catch e { e }
+    println(any1)
+    imut err = try { error("E") } catch e { e }
+    println(err)
+
+    // The catch value of another type is narrowed: an int widens to long.
+    imut widened: long = try { 1 / 0 } catch e { 3 }
+    println(widened)
+    imut unused = try { 1 } catch e { 2L }
+    println(unused)
+    // A body ending in a statement has no value: null.
+    imut empty: string = try { mut z = 1 } catch e { "c" }
+    println(empty)
+
+    // The narrowing is outside the try: its failure goes to the enclosing catch.
+    try {
+        imut bad = try { parseLong("x") } catch e { "str" }
+        println(bad)
+    } catch e {
+        println("outer: " + e)
+    }
+    try {
+        imut none = try { mut z = 1 } catch e { 5 }
+        println(none)
+    } catch e {
+        println("outer: " + e)
+    }
+
+    // In a loop.
+    mut total = 0L
+    mut i = 0
+    while i < 4 {
+        total = try { total + parseLong(substring("1x2x", i, i + 1)) } catch e { total + 100L }
+        i = i + 1
+    }
+    println(total)
+}

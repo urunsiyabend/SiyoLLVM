@@ -1,0 +1,78 @@
+// SiyoLLVM's std/io: the public signatures of SiyoCompiler 0.9.0's std/io.
+// Every body here is a stub. The functions SiyoLLVM implements are native
+// intrinsics in its C runtime (bound by this file's classpath identity,
+// classpath:std/io.siyo); a call to any other is rejected at compile time.
+
+pub fn readFile(path: string) -> string {
+    error("SiyoLLVM intrinsic")
+    return ""
+}
+
+// Writes a line to standard error, where a CLI's diagnostics belong.
+pub fn eprintln(msg: string) {
+    error("SiyoLLVM intrinsic")
+}
+
+pub fn writeFile(path: string, content: string) {
+    error("SiyoLLVM intrinsic")
+}
+
+pub fn appendFile(path: string, content: string) {
+    error("SiyoLLVM intrinsic")
+}
+
+pub fn readLines(path: string) -> string[] {
+    error("SiyoLLVM intrinsic")
+    return [""]
+}
+
+pub fn exists(path: string) -> bool {
+    error("SiyoLLVM intrinsic")
+    return false
+}
+
+pub fn isDir(path: string) -> bool {
+    error("SiyoLLVM intrinsic")
+    return false
+}
+
+pub fn isFile(path: string) -> bool {
+    error("SiyoLLVM intrinsic")
+    return false
+}
+
+pub fn listDir(path: string) -> string[] {
+    error("SiyoLLVM intrinsic")
+    return [""]
+}
+
+pub fn mkdir(path: string) {
+    error("SiyoLLVM intrinsic")
+}
+
+pub fn delete(path: string) -> bool {
+    error("SiyoLLVM intrinsic")
+    return false
+}
+
+// Not supported by SiyoLLVM (rejected at compile time).
+pub fn walk(dir: string) -> string[] {
+    error("SiyoLLVM intrinsic")
+    return [""]
+}
+
+// Not supported by SiyoLLVM (rejected at compile time).
+pub fn readBytes(path: string) -> object {
+    error("SiyoLLVM intrinsic")
+    return null
+}
+
+// Not supported by SiyoLLVM (rejected at compile time).
+pub fn writeBytes(path: string, bytes: object) {
+    error("SiyoLLVM intrinsic")
+}
+
+// Not supported by SiyoLLVM (rejected at compile time).
+pub fn copyFile(src: string, dst: string) {
+    error("SiyoLLVM intrinsic")
+}

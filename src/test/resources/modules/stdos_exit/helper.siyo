@@ -1,0 +1,8 @@
+import "std/os"
+import "std/io"
+
+fn leave(code: int) {
+    io.eprintln("leaving with " + toString(code))
+    os.exit(code)
+    println("not reached in leave")
+}

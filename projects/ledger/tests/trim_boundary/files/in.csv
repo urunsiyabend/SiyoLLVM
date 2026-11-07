@@ -1,0 +1,9 @@
+date,account,category,amount,memo
+2024-03-01,bank,rent,-0.42,control chars trimmed
+2024-03-02, acct ,food,1.00,nbsp kept in account
+2024-03-03,acct,　food　,2.00,ideographic space kept in category
+	 
+2024-03-04,acct,food, 1.00,nbsp makes the amount invalid
+ 2024-03-05,acct,food,1.00,nbsp makes the date invalid
+2024-03-06, ,food,1.00,account of control chars is empty
+😀😀😀😀-x,acct,food,1.00,date of 10 UTF-16 units in 6 code points

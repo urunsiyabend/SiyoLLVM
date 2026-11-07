@@ -1,0 +1,58 @@
+// Arrays are references: two names, an element of another array, a global,
+// a parameter mutated by the callee and a returned array all see one array.
+mut shared = [1, 2]
+
+fn fill(xs: int[], n: int) {
+    mut i = 0
+    while i < n { push(xs, i) i += 1 }
+}
+
+fn touch(xs: int[]) -> int[] {
+    xs[0] = 100
+    return xs
+}
+
+fn sizeOf(xs: any) -> int[] { return xs }
+
+fn main() {
+    mut a = [1, 2, 3]
+    mut b = a
+    b[0] = 10
+    push(b, 4)
+    println(a)
+    println(len(a))
+
+    mut row = [5, 6]
+    mut grid = [row, [7]]
+    row[1] = 60
+    grid[0].push(61)
+    println(grid)
+    println(row)
+    mut inner = grid[1]
+    inner.push(8)
+    println(grid)
+
+    fill(a, 3)
+    println(a)
+    imut back = touch(a)
+    back.push(-1)
+    println(a)
+
+    shared.push(3)
+    imut alias = shared
+    removeAt(alias, 0)
+    println(shared)
+
+    imut viaAny: any = a
+    imut again = sizeOf(viaAny)
+    again[1] = 20
+    println(a)
+    println(viaAny == again)
+
+    // A copy of the reference is the same array.
+    mut selfish: any[] = []
+    push(selfish, 1)
+    mut copy = selfish
+    push(copy, 2)
+    println(selfish)
+}

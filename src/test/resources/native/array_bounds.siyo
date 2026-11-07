@@ -1,0 +1,33 @@
+// Out-of-range indexes, pop and removeAt on an empty array, raised as the
+// JVM's IndexOutOfBoundsException and caught: the catch variable gets the
+// message.
+fn at(xs: int[], i: int) -> int { return xs[i] }
+
+fn main() {
+    mut xs: int[] = []
+    try { println(pop(xs)) } catch e { println("pop: " + e) }
+    try { removeAt(xs, 0) } catch e { println("removeAt: " + e) }
+    push(xs, 4)
+    push(xs, 5)
+    try { println(xs[-1]) } catch e { println("get -1: " + e) }
+    try { println(xs[len(xs)]) } catch e { println("get len: " + e) }
+    try { println(at(xs, 2147483647)) } catch e { println("deep: " + e) }
+    try { xs[2] = 3 } catch e { println("set: " + e) }
+    try { xs[-5] = 3 } catch e: string { println("set -5: " + e) }
+    try { removeAt(xs, 2) } catch e { println("removeAt len: " + e) }
+    try { removeAt(xs, -1) } catch e { println("removeAt -1: " + e) }
+    println(xs)
+    removeAt(xs, 1)
+    println(pop(xs))
+    try { println(pop(xs)) } catch e { println("pop again: " + e) }
+
+    // A raise skips the rest of the expression.
+    mut log: int[] = []
+    try { push(log, xs[0]) } catch e { println(len(log)) }
+
+    mut n = 0
+    while n < 3 {
+        try { println(xs[n]) } catch e { n += 1 }
+    }
+    println(n)
+}

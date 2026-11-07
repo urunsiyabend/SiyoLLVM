@@ -1,0 +1,219 @@
+LEDGER REPORT
+source: large.csv
+rows: 5413 accepted, 164 rejected, 5577 total
+period: 2024-01-01 to 2025-12-28
+
+ACCOUNTS
+ACCOUNT          COUNT        CREDITS         DEBITS            NET
+Acme, Inc.         240      173040.80     -243514.42      -70473.62
+Brokerage          223      155149.03     -204636.55      -49487.52
+Cash               227      139891.65     -244207.51     -104315.86
+Checking           220      141180.37     -215240.59      -74060.22
+Credit Card        208      115700.40     -224427.62     -108727.22
+Garanti BBVA       216      141932.08     -210769.09      -68837.01
+Joint Account      215      123749.15     -219692.76      -95943.61
+Main "Gold"        225      170238.43     -215861.32      -45622.89
+Petty cash         227      170994.61     -240337.63      -69343.02
+Savings            221      151097.65     -226637.63      -75539.98
+Ziraat             226      125827.01     -225080.89      -99253.88
+ağaç Kooperatif    221      167372.99     -197861.91      -30488.92
+zebra fund         221      147653.15     -213615.72      -65962.57
+Öğrenci Kartı      225      120282.38     -239742.55     -119460.17
+Ünal Ailesi        252      119868.13     -263770.72     -143902.59
+İş Bankası         210      142617.60     -218088.73      -75471.13
+Şirket Hesabı      246      145225.31     -250312.49     -105087.18
+工商银行               241      135689.04     -244452.13     -108763.09
+東京三菱               198      117787.09     -202951.97      -85164.88
+銀行口座               242      175871.67     -231637.96      -55766.29
+🏦 Reserve         229      205267.80     -217515.13      -12247.33
+💳 Travel Card     228       78200.73     -235896.96     -157696.23
+😀 Wallet          220      126183.12     -213409.92      -87226.80
+Ａ Fullwidth        232      137561.52     -227922.46      -90360.94
+TOTAL             5413     3428381.71    -5427584.66    -1999202.95
+
+CATEGORIES
+CATEGORY      COUNT            NET
+Salary          300     1498942.67
+Refunds         265     1328154.89
+🎉 Parties      278     -263479.88
+☕ Kahve         286     -272432.55
+Travel          282     -280748.39
+Health          301     -284160.64
+食品              304     -288355.57
+交通              298     -290748.84
+ｶﾌｪ             299     -291913.37
+Market/Pazar    291     -304161.02
+Insurance       298     -305699.35
+Rent            313     -311337.67
+Dining          323     -311339.92
+Gifts, misc     316     -312406.22
+Groceries       317     -312660.32
+Kira            317     -318465.36
+Utilities       326     -334779.75
+Transport       299     -343611.66
+
+REJECTED
+line 33: invalid date '2024/01/20'
+line 58: empty account
+line 76: malformed quotes
+line 129: invalid date '2025/07/26'
+line 154: invalid amount '-1350.575'
+line 205: empty account
+line 211: invalid date '2025-13-15'
+line 317: expected 5 fields, found 6
+line 341: invalid date '2024-13-14'
+line 345: unterminated quote
+line 358: malformed quotes
+line 374: invalid amount '-268.065'
+line 386: empty account
+line 559: unterminated quote
+line 578: invalid date '2025/12/21'
+line 615: expected 5 fields, found 6
+line 625: empty category
+line 664: invalid amount '-219.495'
+line 703: unterminated quote
+line 705: expected 5 fields, found 6
+line 730: expected 5 fields, found 6
+line 781: invalid amount '-184.035'
+line 788: expected 5 fields, found 4
+line 797: expected 5 fields, found 4
+line 888: unterminated quote
+line 946: invalid date '2024/05/22'
+line 950: expected 5 fields, found 6
+line 959: malformed quotes
+line 983: empty account
+line 1026: empty category
+line 1203: unterminated quote
+line 1221: expected 5 fields, found 6
+line 1223: empty account
+line 1259: empty category
+line 1266: unterminated quote
+line 1289: expected 5 fields, found 6
+line 1298: unterminated quote
+line 1321: empty account
+line 1378: expected 5 fields, found 6
+line 1452: invalid date '2024-13-25'
+line 1472: expected 5 fields, found 4
+line 1489: empty account
+line 1506: expected 5 fields, found 4
+line 1519: invalid date '2024-13-27'
+line 1528: empty account
+line 1534: invalid amount '-159.265'
+line 1596: empty category
+line 1658: expected 5 fields, found 4
+line 1779: invalid date '2024/08/19'
+line 1824: expected 5 fields, found 4
+line 1869: unterminated quote
+line 1909: expected 5 fields, found 4
+line 1916: expected 5 fields, found 6
+line 1947: unterminated quote
+line 1974: invalid date '2024-13-27'
+line 2151: invalid date '2024-13-11'
+line 2156: invalid amount '-1392.715'
+line 2164: invalid date '2025-13-23'
+line 2205: invalid date '2024/04/17'
+line 2207: empty category
+line 2247: expected 5 fields, found 6
+line 2317: empty category
+line 2337: expected 5 fields, found 6
+line 2342: invalid date '2024-13-10'
+line 2411: malformed quotes
+line 2412: empty account
+line 2423: malformed quotes
+line 2486: invalid amount '7878.075'
+line 2494: malformed quotes
+line 2506: empty category
+line 2545: invalid amount '-1760.055'
+line 2600: expected 5 fields, found 6
+line 2632: expected 5 fields, found 6
+line 2634: invalid amount '-683.415'
+line 2697: expected 5 fields, found 6
+line 2744: expected 5 fields, found 4
+line 2756: malformed quotes
+line 2804: expected 5 fields, found 4
+line 2825: empty category
+line 2960: invalid date '2025-13-01'
+line 2990: invalid date '2025/05/07'
+line 2992: expected 5 fields, found 6
+line 3012: invalid date '2024-13-04'
+line 3056: expected 5 fields, found 6
+line 3087: invalid amount '-491.835'
+line 3093: expected 5 fields, found 4
+line 3132: invalid date '2025/01/22'
+line 3250: expected 5 fields, found 6
+line 3297: expected 5 fields, found 4
+line 3313: invalid date '2025-13-10'
+line 3348: invalid date '2024-13-24'
+line 3351: expected 5 fields, found 4
+line 3478: empty category
+line 3493: malformed quotes
+line 3520: expected 5 fields, found 4
+line 3531: expected 5 fields, found 4
+line 3536: expected 5 fields, found 6
+line 3545: expected 5 fields, found 6
+line 3579: empty category
+line 3610: expected 5 fields, found 6
+line 3647: expected 5 fields, found 6
+line 3654: unterminated quote
+line 3701: invalid date '2024/02/23'
+line 3702: empty account
+line 3719: expected 5 fields, found 6
+line 3752: empty category
+line 3761: empty account
+line 3766: invalid amount '-174.885'
+line 3806: empty account
+line 3815: expected 5 fields, found 4
+line 3855: expected 5 fields, found 4
+line 3913: malformed quotes
+line 3951: expected 5 fields, found 4
+line 3954: malformed quotes
+line 3996: invalid date '2025-13-08'
+line 4005: expected 5 fields, found 6
+line 4011: invalid date '2024/06/23'
+line 4028: invalid amount '-429.605'
+line 4035: invalid amount '6297.895'
+line 4039: unterminated quote
+line 4063: expected 5 fields, found 4
+line 4213: invalid date '2025/04/23'
+line 4252: expected 5 fields, found 6
+line 4257: expected 5 fields, found 6
+line 4282: unterminated quote
+line 4323: invalid amount '-187.175'
+line 4380: malformed quotes
+line 4387: invalid date '2024-13-15'
+line 4416: unterminated quote
+line 4478: invalid amount '-895.505'
+line 4490: expected 5 fields, found 4
+line 4518: invalid date '2024-13-20'
+line 4605: expected 5 fields, found 4
+line 4614: expected 5 fields, found 6
+line 4620: empty category
+line 4628: unterminated quote
+line 4702: invalid date '2024-13-12'
+line 4721: expected 5 fields, found 6
+line 4723: unterminated quote
+line 4736: invalid date '2025/09/09'
+line 4758: unterminated quote
+line 4779: empty category
+line 4846: unterminated quote
+line 4874: malformed quotes
+line 4887: malformed quotes
+line 4943: invalid amount '-532.285'
+line 4959: invalid date '2025/04/16'
+line 4986: unterminated quote
+line 5065: empty category
+line 5092: malformed quotes
+line 5094: expected 5 fields, found 6
+line 5151: invalid date '2024-13-26'
+line 5201: expected 5 fields, found 6
+line 5222: invalid date '2024-13-09'
+line 5255: empty account
+line 5299: invalid date '2025-13-01'
+line 5308: invalid date '2025-13-28'
+line 5354: expected 5 fields, found 6
+line 5400: invalid date '2024/04/01'
+line 5447: expected 5 fields, found 6
+line 5463: expected 5 fields, found 6
+line 5466: expected 5 fields, found 4
+line 5486: malformed quotes
+line 5514: expected 5 fields, found 6

@@ -1,0 +1,10 @@
+d init
+b init -> 1
+c init -> 2
+main init 2
+b -> 3
+c -> 4
+main -> 5
+alias -> 6
+6
+6

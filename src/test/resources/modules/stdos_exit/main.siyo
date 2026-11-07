@@ -1,0 +1,13 @@
+import "std/os"
+import "helper"
+
+fn main() {
+    println(os.args())
+    println(len(os.args()))
+    try {
+        helper.leave(70)
+    } catch e {
+        println("caught " + e)
+    }
+    println("not reached")
+}

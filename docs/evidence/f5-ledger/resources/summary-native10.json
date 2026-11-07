@@ -1,0 +1,27 @@
+{
+  "accepted": false,
+  "outer_returncode": 1,
+  "receipt": {
+    "child_pid": 1359075,
+    "returncode": 3,
+    "before": {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/siyollvm-test-524445b27ca54c15935528579a1c47a8.scope",
+      "memory.max": "805306368",
+      "memory.swap.max": "0",
+      "memory.peak": "9637888",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+      "oom_kill": 0
+    },
+    "after": {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/siyollvm-test-524445b27ca54c15935528579a1c47a8.scope",
+      "memory.max": "805306368",
+      "memory.swap.max": "0",
+      "memory.peak": "284217344",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+      "oom_kill": 0
+    },
+    "oom_kill_delta": 0
+  },
+  "journal_returncode": 0,
+  "unit": "siyollvm-test-524445b27ca54c15935528579a1c47a8.scope"
+}

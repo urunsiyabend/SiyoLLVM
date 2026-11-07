@@ -1,0 +1,3 @@
+date,account,category,amount,memo
+2024-01-01,a,b,1.00,ends in cr then crlf
+2024-01-02,a,b,-2.00,last line ends in a lone cr

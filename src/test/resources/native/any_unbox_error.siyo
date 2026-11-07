@@ -1,0 +1,10 @@
+// Unboxing an any holding a bool to long raises ClassCastException with the
+// JVM's message; an int would have widened.
+fn f(x: any) -> any { return x }
+
+fn main() {
+  imut wide: long = f(4)
+  println(wide)
+  imut bad: long = f(true)
+  println(bad)
+}

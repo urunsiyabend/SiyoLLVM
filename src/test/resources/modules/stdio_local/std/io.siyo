@@ -1,0 +1,4 @@
+// A program's own std/io beside its main file: siyoc resolves it first.
+pub fn readFile(path: string) -> string {
+    return "local readFile of " + path
+}

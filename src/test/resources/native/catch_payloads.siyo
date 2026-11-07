@@ -1,0 +1,57 @@
+// What a catch variable receives: the thrown value itself, or the message of
+// a runtime error.
+fn f(x: any) -> any { return x }
+fn level3(n: int) -> int {
+    if n > 2 { throw "deep" }
+    return n
+}
+fn level2(n: int) -> int { return level3(n) * 10 }
+fn level1(n: int) -> int { return level2(n) + 1 }
+fn divide(a: int, b: int) -> int { return a / b }
+fn remainder(a: long, b: long) -> long { return a % b }
+
+fn main() {
+    try { println(level1(1)) println(level1(3)) println("unreached") } catch e { println("three levels: " + e) }
+    try { println(divide(7, 0)) } catch e: string { println(e) }
+    try { println(remainder(7L, 0L)) } catch e { println(e) }
+    try { println(substring("abc", 2, 9)) } catch e { println(e) }
+    try { println(parseLong("")) } catch e { println(e) }
+    try { println(parseLong("12x")) } catch e { println(e) }
+    try { println(ord("")) } catch e { println(e) }
+    try { println(chr(-1)) } catch e { println(e) }
+    try { imut n: int = f("s") println(n) } catch e { println(e) }
+    try { imut l: long = f(null) println(l) } catch e { println(e) }
+    try { error("E1") } catch e { println(e) }
+    try { throw 42 } catch e: int { println(e + 1) }
+    try { throw 5L } catch e: long { println(e * 2L) }
+    try { throw true } catch e: bool { println(!e) }
+    try { throw null } catch e { println(e) }
+    try { throw f(7) } catch e { println(e == 7) }
+
+    // Nested: the inner catch handles its own error; a rethrow goes outwards.
+    try {
+        try { throw "in" } catch e { throw e + "2" }
+        println("unreached")
+    } catch e {
+        println(e)
+    }
+    try {
+        try { throw "inner" } catch e { println("inner caught " + e) }
+        println("between")
+        throw "outer"
+    } catch e {
+        println("outer caught " + e)
+    }
+    // A try inside a catch.
+    try { throw 1 } catch e {
+        try { throw "second" } catch e2 { println("nested in catch: " + e + " " + e2) }
+    }
+    // A catch variable of the wrong type raises from the catch block itself,
+    // to the enclosing handler.
+    try {
+        try { throw 1 } catch e: string { println("unreached " + e) }
+    } catch e {
+        println(e)
+    }
+    println("done")
+}

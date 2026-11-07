@@ -1,0 +1,14 @@
+Point { name: only }
+only
+Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+compound: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+Cannot invoke "java.lang.Boolean.booleanValue()" because the return value of "java.util.Map.get(Object)" is null
+null
+Point { name: only, x: 3 }
+Point { name: renamed, x: 3 }
+Point { name: renamed, x: 3, on: true }
+true
+null
+name=null
+Point { x: 1, name: null }
+1

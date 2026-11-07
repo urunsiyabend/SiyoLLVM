@@ -1,0 +1,12 @@
+// A runtime error's payload, caught and thrown again, is uncaught as a
+// SiyoThrow of its message.
+fn main() {
+    mut zero = 0
+    try {
+        println(1 / zero)
+    } catch e {
+        println("caught: " + e)
+        throw e
+    }
+    println("unreached")
+}

@@ -1,0 +1,81 @@
+// ledger: aggregates checked rows into per-account and per-category figures
+// (FORMAT.md "Aggregation").
+import "model"
+
+struct Account { name: string, count: int, credits: long, debits: long }
+
+struct Category { name: string, count: int, net: long }
+
+// Everything the report needs. `minDate`/`maxDate` are "" until a row is
+// accepted; `rejections` holds "line <n>: <reason>" in line order.
+struct Book { accounts: Map<string, Account>, categories: Map<string, Category>, accepted: int, rejected: int, minDate: string, maxDate: string, rejections: string[] }
+
+fn newBook() -> Book {
+    mut accounts: Map<string, Account> = {}
+    mut categories: Map<string, Category> = {}
+    mut rejections: string[] = []
+    return Book {
+        accounts: accounts,
+        categories: categories,
+        accepted: 0,
+        rejected: 0,
+        minDate: "",
+        maxDate: "",
+        rejections: rejections
+    }
+}
+
+fn total(book: Book) -> int {
+    return book.accepted + book.rejected
+}
+
+// Checks the row on line `lineNumber` and adds it to the book.
+fn record(book: Book, lineNumber: int, line: string) {
+    imut checked = model.checkRow(line)
+    if checked.reason != "" {
+        book.rejected += 1
+        push(book.rejections, "line " + lineNumber + ": " + checked.reason)
+        return
+    }
+    accept(book, checked.tx)
+}
+
+// Adds an accepted transaction.
+fn accept(book: Book, tx: Transaction) {
+    book.accepted += 1
+    if book.minDate == "" || tx.date < book.minDate {
+        book.minDate = tx.date
+    }
+    if book.maxDate == "" || tx.date > book.maxDate {
+        book.maxDate = tx.date
+    }
+
+    imut accounts = book.accounts
+    if !accounts.has(tx.account) {
+        accounts[tx.account] = Account { name: tx.account, count: 0, credits: 0L, debits: 0L }
+    }
+    addToAccount(accounts[tx.account], tx.cents)
+
+    imut categories = book.categories
+    if !categories.has(tx.category) {
+        categories[tx.category] = Category { name: tx.category, count: 0, net: 0L }
+    }
+    addToCategory(categories[tx.category], tx.cents)
+}
+
+// `accounts` in accept() is a map local inferred from a field, so a struct read
+// from it is an `any` to the binder, and so are its fields (SUBSET.md, maps);
+// passing it as a struct parameter types them.
+fn addToAccount(account: Account, cents: long) {
+    account.count += 1
+    if cents > 0L {
+        account.credits += cents
+    } else {
+        account.debits += cents
+    }
+}
+
+fn addToCategory(category: Category, cents: long) {
+    category.count += 1
+    category.net += cents
+}

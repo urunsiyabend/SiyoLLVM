@@ -1,0 +1,114 @@
+// model: the Transaction a valid row holds, and row validation
+// (FORMAT.md "Validating a row").
+import "csv"
+
+struct Transaction { date: string, account: string, category: string, cents: long }
+
+// A checked row: `reason` is "" when the row is accepted, and then `tx` holds
+// its transaction; otherwise `reason` says why the row is rejected.
+struct Checked { tx: Transaction, reason: string }
+
+fn rejected(reason: string) -> Checked {
+    return Checked { tx: null, reason: reason }
+}
+
+fn isDigit(c: string) -> bool {
+    return c >= "0" && c <= "9"
+}
+
+// YYYY-MM-DD with month 01-12 and day 01-31 (no calendar check).
+fn validDate(d: string) -> bool {
+    if len(d) != 10 {
+        return false
+    }
+    for mut i = 0 i < 10 i = i + 1 {
+        if i == 4 || i == 7 {
+            if d[i] != "-" {
+                return false
+            }
+        } else if !isDigit(d[i]) {
+            return false
+        }
+    }
+    imut month = parseInt(substring(d, 5, 7))
+    imut day = parseInt(substring(d, 8, 10))
+    return month >= 1 && month <= 12 && day >= 1 && day <= 31
+}
+
+// The number of ASCII digits in `s` from `start` on.
+fn digitsFrom(s: string, start: int) -> int {
+    mut j = start
+    while j < len(s) && isDigit(s[j]) {
+        j += 1
+    }
+    return j - start
+}
+
+// -?[0-9]{1,10}(\.[0-9]{2})?
+fn validAmount(s: string) -> bool {
+    mut i = 0
+    if startsWith(s, "-") {
+        i = 1
+    }
+    imut whole = digitsFrom(s, i)
+    if whole < 1 || whole > 10 {
+        return false
+    }
+    i += whole
+    if i == len(s) {
+        return true
+    }
+    return s[i] == "." && len(s) == i + 3 && digitsFrom(s, i + 1) == 2
+}
+
+// The value in cents of an amount that validAmount accepted.
+fn amountCents(s: string) -> long {
+    mut start = 0
+    imut negative = startsWith(s, "-")
+    if negative {
+        start = 1
+    }
+    imut dot = indexOf(s, ".")
+    mut cents = 0L
+    if dot < 0 {
+        cents = parseLong(substring(s, start, len(s))) * 100L
+    } else {
+        cents = parseLong(substring(s, start, dot)) * 100L + parseLong(substring(s, dot + 1, len(s)))
+    }
+    if negative {
+        cents = 0L - cents
+    }
+    return cents
+}
+
+// Validates one data line; the checks run in FORMAT.md's order.
+fn checkRow(line: string) -> Checked {
+    imut split = csv.splitLine(line)
+    if split.error != "" {
+        return rejected(split.error)
+    }
+    imut parts = split.parts
+    if len(parts) != 5 {
+        return rejected("expected 5 fields, found " + len(parts))
+    }
+    // Array elements read through another module's struct are bound to typed
+    // variables first (SUBSET.md: cross-module arrays have `any` elements).
+    imut date: string = parts[0]
+    imut account: string = parts[1]
+    imut category: string = parts[2]
+    imut amount: string = parts[3]
+    if !validDate(date) {
+        return rejected("invalid date '" + date + "'")
+    }
+    if account == "" {
+        return rejected("empty account")
+    }
+    if category == "" {
+        return rejected("empty category")
+    }
+    if !validAmount(amount) {
+        return rejected("invalid amount '" + amount + "'")
+    }
+    imut tx = Transaction { date: date, account: account, category: category, cents: amountCents(amount) }
+    return Checked { tx: tx, reason: "" }
+}

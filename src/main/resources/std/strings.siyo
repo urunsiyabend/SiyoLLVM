@@ -1,0 +1,118 @@
+// SiyoLLVM's std/strings: the public signatures of SiyoCompiler 0.9.0's
+// std/strings, written in plain Siyo to give the same results.
+
+// Not supported by SiyoLLVM (a Java StringBuilder; rejected at compile time).
+pub fn builder() -> object {
+    error("SiyoLLVM intrinsic")
+    return null
+}
+
+pub fn lines(s: string) -> string[] {
+    return split(s, "\n")
+}
+
+pub fn join(arr: string[], sep: string) -> string {
+    mut result = ""
+    for mut i = 0 i < len(arr) i = i + 1 {
+        if i > 0 {
+            result = result + sep
+        }
+        result = result + arr[i]
+    }
+    return result
+}
+
+pub fn repeat(s: string, n: int) -> string {
+    mut result = ""
+    for mut i = 0 i < n i = i + 1 {
+        result = result + s
+    }
+    return result
+}
+
+// Whether parseInt can read s: an optional minus and digits, that fit an int.
+// parseInt itself answers 0 for anything else, which is also a number.
+pub fn isInt(s: string) -> bool {
+    if s == null {
+        return false
+    }
+    mut start = 0
+    if startsWith(s, "-") {
+        start = 1
+    }
+    if len(s) == start {
+        return false
+    }
+    for mut i = start i < len(s) i = i + 1 {
+        imut c = ord(substring(s, i, i + 1))
+        if c < 48 || c > 57 {
+            return false
+        }
+    }
+    // Leading zeros do not count towards the int's size.
+    mut first = start
+    while first < len(s) - 1 && substring(s, first, first + 1) == "0" {
+        first = first + 1
+    }
+    if len(s) - first > 10 {
+        return false
+    }
+    imut value = parseLong(substring(s, first, len(s)))
+    if start == 1 {
+        return value <= 2147483648L
+    }
+    return value <= 2147483647L
+}
+
+pub fn padLeft(s: string, width: int, ch: string) -> string {
+    mut result = s
+    while len(result) < width {
+        result = ch + result
+    }
+    return result
+}
+
+pub fn padRight(s: string, width: int, ch: string) -> string {
+    mut result = s
+    while len(result) < width {
+        result = result + ch
+    }
+    return result
+}
+
+pub fn chars(s: string) -> string[] {
+    mut actual = [""]
+    for mut i = 0 i < len(s) i = i + 1 {
+        push(actual, substring(s, i, i + 1))
+    }
+    removeAt(actual, 0)
+    return actual
+}
+
+pub fn trimStart(s: string) -> string {
+    mut i = 0
+    while i < len(s) && (substring(s, i, i + 1) == " " || substring(s, i, i + 1) == "\t" || substring(s, i, i + 1) == "\n" || substring(s, i, i + 1) == "\r") {
+        i = i + 1
+    }
+    return substring(s, i, len(s))
+}
+
+pub fn trimEnd(s: string) -> string {
+    mut i = len(s) - 1
+    while i >= 0 && (substring(s, i, i + 1) == " " || substring(s, i, i + 1) == "\t" || substring(s, i, i + 1) == "\n" || substring(s, i, i + 1) == "\r") {
+        i = i - 1
+    }
+    return substring(s, 0, i + 1)
+}
+
+// Returns the index of the last occurrence of needle in s, or -1 if not found.
+pub fn lastIndexOf(s: string, needle: string) -> int {
+    mut result = -1
+    mut nlen = len(needle)
+    for mut i = 0 i <= len(s) - nlen i = i + 1 {
+        if substring(s, i, i + nlen) == needle {
+            result = i
+        }
+    }
+    return result
+}
