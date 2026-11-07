@@ -4,6 +4,7 @@ import codeanalysis.BuiltinFunctions;
 import codeanalysis.FunctionSymbol;
 import codeanalysis.ParameterSymbol;
 import codeanalysis.SiyoArray;
+import codeanalysis.SiyoStruct;
 import codeanalysis.binding.BoundArrayLiteralExpression;
 import codeanalysis.binding.BoundAssignmentExpression;
 import codeanalysis.binding.BoundBinaryExpression;
@@ -19,10 +20,13 @@ import codeanalysis.binding.BoundIndexAssignmentExpression;
 import codeanalysis.binding.BoundIndexExpression;
 import codeanalysis.binding.BoundLabelStatement;
 import codeanalysis.binding.BoundLiteralExpression;
+import codeanalysis.binding.BoundMemberAccessExpression;
+import codeanalysis.binding.BoundMemberAssignmentExpression;
 import codeanalysis.binding.BoundNode;
 import codeanalysis.binding.BoundNodeType;
 import codeanalysis.binding.BoundReturnStatement;
 import codeanalysis.binding.BoundStatement;
+import codeanalysis.binding.BoundStructLiteralExpression;
 import codeanalysis.binding.BoundThrowStatement;
 import codeanalysis.binding.BoundTryCatchStatement;
 import codeanalysis.binding.BoundTryExpression;
@@ -93,11 +97,20 @@ import java.util.Set;
  * array or a string that is only len and indexing, so it needs nothing of its
  * own; over a map, a set or an any the binder wraps the collection in a
  * helper call, which is rejected.
+ *
+ * <p>Structs ({@code SiyoStruct}) are values of every kind above too. A
+ * struct declaration binds to a placeholder literal statement; literals,
+ * field reads ({@code p.x}) and field writes ({@code p.x = v}, and
+ * {@code p.x += v}, which the parser desugars into a write of a read) are
+ * accepted with fields of the value types, as is {@code typeName}. The binder
+ * gives a field read the field's declared type when it can tell which struct
+ * the target is, else {@code any}.
  */
 public final class SubsetValidator {
 
     private static final Set<Class<?>> VALUE_TYPES =
-            Set.of(Integer.class, Long.class, Boolean.class, String.class, Object.class, SiyoArray.class);
+            Set.of(Integer.class, Long.class, Boolean.class, String.class, Object.class, SiyoArray.class,
+                    SiyoStruct.class);
 
     /**
      * Types an any holds boxed. The JVM backend boxes them when declaring an
@@ -155,9 +168,6 @@ public final class SubsetValidator {
     private static final Map<BoundNodeType, String> CONSTRUCTS = Map.ofEntries(
             Map.entry(BoundNodeType.MapLiteralExpression, "maps are"),
             Map.entry(BoundNodeType.SetLiteralExpression, "sets are"),
-            Map.entry(BoundNodeType.MemberAccessExpression, "member access is"),
-            Map.entry(BoundNodeType.MemberAssignmentExpression, "member assignment is"),
-            Map.entry(BoundNodeType.StructLiteralExpression, "structs are"),
             Map.entry(BoundNodeType.UnionLiteralExpression, "sum types are"),
             Map.entry(BoundNodeType.JavaMethodCallExpression, "Java interop is"),
             Map.entry(BoundNodeType.JavaStaticFieldExpression, "Java interop is"),
@@ -317,11 +327,34 @@ public final class SubsetValidator {
             }
             case BoundIndexExpression index -> validateIndex(index);
             case BoundIndexAssignmentExpression assignment -> validateIndexAssignment(assignment);
+            case BoundStructLiteralExpression literal -> {
+                for (BoundExpression value : literal.getFieldValues().values()) {
+                    if (validatesCleanly(value)) requireValueType(value.getClassType(), "struct fields");
+                }
+            }
+            case BoundMemberAccessExpression access -> {
+                if (validatesCleanly(access.getTarget()) && requireStruct(access.getTarget())) {
+                    requireValueType(access.getClassType(), "struct fields");
+                }
+            }
+            case BoundMemberAssignmentExpression assignment -> {
+                boolean clean = validatesCleanly(assignment.getTarget()) & validatesCleanly(assignment.getValue());
+                if (clean && requireStruct(assignment.getTarget())) {
+                    requireValueType(assignment.getValue().getClassType(), "struct fields");
+                }
+            }
             default -> reportNode(expression);
         }
         // Set for a first argument that was not there (a call with none).
         _emptyStack = false;
         _offset = saved;
+    }
+
+    /** The binder makes member access on anything but a struct an error; this keeps the emitter safe. */
+    private boolean requireStruct(BoundExpression target) {
+        if (target.getClassType() == SiyoStruct.class) return true;
+        report("member access on values of type " + typeName(target.getClassType()) + " is");
+        return false;
     }
 
     /**
@@ -451,6 +484,12 @@ public final class SubsetValidator {
             } else if (function == BuiltinFunctions.POP) {
                 // The binder types pop as the array's tracked element type.
                 requireValueType(call.getClassType(), "values");
+            }
+            return;
+        }
+        if (function == BuiltinFunctions.TYPE_NAME) {
+            for (BoundExpression argument : call.getArguments()) {
+                if (validatesCleanly(argument)) requireValueType(argument.getClassType(), "values");
             }
             return;
         }

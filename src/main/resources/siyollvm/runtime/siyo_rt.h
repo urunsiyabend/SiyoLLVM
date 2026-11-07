@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* First word of every heap object. Tags 6-8 are reserved for later features. */
+/* First word of every heap object. Tags 6 and 8 are reserved for later features. */
 enum {
     SIYO_TAG_STR = 1,
     SIYO_TAG_INT = 2,
@@ -84,6 +84,27 @@ typedef struct SiyoArray {
 _Static_assert(offsetof(SiyoArray, len) == 4, "SiyoArray layout must match the IR");
 _Static_assert(offsetof(SiyoArray, cap) == 8, "SiyoArray layout must match the IR");
 _Static_assert(offsetof(SiyoArray, items) == 16, "SiyoArray layout must match the IR");
+
+/*
+ * A Siyo struct value (tag SIYO_TAG_STRUCT), as the JVM's SiyoObject, a
+ * LinkedHashMap<String, Object> carrying the struct's name: count fields,
+ * names[i] holding values[i] (an any value, a primitive boxed), in the order
+ * the literal wrote them; a field set later is appended. Structs are shared
+ * by reference and mutated in place; they are never freed. names starts out
+ * as the literal's constant array and is copied before it grows.
+ */
+typedef struct SiyoStruct {
+    uint32_t tag;
+    int32_t count;
+    const SiyoStr *type_name;
+    const SiyoStr **names;
+    void **values;
+} SiyoStruct;
+
+_Static_assert(offsetof(SiyoStruct, count) == 4, "SiyoStruct layout must match the IR");
+_Static_assert(offsetof(SiyoStruct, type_name) == 8, "SiyoStruct layout must match the IR");
+_Static_assert(offsetof(SiyoStruct, names) == 16, "SiyoStruct layout must match the IR");
+_Static_assert(offsetof(SiyoStruct, values) == 24, "SiyoStruct layout must match the IR");
 
 /* Lowest stack address a Siyo function may start at; set on the program thread. */
 extern uint64_t siyo_rt_stack_limit;
@@ -188,16 +209,30 @@ _Bool siyo_rt_unbox_bool(const void *value);
 const SiyoStr *siyo_rt_cast_str(const void *value);
 /* checkcast java/util/List: the array itself, null passes. */
 SiyoArray *siyo_rt_cast_array(const void *value);
+/* checkcast java/util/Map: the struct itself, null passes. */
+SiyoStruct *siyo_rt_cast_struct(const void *value);
+/* checkcast java/util/LinkedHashMap, which the JVM backend uses for an any
+   passed to a struct parameter: the struct itself, null passes. */
+SiyoStruct *siyo_rt_cast_struct_arg(const void *value);
+/* unbox_int and unbox_bool of a value read from a struct field: the same,
+   but the NullPointerException's message ends as the JVM's does there,
+   'because the return value of "java.util.Map.get(Object)" is null'. */
+int32_t siyo_rt_unbox_int_field(const void *value);
+_Bool siyo_rt_unbox_bool_field(const void *value);
 /*
  * String.valueOf(Object): "null" for null, a string itself, an array as
  * SiyoArray.toString writes it ("[a, b]", each element by String.valueOf,
- * nested arrays recursively). An array that contains itself recurses until
+ * nested arrays recursively), a struct as SiyoObject.toString writes it
+ * ("Point { x: 1, y: 2 }", each value by String.valueOf). An array or struct
+ * that contains itself recurses until
  * the stack runs out, which is java.lang.StackOverflowError (fatal, as for
  * Siyo functions).
  */
 SiyoStr *siyo_rt_any_to_string(const void *value);
 /* Objects.equals: same type and value, so a boxed 5L is not equal to a boxed 5;
-   arrays are equal when their elements are, in order (List.equals). */
+   arrays are equal when their elements are, in order (List.equals); structs
+   when they have the same field names with equal values, in any order and
+   whatever their type names (AbstractMap.equals). */
 _Bool siyo_rt_any_equals(const void *a, const void *b);
 /* PrintStream.print(Object). */
 void siyo_rt_print_any(const void *value);
@@ -226,6 +261,23 @@ void *siyo_rt_array_pop(SiyoArray *array);
 void siyo_rt_array_remove_at(SiyoArray *array, int32_t index);
 /* List.size. */
 int32_t siyo_rt_array_len(SiyoArray *array);
+
+/*
+ * Structs. A null struct raises java.lang.NullPointerException. Fields are
+ * looked up by name: pointer equality first (the IR interns every name),
+ * then the bytes.
+ */
+/* A struct of the named type with count fields, names[i] holding null; names
+   (in the literal's order, distinct) is kept, not copied. Never raises. */
+SiyoStruct *siyo_rt_struct_new(const SiyoStr *type_name, int32_t count, const SiyoStr **names);
+/* Stores the literal's value of field index into a struct just made. Never raises. */
+void siyo_rt_struct_init(SiyoStruct *s, int32_t index, void *value);
+/* Map.get: the field's value, null when the struct has no such field. */
+void *siyo_rt_struct_get(SiyoStruct *s, const SiyoStr *name);
+/* Map.put: replaces the field's value, or appends the field after the others. */
+void siyo_rt_struct_set(SiyoStruct *s, const SiyoStr *name, void *value);
+/* typeName(value): a struct's type name, "" for anything else (null included). */
+SiyoStr *siyo_rt_type_name(const void *value);
 
 /*
  * Exceptions. A raise records a pending exception and returns; the raising

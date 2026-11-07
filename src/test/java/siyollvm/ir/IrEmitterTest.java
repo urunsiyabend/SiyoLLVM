@@ -405,6 +405,60 @@ class IrEmitterTest {
     }
 
     @Test
+    void structLiteralIsMadeWithItsFieldNamesInLiteralOrder() {
+        String ir = emit("struct P { x: int, name: string }\n"
+                + "fn main() { imut p = P { name: \"n\", x: 7 } println(p) }");
+        // The field names, as interned strings, in the order the literal wrote them.
+        Matcher names = Pattern.compile("(@siyo\\.fields\\.0) = private unnamed_addr constant \\[2 x ptr\\] "
+                + "\\[ptr (@siyo\\.str\\.\\d+), ptr (@siyo\\.str\\.\\d+)\\]").matcher(ir);
+        assertTrue(names.find(), ir);
+        assertTrue(ir.contains(names.group(2) + ".bytes = private unnamed_addr constant [4 x i8] c\"name\""), ir);
+        assertTrue(ir.contains(names.group(3) + ".bytes = private unnamed_addr constant [1 x i8] c\"x\""), ir);
+        String main = function(ir, "@siyo.fn.0");
+        Matcher made = Pattern.compile("(%t\\d+) = call ptr @siyo_rt_struct_new\\(ptr @siyo\\.str\\.\\d+, i32 2, "
+                + "ptr @siyo\\.fields\\.0\\)\n").matcher(main);
+        assertTrue(made.find(), main);
+        String s = made.group(1);
+        assertTrue(main.contains("call void @siyo_rt_struct_init(ptr " + s + ", i32 0, ptr @siyo.str."), main);
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_box_int\\(i32 7\\)\n"
+                + "  call void @siyo_rt_struct_init\\(ptr " + s + ", i32 1, ptr \\1\\)\n").matcher(main).find(), main);
+        // A new struct is not null: nothing here can raise.
+        assertEquals(0, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+        assertTrue(main.contains("call void @siyo_rt_print_any(ptr "), main);
+    }
+
+    @Test
+    void fieldReadsAndWritesLookUpTheInternedNameAndCheck() {
+        String ir = emit("struct P { x: int }\n"
+                + "fn main() { mut p = P { x: 1 } p.x += 2 println(p.x) }");
+        String main = function(ir, "@siyo.fn.0");
+        // p.x += 2 reads the field (then narrows it), then writes it; println reads it again.
+        assertEquals(2, count(main, "call ptr @siyo_rt_struct_get(ptr "), main);
+        assertEquals(1, count(main, "call void @siyo_rt_struct_set(ptr "), main);
+        assertEquals(2, count(main, "call i32 @siyo_rt_unbox_int_field(ptr "), main);
+        assertFalse(main.contains("@siyo_rt_unbox_int(ptr"), main);
+        // get, unbox, unbox and set each raise.
+        assertEquals(5, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void structArgumentFromAnyIsCastAsTheReferenceCastsArguments() {
+        String ir = emit("struct P { x: int }\nfn f(p: P) -> int { return 1 }\nfn g(a: any) -> P { return a }\n"
+                + "fn main() { imut a: any = P { x: 1 } println(f(a)) imut q: P = a println(g(q)) }");
+        String main = function(ir, "@siyo.fn.2");
+        assertEquals(1, count(main, "call ptr @siyo_rt_cast_struct_arg(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_cast_struct(ptr "), main);
+        assertEquals(1, count(function(ir, "@siyo.fn.1"), "call ptr @siyo_rt_cast_struct(ptr "));
+    }
+
+    @Test
+    void structDeclarationEmitsNothing() {
+        String ir = emit("struct P { x: int }\nfn main() { println(1) }");
+        assertFalse(ir.contains("call ptr @siyo_rt_struct_new("), ir);
+        assertFalse(ir.contains("@siyo.fields."), ir);
+    }
+
+    @Test
     void onlyRaisingRuntimeCallsAreChecked() {
         String ir = emit("fn main() { mut s = \"abc\" println(s + substring(s, 0, 1)) println(parseInt(s)) }");
         String main = function(ir, "@siyo.fn.0");

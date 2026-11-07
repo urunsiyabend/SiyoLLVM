@@ -902,16 +902,18 @@ static const char *siyo_rt_java_class_of(const void *value) {
     case SIYO_TAG_LONG: return "java.lang.Long";
     case SIYO_TAG_BOOL: return "java.lang.Boolean";
     case SIYO_TAG_ARRAY: return "codeanalysis.SiyoArray";
+    case SIYO_TAG_STRUCT: return "codeanalysis.SiyoObject";
     default: siyo_rt_fail("SiyoLLVM runtime: a value has an unknown type tag\n");
     }
 }
 
 /* checkcast failing, worded as HotSpot does: every target is a java.base
-   class, and so is every value's class but SiyoArray, which the reference
-   loads from the class path. */
+   class, and so is every value's class but SiyoArray and SiyoObject, which
+   the reference loads from the class path. */
 static void siyo_rt_class_cast(const void *value, const char *target) {
     const char *from = siyo_rt_java_class_of(value);
-    if (siyo_rt_tag_of(value) == SIYO_TAG_ARRAY) {
+    uint32_t tag = siyo_rt_tag_of(value);
+    if (tag == SIYO_TAG_ARRAY || tag == SIYO_TAG_STRUCT) {
         siyo_rt_raise_format("java.lang.ClassCastException",
                 "class %s cannot be cast to class %s (%s is in unnamed module of loader 'app'; "
                 "%s is in module java.base of loader 'bootstrap')",
@@ -929,10 +931,9 @@ static void siyo_rt_class_cast(const void *value, const char *target) {
  * bool it keeps the part that does not depend on that. unboxLong's message is
  * always the same, as the null is its own parameter.
  */
-int32_t siyo_rt_unbox_int(const void *value) {
+static int32_t siyo_rt_unbox_int_or(const void *value, const SiyoStr *null_message) {
     if (value == NULL) {
-        SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Integer.intValue()\"");
-        siyo_rt_raise_java("java.lang.NullPointerException", &message);
+        siyo_rt_raise_java("java.lang.NullPointerException", null_message);
         return 0;
     }
     if (siyo_rt_tag_of(value) != SIYO_TAG_INT) {
@@ -940,6 +941,17 @@ int32_t siyo_rt_unbox_int(const void *value) {
         return 0;
     }
     return (int32_t)siyo_rt_box_value(value);
+}
+
+int32_t siyo_rt_unbox_int(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Integer.intValue()\"");
+    return siyo_rt_unbox_int_or(value, &message);
+}
+
+int32_t siyo_rt_unbox_int_field(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Integer.intValue()\" because the return value of "
+            "\"java.util.Map.get(Object)\" is null");
+    return siyo_rt_unbox_int_or(value, &message);
 }
 
 int64_t siyo_rt_unbox_long(const void *value) {
@@ -956,10 +968,9 @@ int64_t siyo_rt_unbox_long(const void *value) {
     return siyo_rt_box_value(value);
 }
 
-_Bool siyo_rt_unbox_bool(const void *value) {
+static _Bool siyo_rt_unbox_bool_or(const void *value, const SiyoStr *null_message) {
     if (value == NULL) {
-        SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Boolean.booleanValue()\"");
-        siyo_rt_raise_java("java.lang.NullPointerException", &message);
+        siyo_rt_raise_java("java.lang.NullPointerException", null_message);
         return 0;
     }
     if (siyo_rt_tag_of(value) != SIYO_TAG_BOOL) {
@@ -967,6 +978,17 @@ _Bool siyo_rt_unbox_bool(const void *value) {
         return 0;
     }
     return siyo_rt_box_value(value) != 0;
+}
+
+_Bool siyo_rt_unbox_bool(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Boolean.booleanValue()\"");
+    return siyo_rt_unbox_bool_or(value, &message);
+}
+
+_Bool siyo_rt_unbox_bool_field(const void *value) {
+    SIYO_RT_STATIC_STR(message, "Cannot invoke \"java.lang.Boolean.booleanValue()\" because the return value of "
+            "\"java.util.Map.get(Object)\" is null");
+    return siyo_rt_unbox_bool_or(value, &message);
 }
 
 const SiyoStr *siyo_rt_cast_str(const void *value) {
@@ -983,6 +1005,22 @@ SiyoArray *siyo_rt_cast_array(const void *value) {
         return NULL;
     }
     return (SiyoArray *)value;
+}
+
+SiyoStruct *siyo_rt_cast_struct(const void *value) {
+    if (value != NULL && siyo_rt_tag_of(value) != SIYO_TAG_STRUCT) {
+        siyo_rt_class_cast(value, "java.util.Map");
+        return NULL;
+    }
+    return (SiyoStruct *)value;
+}
+
+SiyoStruct *siyo_rt_cast_struct_arg(const void *value) {
+    if (value != NULL && siyo_rt_tag_of(value) != SIYO_TAG_STRUCT) {
+        siyo_rt_class_cast(value, "java.util.LinkedHashMap");
+        return NULL;
+    }
+    return (SiyoStruct *)value;
 }
 
 /* Recursion through nested arrays checks the stack as Siyo functions do, so
@@ -1004,6 +1042,23 @@ static SiyoStr *siyo_rt_array_to_string(const SiyoArray *array) {
     return siyo_rt_str_concat(text, &close);
 }
 
+/* SiyoObject.toString: "Name { f: v, g: w }", or "Name {  }" with no fields. */
+static SiyoStr *siyo_rt_struct_to_string(const SiyoStruct *s) {
+    SIYO_RT_STATIC_STR(open, " { ");
+    SIYO_RT_STATIC_STR(separator, ", ");
+    SIYO_RT_STATIC_STR(colon, ": ");
+    SIYO_RT_STATIC_STR(close, " }");
+    siyo_rt_check_stack();
+    SiyoStr *text = siyo_rt_str_concat(s->type_name, &open);
+    for (int32_t i = 0; i < s->count; i++) {
+        if (i > 0) text = siyo_rt_str_concat(text, &separator);
+        text = siyo_rt_str_concat(text, s->names[i]);
+        text = siyo_rt_str_concat(text, &colon);
+        text = siyo_rt_str_concat(text, siyo_rt_any_to_string(s->values[i]));
+    }
+    return siyo_rt_str_concat(text, &close);
+}
+
 SiyoStr *siyo_rt_any_to_string(const void *value) {
     if (value == NULL) return siyo_rt_str_from_bytes("null", 4, 4);
     switch (siyo_rt_tag_of(value)) {
@@ -1012,6 +1067,7 @@ SiyoStr *siyo_rt_any_to_string(const void *value) {
     case SIYO_TAG_LONG: return siyo_rt_str_from_long(siyo_rt_box_value(value));
     case SIYO_TAG_BOOL: return siyo_rt_str_from_bool(siyo_rt_box_value(value) != 0);
     case SIYO_TAG_ARRAY: return siyo_rt_array_to_string(value);
+    case SIYO_TAG_STRUCT: return siyo_rt_struct_to_string(value);
     default: siyo_rt_java_class_of(value); return NULL;
     }
 }
@@ -1022,6 +1078,20 @@ static _Bool siyo_rt_array_equals(const SiyoArray *a, const SiyoArray *b) {
     if (a->len != b->len) return 0;
     for (int32_t i = 0; i < a->len; i++) {
         if (!siyo_rt_any_equals(a->items[i], b->items[i])) return 0;
+    }
+    return 1;
+}
+
+static int32_t siyo_rt_field_index(const SiyoStruct *s, const SiyoStr *name);
+
+/* AbstractMap.equals between two structs: the same size, and every field of a
+   present in b with an equal value; order and type names do not matter. */
+static _Bool siyo_rt_struct_equals(const SiyoStruct *a, const SiyoStruct *b) {
+    siyo_rt_check_stack();
+    if (a->count != b->count) return 0;
+    for (int32_t i = 0; i < a->count; i++) {
+        int32_t j = siyo_rt_field_index(b, a->names[i]);
+        if (j < 0 || !siyo_rt_any_equals(a->values[i], b->values[j])) return 0;
     }
     return 1;
 }
@@ -1037,12 +1107,13 @@ _Bool siyo_rt_any_equals(const void *a, const void *b) {
     case SIYO_TAG_LONG:
     case SIYO_TAG_BOOL: return siyo_rt_box_value(a) == siyo_rt_box_value(b);
     case SIYO_TAG_ARRAY: return siyo_rt_array_equals(a, b);
+    case SIYO_TAG_STRUCT: return siyo_rt_struct_equals(a, b);
     default: siyo_rt_java_class_of(a); return 0;
     }
 }
 
 /* Prints a string or a boxed value without allocating, so printing those in a
-   loop does not grow memory; an array is built into one string first, as
+   loop does not grow memory; an array or a struct is built into one string first, as
    PrintStream.print(Object) does, so a failure prints nothing of it. */
 void siyo_rt_print_any(const void *value) {
     if (value == NULL) {
@@ -1055,6 +1126,7 @@ void siyo_rt_print_any(const void *value) {
     case SIYO_TAG_LONG: siyo_rt_print_long(siyo_rt_box_value(value)); return;
     case SIYO_TAG_BOOL: siyo_rt_print_bool(siyo_rt_box_value(value) != 0); return;
     case SIYO_TAG_ARRAY: siyo_rt_print_str(siyo_rt_array_to_string(value)); return;
+    case SIYO_TAG_STRUCT: siyo_rt_print_str(siyo_rt_struct_to_string(value)); return;
     default: siyo_rt_java_class_of(value); return;
     }
 }
@@ -1266,4 +1338,72 @@ int main(int argc, char **argv) {
     pthread_join(thread, NULL);
     fflush(NULL);
     return 0;
+}
+
+/* --- structs --------------------------------------------------------------- */
+
+SiyoStruct *siyo_rt_struct_new(const SiyoStr *type_name, int32_t count, const SiyoStr **names) {
+    SiyoStruct *s = siyo_rt_alloc(sizeof(SiyoStruct));
+    s->tag = SIYO_TAG_STRUCT;
+    s->count = count;
+    s->type_name = type_name;
+    s->names = names;
+    s->values = count > 0 ? siyo_rt_alloc((size_t)count * sizeof(void *)) : NULL;
+    for (int32_t i = 0; i < count; i++) s->values[i] = NULL;
+    return s;
+}
+
+void siyo_rt_struct_init(SiyoStruct *s, int32_t index, void *value) {
+    s->values[index] = value;
+}
+
+/* The index of the field called name, or -1: the IR interns names, so a
+   pointer comparison almost always decides. */
+static int32_t siyo_rt_field_index(const SiyoStruct *s, const SiyoStr *name) {
+    for (int32_t i = 0; i < s->count; i++) {
+        if (s->names[i] == name) return i;
+    }
+    for (int32_t i = 0; i < s->count; i++) {
+        if (siyo_rt_str_eq(s->names[i], name)) return i;
+    }
+    return -1;
+}
+
+void *siyo_rt_struct_get(SiyoStruct *s, const SiyoStr *name) {
+    if (s == NULL) {
+        siyo_rt_null_pointer();
+        return NULL;
+    }
+    int32_t i = siyo_rt_field_index(s, name);
+    return i < 0 ? NULL : s->values[i];
+}
+
+void siyo_rt_struct_set(SiyoStruct *s, const SiyoStr *name, void *value) {
+    if (s == NULL) {
+        siyo_rt_null_pointer();
+        return;
+    }
+    int32_t i = siyo_rt_field_index(s, name);
+    if (i >= 0) {
+        s->values[i] = value;
+        return;
+    }
+    /* A field the literal left out: append it, as LinkedHashMap.put does. */
+    size_t n = (size_t)s->count;
+    const SiyoStr **names = siyo_rt_alloc((n + 1) * sizeof(SiyoStr *));
+    void **values = siyo_rt_alloc((n + 1) * sizeof(void *));
+    for (size_t k = 0; k < n; k++) {
+        names[k] = s->names[k];
+        values[k] = s->values[k];
+    }
+    names[n] = name;
+    values[n] = value;
+    s->names = names;
+    s->values = values;
+    s->count++;
+}
+
+SiyoStr *siyo_rt_type_name(const void *value) {
+    if (value != NULL && siyo_rt_tag_of(value) == SIYO_TAG_STRUCT) return (SiyoStr *)((const SiyoStruct *)value)->type_name;
+    return siyo_rt_str_from_bytes("", 0, 0);
 }

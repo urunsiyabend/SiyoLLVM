@@ -70,6 +70,31 @@ class FrontendTest {
         assertNotNull(program.text());
     }
 
+    @Test
+    void structDeclarationBinds() {
+        FrontendResult result = Frontend.analyze("s.siyo",
+                "struct P { x: int, name: string }\nfn main() { imut p = P { name: \"n\", x: 1 } println(p.x) }");
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        assertNotNull(result.program());
+    }
+
+    @Test
+    void otherTypeDeclarationsAreStillRejectedBeforeBinding() {
+        String[][] cases = {
+                {"interface Named { fn name() -> string }\nfn main() { }", "interface declarations are"},
+                {"type R = Good(int) | Stop\nfn main() { }", "type declarations are"},
+                {"actor Store { n: int }\nfn main() { }", "actors are"},
+                {"enum Color { Red, Green }\nfn main() { }", "enum declarations are"},
+                {"struct P { x: int }\nimpl P { fn get(self) -> int { return self.x } }\nfn main() { }", "impl blocks are"},
+        };
+        for (String[] c : cases) {
+            FrontendResult result = Frontend.analyze("d.siyo", c[0]);
+            assertNull(result.program(), c[0]);
+            assertTrue(result.diagnostics().stream().anyMatch(d ->
+                    stripPrefix(d.message()).equals(c[1] + " not supported by SiyoLLVM")), result.diagnostics().toString());
+        }
+    }
+
     private static String stripPrefix(String message) {
         return message.startsWith("[llvm] ") ? message.substring("[llvm] ".length()) : message;
     }

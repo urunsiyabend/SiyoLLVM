@@ -15,7 +15,7 @@ byte.
 
 | Area | Accepted |
 |---|---|
-| Types | `int` (32-bit), `long` (64-bit), `bool`, `string`, arrays of these (`int[]`, `Array<string>`, `any[]`, and nested arrays written as unannotated literals such as `[[1, 2], [3]]`), `any` (`object`) holding one of those or null |
+| Types | `int` (32-bit), `long` (64-bit), `bool`, `string`, arrays of these (`int[]`, `Array<string>`, `any[]`, and nested arrays written as unannotated literals such as `[[1, 2], [3]]`), structs, `any` (`object`) holding one of those or null |
 | Literals | int, long (`5L`, or an int literal too large for `int`), `true`/`false`, strings (escapes `\n \t \r \\ \" \0 \$ \{ \}`, triple-quoted strings), `null` |
 | Variables | `mut`/`imut` locals and parameters; file-level globals |
 | Arithmetic | `+ - * / %` on int and long, and on an int mixed with a long (the int widens) |
@@ -28,9 +28,10 @@ byte.
 | Control flow | `if`/`else` statements, `while`, `do … while`, `for` (three-part form), `for x in …` over an array (including `range(a, b)` and `split(s, d)`) or a string (its UTF-16 units), `break`, `continue`, `return` |
 | Exceptions | `throw v` of any accepted value (an int, long or bool is boxed); `error(msg)`, which throws its argument; `try { … } catch e { … }` statements, nested anywhere (in loops, in other try and catch bodies), with `break`, `continue` and `return` inside both bodies; the catch variable untyped (`any`) or typed `catch e: int` / `long` / `bool` / `string` / `any` (a checked cast, as for an `any` read); `try` expressions (`imut v = try { parseLong(s) } catch e { 0L - 1L }`) as a statement, a declaration's or assignment's value, a condition, a returned or thrown value, or the first argument of a function or `toString` (also nested: `imut s = f(g(try { … } catch e { … }))`) |
 | Arrays | literals (`[1, 2]`, `["a"]`, `[[1], [2]]`; an empty literal `[]` typed by its declaration, `mut xs: int[] = []`); as variables, globals, parameters, return values, elements of other arrays, `any` values, thrown values, catch variables (`catch e: int[]`) and `try` expression values; `xs[i]` (also on an `any` holding an array, as the JVM backend's checkcast to `List`), `xs[i] = v` and `xs[i] += v`; `len(xs)`, `push(xs, v)`, `pop(xs)`, `removeAt(xs, i)` and their method forms (`xs.push(v)`); printing, `toString`, interpolation (`"$xs"`), `+` with a string when the array is held in an `any`; `==`/`!=` between an `any` holding an array and any value (`List.equals`); `range(a, b)` and `split(s, d)`, which make new arrays; `for x in xs` (the binder's desugaring into `len` and indexing) |
+| Structs | `struct` declarations; literals (`Point { y: 2, x: 1 }`, fields in any order, some left out); field reads `p.x` (also nested, `b.p.x`, and on array elements, `ps[0].x`), writes `p.x = v` and compound writes `p.x += v`; struct values as variables, globals, parameters, return values, array elements, fields of other structs, `any` values, thrown values and catch variables (`catch e: Point`); printing, `toString`, interpolation; `==`/`!=` against `null` or an `any`; fields of the types above; `typeName(x)` |
 | `any` | declared as a variable, parameter or return type; an int, long, bool, string or null stored into it by declaration (`mut a: any = 5`) or argument, and a string or null also by assignment or `return`; read back into an `int`, `long`, `bool` or `string` variable, parameter or return value with a checked cast; printed, `toString`, joined with `+` to a string; `==`/`!=` against any value (Java's `Objects.equals`) |
 | Functions | top-level and nested (non-capturing) functions taking and returning the types above; recursion, mutual recursion, any declaration order |
-| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any` and arrays included); `len`, `push`, `pop`, `removeAt` on arrays; `range(a, b)`; on strings `len`, `s[i]`, `split`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
+| Builtins | `print(x)`, `println(x)`, `toString(x)` for every accepted type (`any`, arrays and structs included); `typeName(x)`; `len`, `push`, `pop`, `removeAt` on arrays; `range(a, b)`; on strings `len`, `s[i]`, `split`, `substring`, `contains`, `indexOf`, `startsWith`, `endsWith`, `replace`, `trim`, `toUpper`, `toLower`, `ord`, and `chr(int)`; `parseInt`, `parseLong`, `toInt(string)`, `toInt(long)`, `toLong(int)` |
 | Entry | file-level globals are initialised in source order, then `init()` runs, then `main()`; both optional, with no parameters and no return value |
 
 ## Rejected
@@ -45,9 +46,9 @@ and `removeAt` through an `any` value (`push(a[0], 1)` where `a` is
 `any[]`: the reference uses `invokeinterface`, which raises
 `IncompatibleClassChangeError` for a non-list; SiyoLLVM does not reproduce
 that error); `sort`, `map`, `filter`, `reduce` and `forEach` (they take
-lambdas); `for … in` over an `any`, a map, a set or a channel; structs, enums, sum types,
-interfaces, `impl` blocks, actors (even when declared but unused);
-member access; `match` and `if` expressions; lambdas, closures and nested
+lambdas); `for … in` over an `any`, a map, a set or a channel; enums, sum types,
+interfaces, `impl` blocks and methods, actors (even when declared but unused);
+fields of a type outside the subset (`float`, maps, …); `match` and `if` expressions; lambdas, closures and nested
 functions that capture locals; generic functions; a `try` expression
 anywhere else, or one whose body ends in a call with no value
 (`try { println(x) } catch e { … }`; the reference fails to compile it).
@@ -175,6 +176,31 @@ returning one from a function returning `any` (the reference fails with
   program stops with `java.lang.StackOverflowError` (not catchable; see
   Deviations). `==` between `any` values holding arrays compares the elements
   in order (`[1]` holding an int is not equal to `[1L]`).
+- A struct is a reference, as on the JVM, where it is a `SiyoObject` (a
+  `LinkedHashMap` of field names to values carrying the struct's name): two
+  variables, a parameter, an array element and a field of another struct can
+  all name one struct, and `p.x = v` through any of them is seen through the
+  others. Its fields are kept in the order the literal wrote them, which is
+  the order it prints in: `Point { y: 2, x: 1 }`, each value by
+  `String.valueOf`, nested structs and arrays included. A field the literal left out reads as null
+  and, once written, is added after the others. Field values are `any`
+  values (an int, long or bool boxed); a read is narrowed to the field's
+  declared type with the checked cast of an `any` read, and the binder gives
+  a read the declared type only when it can tell which struct the target is
+  (otherwise, as for a variable declared `p: Point` from an `any`, the read
+  is an `any`). A null field read into an `int` or `bool` raises
+  `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null`
+  (`Boolean.booleanValue()` for bool), also in `p.x += 1`, which reads the
+  field (evaluating `p` twice) and then writes it. An `any` read as a struct
+  is a checkcast to `java.util.Map`, except an argument of a struct
+  parameter, which the reference casts to `java.util.LinkedHashMap`; a wrong
+  type raises `ClassCastException` naming that class, and a struct read as
+  something else names `codeanalysis.SiyoObject`. `==` between `any` values
+  holding structs is `AbstractMap.equals`: the same field names with equal
+  values, in any order, whatever the struct names (`Point { x: 1 }` equals
+  `Other { x: 1 }`). `typeName(x)` is a struct's name, and `""` for any
+  other value. A struct that contains itself prints until the stack runs
+  out (`java.lang.StackOverflowError`, as for arrays).
 - `for x in xs` is the binder's index loop: it walks the array the
   expression named when the loop began (assigning the variable another
   array does not change that), and reads `len` before every iteration, so
@@ -251,6 +277,7 @@ returning one from a function returning `any` (the reference fails with
 | A `bool`/`long`/`string` function falling off its end without `return` | `VerifyError` at class load (`int` functions return 0) | returns the type's default (`false`, `0L`, null) |
 | `fn main() -> int` | crashes with `NoSuchMethodError` | rejected at compile time |
 | A null array (from an `any`, or a global read before its initialiser) indexed, assigned into or passed to `len`/`push`/`pop`/`removeAt` | `java.lang.NullPointerException: Cannot invoke "java.util.List.get(int)" because "<local0>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` |
+| A null struct (from a variable or field holding null) whose field is read or written | `java.lang.NullPointerException: Cannot invoke "java.util.Map.get(Object)" because "<local3>" is null` (`Map.put(Object, Object)` for a write; a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` |
 | Null `any` or array element (other than the literal `null`) read into an `int` or `bool` | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because the return value of "<Class>.f(Object)" is null` (the helpful message names where the null came from: a call, `"<local1>"`, a field, `"java.util.List.get(int)"` for an element, `"java.util.List.set(int, Object)"` for the element an assignment replaced) | `java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()"` (`Boolean.booleanValue()` for bool), without the `because …` part; a catch variable receives that shorter message |
 | String builtin or ordering on a null string | `java.lang.NullPointerException: Cannot invoke "String.length()" because "<Class>.<global>" is null` (a helpful message naming JVM internals) | `java.lang.NullPointerException`; a catch variable receives `NullPointerException` instead of the helpful message |
 | `toUpper` of characters whose Java upper case is several characters, other than `ß` | one-to-many mapping from Unicode SpecialCasing | the character is kept, or mapped to a single character (see below) |

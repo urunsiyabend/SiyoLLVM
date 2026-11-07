@@ -26,9 +26,9 @@ import java.util.Map;
  * Runs the SiyoCompiler frontend (snapshot) on one file: parse, bind, lower.
  *
  * <p>Binding is done exactly as {@code siyoc} binds a file (top-level
- * statements rejected). Imports and type declarations are rejected before
- * binding, so the binder never resolves modules from the filesystem or Java
- * classes from the classpath.
+ * statements rejected). Imports and the type declarations SiyoLLVM does not
+ * compile (all but structs) are rejected before binding, so the binder never
+ * resolves modules from the filesystem or Java classes from the classpath.
  */
 public final class Frontend {
     private Frontend() {}
@@ -90,13 +90,13 @@ public final class Frontend {
 
     /**
      * Declarations SiyoLLVM cannot compile, rejected from the syntax tree: an
-     * import must not reach the binder, and a type declaration binds to no
-     * code the validator would see.
+     * import must not reach the binder, and these type declarations bind to
+     * no code the validator would see. A struct declaration binds too, to a
+     * placeholder statement; its uses are checked by the validator.
      */
     private static final Map<SyntaxType, String> UNSUPPORTED_DECLARATIONS = Map.of(
             SyntaxType.ImportStatement, "imports are",
             SyntaxType.JavaImportStatement, "imports are",
-            SyntaxType.StructDeclaration, "struct declarations are",
             SyntaxType.EnumDeclaration, "enum declarations are",
             SyntaxType.TypeDeclaration, "type declarations are",
             SyntaxType.InterfaceDeclaration, "interface declarations are",

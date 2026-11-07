@@ -38,6 +38,7 @@ class RuntimeIrTest {
             "@siyo_rt_str_from_bool", "@siyo_rt_str_of_string", "@siyo_rt_parse_int",
             "@siyo_rt_box_int", "@siyo_rt_box_long", "@siyo_rt_box_bool", "@siyo_rt_array_new", "@siyo_rt_array_append", "@siyo_rt_range",
             "@siyo_rt_any_to_string", "@siyo_rt_any_equals",
+            "@siyo_rt_struct_new", "@siyo_rt_struct_init", "@siyo_rt_type_name",
             "@siyo_rt_catch", "@siyo_rt_uncaught", "@siyo_rt_stack_overflow");
 
     @Test

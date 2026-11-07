@@ -360,9 +360,35 @@ class SubsetValidatorTest {
         assertRejected(source, construct);
     }
 
-    @Test
-    void structDeclarationIsRejectedEvenWhenUnused() {
-        assertRejected("struct P { x: int }\nfn main() { println(1) }", "struct declarations are");
+    // Structs: literals, field reads and writes (compound ones too), struct
+    // values as variables, parameters, returns, elements, fields and any values.
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            struct P { x: int } fn main() { println(1) }
+            struct P { x: int, s: string } fn main() { imut p = P { s: "a", x: 1 } println(p) println(p.x + 1) }
+            struct P { x: int } fn main() { mut p = P { x: 1 } p.x = 2 p.x += 3 println(p.x) }
+            struct P { x: int } fn f(p: P) -> P { p.x = 9 return p } fn main() { println(f(P { x: 1 }).x) }
+            struct P { x: int } struct B { p: P, xs: int[] } fn main() { imut b = B { p: P { x: 1 }, xs: [1] } b.p.x = 99 println(b.xs[0] + b.p.x) }
+            struct P { x: int } fn main() { imut ps = [P { x: 1 }] ps[0].x = 2 println(ps) }
+            struct P { x: int } fn main() { imut a: any = P { x: 1 } imut p: P = a println(a == p) println("$p" + toString(p)) }
+            struct P { l: long, b: bool, a: any } fn main() { imut p = P { l: 1, b: true, a: null } println(p.l + 1L) println(!p.b) }
+            struct P { x: int } fn main() { println(typeName(P { x: 1 })) println(typeName(1)) }
+            struct P { x: int } fn main() { try { throw P { x: 1 } } catch e: P { println(e.x) } }
+            struct P { x: int } mut g: P = null fn main() { println(g == null) }
+            """)
+    void structsAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            struct P { f: float } fn main() { imut p = P { f: 1.5 } println(p) }      | float values are
+            struct P { f: float } fn main() { imut p = P { f: 1.5 } println(p.f) }    | float values are
+            struct P { x: int } fn main() { imut p = P { x: 1 } println(len(p)) }     | len() on struct is
+            struct P { m: any } fn main() { imut p = P { m: null } p.m = {"a": 1} }  | maps are
+            """)
+    void unsupportedStructConstructsAreRejected(String source, String construct) {
+        assertRejected(source, construct);
     }
 
     @Test
