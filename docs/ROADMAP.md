@@ -74,9 +74,10 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Next step (2026-11-07, after F3c publish): F4 modules + native std — plan
-  `docs/superpowers/plans/2026-11-07-f4-modules.md`, then SDD. Controller helpers (scratch):
-  `tools/final-gates.sh <label>`, `tools/publish-evidence.sh <label> <dir> <title> <ledger>`.
+- Next step (2026-11-07, F4 in progress): Task 1 (user modules) done and reviewed locally at b42fbad;
+  Task 2 (native std/io, std/os, std/strings) next, then F4 whole-feature review → fix wave →
+  `tools/final-gates.sh f4` → `tools/publish-evidence.sh f4 f4-modules ...`. Ledger:
+  `.superpowers/sdd/2026-11-07-f4-modules/progress.md`. Then F5 application.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
