@@ -1,0 +1,21 @@
+LEDGER REPORT
+source: in.csv
+rows: 5 accepted, 0 rejected, 5 total
+period: 2024-01-01 to 2024-01-02
+
+ACCOUNTS
+ACCOUNT  COUNT        CREDITS         DEBITS            NET
+a            3           3.00           0.00           3.00
+😀           1           0.00           0.00           0.00
+Ａ            1           0.00           0.00           0.00
+TOTAL        5           3.00           0.00           3.00
+
+CATEGORIES
+CATEGORY  COUNT            NET
+Z             1           1.00
+😀            1           1.00
+Ａ             1           1.00
+b             2           0.00
+
+REJECTED
+none

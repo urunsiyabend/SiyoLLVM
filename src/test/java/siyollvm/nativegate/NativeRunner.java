@@ -103,7 +103,8 @@ final class NativeRunner {
         assertEquals(expectedExit, run.exitCode(), name + " exit code; stderr: " + run.stderr());
     }
 
-    record Run(int exitCode, byte[] stdout, String stderr) {}
+    /** {@code stderr} is the captured stderr decoded as UTF-8; {@code stderrBytes} is the same output as bytes. */
+    record Run(int exitCode, byte[] stdout, String stderr, byte[] stderrBytes) {}
 
     /**
      * An empty {@code run} directory in {@code work}, holding a copy of the
@@ -144,7 +145,8 @@ final class NativeRunner {
             process.destroyForcibly();
             fail(command + " did not finish within " + RUN_TIMEOUT_SECONDS + " s");
         }
-        return new Run(process.exitValue(), Files.readAllBytes(out), Files.readString(err, StandardCharsets.UTF_8));
+        return new Run(process.exitValue(), Files.readAllBytes(out), Files.readString(err, StandardCharsets.UTF_8),
+                Files.readAllBytes(err));
     }
 
     private static Path sibling(Path source, String suffix) {

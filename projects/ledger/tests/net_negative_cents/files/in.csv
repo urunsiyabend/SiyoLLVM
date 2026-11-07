@@ -1,0 +1,4 @@
+date,account,category,amount,memo
+2024-02-02,a,b,-0.42,only a debit below one unit
+2024-02-03,c,d,0.58,credit
+2024-02-03,c,d,-0.58,debit cancelling it

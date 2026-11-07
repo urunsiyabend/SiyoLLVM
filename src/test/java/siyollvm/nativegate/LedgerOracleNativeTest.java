@@ -45,7 +45,8 @@ class LedgerOracleNativeTest {
         python = onPath("python3");
         assertNotNull(python, "python3 is required on PATH for the ledger oracle");
         assertTrue(Files.isRegularFile(ORACLE), "missing " + ORACLE);
-        work = Files.createDirectories(TestPaths.tempRoot().resolve("native").resolve("ledger-oracle"));
+        // A directory of its own per run, so concurrent or repeated runs never share files.
+        work = Files.createTempDirectory(Files.createDirectories(TestPaths.tempRoot().resolve("native")), "ledger-oracle-");
     }
 
     private static Path onPath(String name) {
@@ -81,7 +82,7 @@ class LedgerOracleNativeTest {
         Path argsFile = dir.resolve("args");
         List<String> args = Files.readAllLines(argsFile, StandardCharsets.UTF_8);
         byte[] expectedStdout = Files.readAllBytes(dir.resolve("expected.stdout"));
-        String expectedStderr = Files.readString(dir.resolve("expected.stderr"), StandardCharsets.UTF_8);
+        byte[] expectedStderr = Files.readAllBytes(dir.resolve("expected.stderr"));
         int expectedExit = Integer.parseInt(Files.readString(dir.resolve("expected.exit")).strip());
         Path expectedReport = dir.resolve("expected.report");
 
@@ -96,7 +97,7 @@ class LedgerOracleNativeTest {
 
         assertArrayEquals(expectedStdout, run.stdout(),
                 name + " stdout:\n" + new String(run.stdout(), StandardCharsets.UTF_8));
-        assertEquals(expectedStderr, run.stderr(), name + " stderr");
+        assertArrayEquals(expectedStderr, run.stderrBytes(), name + " stderr:\n" + run.stderr());
         assertEquals(expectedExit, run.exitCode(), name + " exit code; stderr: " + run.stderr());
         if (args.size() >= 2) {
             Path report = runDir.resolve(args.get(1));
@@ -104,6 +105,9 @@ class LedgerOracleNativeTest {
                 assertTrue(Files.isRegularFile(report), name + ": no report at " + report);
                 assertArrayEquals(Files.readAllBytes(expectedReport), Files.readAllBytes(report),
                         name + " report:\n" + Files.readString(report, StandardCharsets.UTF_8));
+            } else if (Files.isDirectory(dir.resolve("files").resolve(args.get(1)))) {
+                // The report path is a directory the case provides: it must still be one.
+                assertTrue(Files.isDirectory(report), name + ": report directory replaced at " + report);
             } else {
                 assertFalse(Files.exists(report), name + ": unexpected report at " + report);
             }

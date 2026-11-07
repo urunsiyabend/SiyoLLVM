@@ -1,0 +1,23 @@
+LEDGER REPORT
+source: in.csv
+rows: 3 accepted, 4 rejected, 7 total
+period: 2024-03-01 to 2024-03-03
+
+ACCOUNTS
+ACCOUNT  COUNT        CREDITS         DEBITS            NET
+acct         1           2.00           0.00           2.00
+bank         1           0.00          -0.42          -0.42
+ acct        1           1.00           0.00           1.00
+TOTAL        3           3.00          -0.42           2.58
+
+CATEGORIES
+CATEGORY  COUNT            NET
+　food　        1           2.00
+food          1           1.00
+rent          1          -0.42
+
+REJECTED
+line 6: invalid amount ' 1.00'
+line 7: invalid date ' 2024-03-05'
+line 8: empty account
+line 9: invalid date '😀😀😀😀-x'
