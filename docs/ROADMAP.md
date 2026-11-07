@@ -15,7 +15,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 | F3a | Arrays, `for … in`, `range`, `split`, `s[i]` | F2 | done | 1d0e5ae..2e5c8dd, pushed at 1abd7b0 | `docs/evidence/f3a-arrays/`; CI run 42336285628 green at 1abd7b0 |
 | F3b | Structs, `impl` methods, enums | F3a | done | ff55202..6c609fa, pushed at 175e760 | `docs/evidence/f3b-structs/`; CI run 42338248852 green at 175e760 |
 | F3c | Maps (insertion-ordered) | F3a | done | e8b52be..2018ca3, pushed at 552d5ba | `docs/evidence/f3c-maps/`; CI run 42340020516 green at 552d5ba |
-| F4 | User modules; native `std/io`, `std/os`, `std/strings` | F3a–c | in progress | | |
+| F4 | User modules; native `std/io`, `std/os`, `std/strings` | F3a–c | in progress (gates green at b0cce71; publishing) | edafc1a..b0cce71 | `docs/evidence/f4-modules/` |
 | F5 | `projects/ledger` application + independent oracles | F4 | planned | | |
 | — | float, sum types + match, lambdas, sets, GC | after milestone | planned | | |
 
