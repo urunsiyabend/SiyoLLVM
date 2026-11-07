@@ -79,13 +79,74 @@ class FrontendTest {
     }
 
     @Test
+    void implMethodsAreFunctionsInDeclarationOrderUnderTheirQualifiedNames() {
+        String source = "struct P { x: int }\nfn first() { }\n"
+                + "impl P {\n  fn get(self) -> int { return self.x }\n  fn new(x: int) -> P { return P { x: x } }\n}\n"
+                + "fn main() { println(P.new(1).get()) }";
+        FrontendResult result = Frontend.analyze("i.siyo", source);
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        LoweredProgram program = result.program();
+        List<String> names = program.functions().keySet().stream().map(FunctionSymbol::getName).toList();
+        assertEquals(List.of("first", "P.get", "P.new", "main"), names);
+        for (FunctionSymbol function : program.functions().keySet()) {
+            if (function.getName().equals("P.get")) {
+                assertEquals(source.indexOf("get(self)"), program.declarationOffsets().get(function));
+                assertEquals("self", function.getParameters().get(0).getName());
+            }
+        }
+    }
+
+    @Test
+    void implMethodDoesNotTakeTheDeclarationOfAFunctionWithItsBareName() {
+        // Same bare name and arity: each keeps its own declaration offset.
+        String source = "struct P { x: int }\nimpl P { fn sum(self) -> int { return self.x } }\n"
+                + "fn sum(p: P) -> int { return 2 }\nfn main() { println(sum(P { x: 1 })) }";
+        FrontendResult result = Frontend.analyze("i.siyo", source);
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        LoweredProgram program = result.program();
+        for (FunctionSymbol function : program.functions().keySet()) {
+            int offset = program.declarationOffsets().get(function);
+            switch (function.getName()) {
+                case "P.sum" -> assertEquals(source.indexOf("sum(self)"), offset);
+                case "sum" -> assertEquals(source.indexOf("sum(p: P)"), offset);
+                case "main" -> assertEquals(source.indexOf("main()"), offset);
+                default -> throw new AssertionError(function.getName());
+            }
+        }
+    }
+
+    @Test
+    void enumDeclarationBindsAndAnEnumTypeNameIsABindError() {
+        FrontendResult ok = Frontend.analyze("e.siyo", "enum C { A = 10, B }\nfn main() { println(C.B) }");
+        assertTrue(ok.diagnostics().isEmpty(), ok.diagnostics().toString());
+        assertNotNull(ok.program());
+        // The binder has no enum types: only members are values.
+        FrontendResult bad = Frontend.analyze("e.siyo", "enum C { A, B }\nfn f(c: C) { }\nfn main() { }");
+        assertNull(bad.program());
+        assertTrue(bad.diagnostics().stream().anyMatch(d -> d.message().contains("Type 'C' does not exist")),
+                bad.diagnostics().toString());
+        FrontendResult missing = Frontend.analyze("e.siyo", "enum C { A, B }\nfn main() { println(C.Z) }");
+        assertNull(missing.program());
+        assertTrue(missing.diagnostics().get(0).message().contains("'C.Z' does not exist"),
+                missing.diagnostics().toString());
+    }
+
+    @Test
+    void implOfAnUndeclaredInterfaceIsABindError() {
+        // Interface declarations are rejected before binding, so the interface never exists.
+        FrontendResult result = Frontend.analyze("i.siyo",
+                "struct P { x: int }\nimpl Named for P { fn name(self) -> string { return \"p\" } }\nfn main() { }");
+        assertNull(result.program());
+        assertTrue(result.diagnostics().get(0).message().contains("Type 'Named' does not exist"),
+                result.diagnostics().toString());
+    }
+
+    @Test
     void otherTypeDeclarationsAreStillRejectedBeforeBinding() {
         String[][] cases = {
                 {"interface Named { fn name() -> string }\nfn main() { }", "interface declarations are"},
                 {"type R = Good(int) | Stop\nfn main() { }", "type declarations are"},
                 {"actor Store { n: int }\nfn main() { }", "actors are"},
-                {"enum Color { Red, Green }\nfn main() { }", "enum declarations are"},
-                {"struct P { x: int }\nimpl P { fn get(self) -> int { return self.x } }\nfn main() { }", "impl blocks are"},
         };
         for (String[] c : cases) {
             FrontendResult result = Frontend.analyze("d.siyo", c[0]);

@@ -9,6 +9,7 @@ import codeanalysis.binding.BoundBlockStatement;
 import codeanalysis.binding.BoundGlobalScope;
 import codeanalysis.lowering.Lowerer;
 import codeanalysis.syntax.FunctionDeclarationSyntax;
+import codeanalysis.syntax.ImplDeclarationSyntax;
 import codeanalysis.syntax.SyntaxNode;
 import codeanalysis.syntax.SyntaxTree;
 import codeanalysis.syntax.SyntaxType;
@@ -17,18 +18,26 @@ import codeanalysis.text.SourceText;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Runs the SiyoCompiler frontend (snapshot) on one file: parse, bind, lower.
  *
  * <p>Binding is done exactly as {@code siyoc} binds a file (top-level
  * statements rejected). Imports and the type declarations SiyoLLVM does not
- * compile (all but structs) are rejected before binding, so the binder never
- * resolves modules from the filesystem or Java classes from the classpath.
+ * compile (all but structs, impl blocks and enums) are rejected before
+ * binding, so the binder never resolves modules from the filesystem or Java
+ * classes from the classpath.
+ *
+ * <p>An impl method is a function named {@code Type.method} whose first
+ * parameter is {@code self} when it has one. The binder lowers an impl
+ * method's body itself (a plain function's it leaves structured), so that
+ * body is used as it is rather than lowered a second time.
  */
 public final class Frontend {
     private Frontend() {}
@@ -52,7 +61,8 @@ public final class Frontend {
         if (!diagnostics.isEmpty()) return new FrontendResult(null, diagnostics);
 
         Map<String, Integer> declared = new HashMap<>();
-        findDeclarations(tree.getRoot(), declared);
+        Set<String> implMethods = new HashSet<>();
+        findDeclarations(tree.getRoot(), declared, implMethods);
         Map<FunctionSymbol, Integer> offsets = new HashMap<>();
         for (FunctionSymbol function : scope.getFunctionBodies().keySet()) {
             offsets.put(function, declarationOffset(function, declared));
@@ -61,7 +71,9 @@ public final class Frontend {
         bodies.sort(Comparator.comparingInt(e -> offsets.get(e.getKey())));
         LinkedHashMap<FunctionSymbol, BoundBlockStatement> functions = new LinkedHashMap<>();
         for (Map.Entry<FunctionSymbol, BoundBlockStatement> entry : bodies) {
-            functions.put(entry.getKey(), Lowerer.lower(entry.getValue()));
+            FunctionSymbol function = entry.getKey();
+            boolean lowered = function.getDeclarationSpan() == null && implMethods.contains(key(function));
+            functions.put(function, lowered ? entry.getValue() : Lowerer.lower(entry.getValue()));
         }
         BoundBlockStatement globals = Lowerer.lower(scope.getBoundStatement());
         return new FrontendResult(new LoweredProgram(file, text, globals, functions, offsets), List.of());
@@ -69,38 +81,60 @@ public final class Frontend {
 
     /**
      * Where a function is declared. The binder records a span only for nested
-     * functions; a top-level one is found by name and arity, which the binder
-     * keeps unique.
+     * functions; a top-level one or an impl method is found by its name
+     * ({@code Type.method} for a method) and arity, which the binder keeps
+     * unique.
      */
     private static int declarationOffset(FunctionSymbol function, Map<String, Integer> declared) {
         if (function.getDeclarationSpan() != null) return function.getDeclarationSpan().getStart();
-        return declared.getOrDefault(function.getName() + "/" + function.getParameters().size(), Integer.MAX_VALUE);
+        return declared.getOrDefault(key(function), Integer.MAX_VALUE);
     }
 
-    private static void findDeclarations(SyntaxNode node, Map<String, Integer> out) {
+    private static String key(FunctionSymbol function) {
+        return function.getName() + "/" + function.getParameters().size();
+    }
+
+    /**
+     * Records each function declaration's offset by name and arity, and the
+     * keys of impl methods in {@code implMethods}. A method is keyed by its
+     * qualified name, as the binder names it, so it never takes the place of
+     * a function with its bare name; its {@code self} counts towards the arity
+     * as it does in the binder's symbol.
+     */
+    private static void findDeclarations(SyntaxNode node, Map<String, Integer> out, Set<String> implMethods) {
+        if (node instanceof ImplDeclarationSyntax impl) {
+            for (FunctionDeclarationSyntax method : impl.getMethods()) {
+                String key = impl.getTypeName().getData() + "." + method.getIdentifier().getData()
+                        + "/" + method.getParameters().getCount();
+                out.putIfAbsent(key, method.getIdentifier().getSpan().getStart());
+                implMethods.add(key);
+                // Nested functions inside a method body.
+                findDeclarations(method.getBody(), out, implMethods);
+            }
+            return;
+        }
         if (node instanceof FunctionDeclarationSyntax declaration) {
             out.putIfAbsent(declaration.getIdentifier().getData() + "/" + declaration.getParameters().getCount(),
                     declaration.getIdentifier().getSpan().getStart());
         }
         for (Iterator<SyntaxNode> it = node.getChildren(); it.hasNext(); ) {
             SyntaxNode child = it.next();
-            if (child != null) findDeclarations(child, out);
+            if (child != null) findDeclarations(child, out, implMethods);
         }
     }
 
     /**
      * Declarations SiyoLLVM cannot compile, rejected from the syntax tree: an
      * import must not reach the binder, and these type declarations bind to
-     * no code the validator would see. A struct declaration binds too, to a
-     * placeholder statement; its uses are checked by the validator.
+     * no code the validator would see. Struct, impl and enum declarations bind
+     * too, to placeholder statements; their uses (and impl methods' bodies) are
+     * checked by the validator.
      */
     private static final Map<SyntaxType, String> UNSUPPORTED_DECLARATIONS = Map.of(
             SyntaxType.ImportStatement, "imports are",
             SyntaxType.JavaImportStatement, "imports are",
-            SyntaxType.EnumDeclaration, "enum declarations are",
             SyntaxType.TypeDeclaration, "type declarations are",
             SyntaxType.InterfaceDeclaration, "interface declarations are",
-            SyntaxType.ImplDeclaration, "impl blocks are",
             SyntaxType.ActorDeclaration, "actors are");
 
     private static void findUnsupportedDeclarations(SyntaxNode node, String file, SourceText text,

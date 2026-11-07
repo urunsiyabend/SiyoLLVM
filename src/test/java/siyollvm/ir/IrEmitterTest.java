@@ -459,6 +459,25 @@ class IrEmitterTest {
     }
 
     @Test
+    void implMethodIsAFunctionTakingSelfFirst() {
+        String ir = emit("struct P { x: int }\n"
+                + "impl P { fn add(self, d: int) -> int { return self.x + d } fn new(x: int) -> P { return P { x: x } } }\n"
+                + "fn main() { imut p = P.new(4) println(p.add(3)) }");
+        assertTrue(ir.contains("define internal i32 @siyo.fn.0(ptr %p0, i32 %p1)"), ir);
+        String main = function(ir, "@siyo.fn.2");
+        assertTrue(main.contains("call ptr @siyo.fn.1(i32 4)"), main);
+        assertTrue(Pattern.compile("call i32 @siyo\\.fn\\.0\\(ptr %[^,]+, i32 3\\)").matcher(main).find(), main);
+    }
+
+    @Test
+    void enumMemberIsAnIntConstant() {
+        String ir = emit("enum C { A = 10, B, D = -3 }\nfn main() { println(C.B) println(C.D) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(main.contains("@siyo_rt_print_int(i32 11)"), main);
+        assertTrue(main.contains("@siyo_rt_print_int(i32 -3)"), main);
+    }
+
+    @Test
     void onlyRaisingRuntimeCallsAreChecked() {
         String ir = emit("fn main() { mut s = \"abc\" println(s + substring(s, 0, 1)) println(parseInt(s)) }");
         String main = function(ir, "@siyo.fn.0");

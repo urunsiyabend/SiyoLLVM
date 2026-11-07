@@ -391,6 +391,43 @@ class SubsetValidatorTest {
         assertRejected(source, construct);
     }
 
+    // impl methods are user functions taking self first; enum members are int literals.
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            struct P { x: int } impl P { fn get(self) -> int { return self.x } } fn main() { println(P { x: 1 }.get()) }
+            struct P { x: int } impl P { fn new(x: int) -> P { return P { x: x } } fn twice(self) -> int { return self.get() * 2 } fn get(self) -> int { return self.x } } fn main() { println(P.new(2).twice()) }
+            struct P { x: int } impl P { fn down(self, k: int) -> int { if k <= 0 { return 0 } return self.down(k - 1) } } fn main() { imut ps = [P { x: 1 }] println(ps[0].down(3)) }
+            struct P { x: int } impl P { fn bad(self) { throw "no" } } fn main() { try { P { x: 1 }.bad() } catch e { println(e) } }
+            enum C { A = 10, B, D = -3 } fn main() { println(C.B) imut xs = [C.A, C.D] println(xs[0] == C.A) }
+            enum C { A, B } struct S { c: int } fn main() { mut c = C.A while c != C.B { c = c + 1 } println(S { c: C.B }) }
+            """)
+    void implMethodsAndEnumsAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', textBlock = """
+            struct P { x: int } impl P { fn f(self, d: float) { } } fn main() { println(1) }       | parameters of type float are
+            struct P { x: int } impl P { fn m(self) { mut a = {"a": 1} } } fn main() { println(1) } | maps are
+            """)
+    void unsupportedCodeInImplMethodsIsRejected(String source, String construct) {
+        assertRejected(source, construct);
+    }
+
+    /**
+     * The validator's "member access on values of type any" guard is not
+     * reachable from source: the binder already rejects member access on an
+     * any (and on every other non-struct type).
+     */
+    @Test
+    void memberAccessOnAnyIsABindError() {
+        FrontendResult result = Frontend.analyze("p.siyo",
+                "struct P { x: int } fn main() { imut a: any = P { x: 1 } println(a.x) }");
+        assertEquals(null, result.program());
+        assertTrue(result.diagnostics().get(0).message().contains("does not have members"),
+                result.diagnostics().toString());
+    }
+
     @Test
     void unsupportedCodeAfterReturnIsRejected() {
         assertRejected("fn f() -> int {\n  return 1\n  mut d = 2.5\n  return 2\n}\nfn main() { println(f()) }",

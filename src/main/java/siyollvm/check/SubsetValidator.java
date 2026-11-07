@@ -105,6 +105,11 @@ import java.util.Set;
  * accepted with fields of the value types, as is {@code typeName}. The binder
  * gives a field read the field's declared type when it can tell which struct
  * the target is, else {@code any}.
+ *
+ * <p>An impl method is a user function like any other (named
+ * {@code Type.method}, with {@code self} as its first parameter), so its
+ * signature and body are checked as above and a call to it is a user call.
+ * An enum member binds to an int literal and needs nothing of its own.
  */
 public final class SubsetValidator {
 
