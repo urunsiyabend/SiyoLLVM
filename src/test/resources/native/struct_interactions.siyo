@@ -1,0 +1,86 @@
+struct Point {
+    x: int,
+    y: int
+}
+
+struct Bag {
+    name: string,
+    items: int[],
+    pts: Point[]
+}
+
+enum Kind { A = -2, B, C = 7, D }
+
+impl Point {
+    fn new(x: int, y: int) -> Point {
+        return Point { y: y, x: x }
+    }
+    fn sum(self) -> int {
+        return self.x + self.y
+    }
+    fn shift(self, d: int) {
+        self.x += d
+    }
+    fn risky(self, limit: int) -> int {
+        self.x = self.x + 100
+        if self.x > limit {
+            throw "too big: " + self.x
+        }
+        self.y = 1
+        return self.x
+    }
+    fn helper(self) -> int {
+        fn sq(n: int) -> int {
+            return n * n
+        }
+        return sq(self.x) + sq(self.y)
+    }
+}
+
+fn makeOrigin() -> Point {
+    imut p = Point.new(3, 4)
+    println("init origin " + p.sum())
+    return p
+}
+
+mut origin: Point = makeOrigin()
+mut total: int = origin.sum() + Kind.D
+mut tag: string = "é\0ü"
+
+fn main() {
+    println("total " + total)
+    println(origin)
+    mut b = Bag { pts: [Point.new(1, 2), Point { x: 5, y: 6 }], name: tag + "/ß", items: [1, 2] }
+    println(b)
+    for q in b.pts {
+        q.shift(10)
+        println(q.sum() + " " + q.helper())
+    }
+    b.pts[0].x += 1
+    push(b.items, Kind.A)
+    println(b)
+    println(len(b.name))
+    mut p = b.pts[1]
+    imut r = try { p.risky(50) } catch e { -1 }
+    println(r)
+    println(p)
+    try {
+        p.risky(500)
+        println(p)
+        b.pts[0].risky(0)
+        println("unreached")
+    } catch e {
+        println("caught " + e)
+    }
+    println(b.pts)
+    try {
+        throw origin
+    } catch e: Point {
+        e.shift(1)
+        println(typeName(e) + " " + e.x)
+    }
+    println(origin)
+    mut a: any = b
+    println(a == b)
+    println(typeName(b.pts[0]) + "|" + typeName(b.items))
+}

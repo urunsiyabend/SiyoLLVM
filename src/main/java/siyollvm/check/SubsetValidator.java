@@ -174,7 +174,6 @@ public final class SubsetValidator {
             Map.entry(BoundNodeType.MapLiteralExpression, "maps are"),
             Map.entry(BoundNodeType.SetLiteralExpression, "sets are"),
             Map.entry(BoundNodeType.UnionLiteralExpression, "sum types are"),
-            Map.entry(BoundNodeType.JavaMethodCallExpression, "Java interop is"),
             Map.entry(BoundNodeType.JavaStaticFieldExpression, "Java interop is"),
             Map.entry(BoundNodeType.CastExpression, "casts are"),
             Map.entry(BoundNodeType.LambdaExpression, "lambdas are"),
@@ -571,6 +570,16 @@ public final class SubsetValidator {
     }
 
     private void reportNode(BoundNode node) {
+        if (node instanceof codeanalysis.binding.BoundJavaMethodCallExpression call && call.getTarget() != null
+                && (call.getTarget().getClassType() == SiyoStruct.class
+                || call.getTarget().getClassType() == Object.class)) {
+            report("method calls on a struct whose type the binder cannot tell are");
+            return;
+        }
+        if (node.getType() == BoundNodeType.JavaMethodCallExpression) {
+            report("Java interop is");
+            return;
+        }
         report(CONSTRUCTS.getOrDefault(node.getType(), node.getType() + " is"));
     }
 

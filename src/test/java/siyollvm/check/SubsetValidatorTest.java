@@ -466,4 +466,15 @@ class SubsetValidatorTest {
     void parameterisedMainIsRejected() {
         assertRejected("fn main(x: int) { println(x) }", "entry points with parameters are");
     }
+
+    @Test
+    void methodCallOnStructTheBinderCannotTellIsRejected() {
+        String decl = "struct Point { x: int }\nimpl Point {\n  fn new(x: int) -> Point { return Point { x: x } }\n"
+                + "  fn sum(self) -> int { return self.x }\n}\n";
+        assertRejected(decl + "fn mk() -> Point { return Point.new(1) }\n"
+                + "fn main() { mut q: Point = null\n q = mk()\n println(q.sum()) }",
+                "method calls on a struct whose type the binder cannot tell are");
+        assertRejected(decl + "fn main() { imut a: any = Point.new(1)\n mut q: Point = a\n println(q.sum()) }",
+                "method calls on a struct whose type the binder cannot tell are");
+    }
 }

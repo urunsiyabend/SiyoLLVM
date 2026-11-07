@@ -23,7 +23,7 @@ functions and recursion, `print`/`println`, string concatenation and
 interpolation, and the string builtins (`len`, `substring`, `indexOf`, … with
 Java's UTF-16 indexing). Arrays (`T[]`, literals, indexing with
 bounds errors, `push`/`pop`/`removeAt`/`len`), `for … in` over arrays, strings
-and `range(a, b)`, `split`, and string indexing `s[i]`. Exceptions: `throw`, `error()`, `try`/`catch`
+and `range(a, b)`, `split`, and string indexing `s[i]`. Structs (literals, fields, `impl` methods, `Type.new`) and enums. Exceptions: `throw`, `error()`, `try`/`catch`
 statements, and `try` expressions in the positions SUBSET.md lists; runtime
 errors (`/ by zero`, a failed cast, `parseLong` of bad input, an index out
 of range, …) are catchable, and an uncaught one prints the JVM's exception
