@@ -11,7 +11,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 |---|---|---|---|---|---|
 | F0 | Spec, roadmap, oracle script, PR for CI | — | done | 62218e8, 0d5903f | PR #1; CI run 42307548296 green at 0d5903f |
 | F1 | C runtime linked by clang; appendable WTF-8 strings; string builtins | F0 | done | 90f3129..8d9af60, pushed at 2774fc7 | `docs/evidence/f1-strings/`; CI run 42328908151 green at 2774fc7 |
-| F2 | `any` values; exceptions: try/catch/throw, catchable runtime errors | F1 | in progress (plan: docs/superpowers/plans/2026-11-07-f2-exceptions.md) | | |
+| F2 | `any` values; exceptions: try/catch/throw, try expressions, catchable runtime errors | F1 | in progress (gates green at 0c1c449; publishing) | de865b5..0c1c449 | `docs/evidence/f2-exceptions/` |
 | F3a | Arrays, `for … in`, `range`, `split` | F2 | planned | | |
 | F3b | Structs, `impl` methods, enums | F3a | planned | | |
 | F3c | Maps (insertion-ordered) | F3a | planned | | |
