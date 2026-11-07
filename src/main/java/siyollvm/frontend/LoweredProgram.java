@@ -9,6 +9,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A bound, lowered program: what the validator checks and the emitter compiles.
@@ -29,10 +30,12 @@ import java.util.Map;
  * @param units Every file, in initialisation order, the main file last.
  * @param unitOf The unit declaring each function (by identity).
  * @param moduleFunctions Each module's own functions by {@link #key(String, String, int)}.
+ * @param ambiguousFunctions Keys two of a module's functions share; a qualified call to one is rejected.
  * @param moduleVariables Each module's own globals by {@code className + "." + name}.
  */
 public record LoweredProgram(List<Unit> units, IdentityHashMap<FunctionSymbol, Unit> unitOf,
                              Map<String, FunctionSymbol> moduleFunctions,
+                             Set<String> ambiguousFunctions,
                              Map<String, VariableSymbol> moduleVariables) {
 
     /**
@@ -92,20 +95,38 @@ public record LoweredProgram(List<Unit> units, IdentityHashMap<FunctionSymbol, U
 
     /**
      * The function a call to {@code function} runs: itself when a unit
-     * declares it, the module's own symbol for an imported one, else null.
+     * declares it, the module's own symbol for an imported one, else null (a
+     * builtin).
+     *
+     * @throws IllegalStateException when {@code function} is a module's
+     *         symbol that does not map to exactly one of that module's functions
      */
     public FunctionSymbol target(FunctionSymbol function) {
         if (unitOf.containsKey(function)) return function;
         if (function.getModuleName() == null) return null;
         String jvmName = function.getJvmMethodName() != null
                 ? function.getJvmMethodName() : function.getName().replace('.', '$');
-        return moduleFunctions.get(key(function.getModuleName(), jvmName, function.getParameters().size()));
+        String key = key(function.getModuleName(), jvmName, function.getParameters().size());
+        FunctionSymbol own = moduleFunctions.get(key);
+        if (own == null || ambiguousFunctions.contains(key)) {
+            throw new IllegalStateException("SiyoLLVM cannot resolve " + function.getName() + " (" + key + ") to "
+                    + (own == null ? "a" : "exactly one") + " module function");
+        }
+        return own;
     }
 
-    /** The global a module variable {@code q.name} reads: the module's own; any other variable is itself. */
+    /**
+     * The global a variable reads: a module variable ({@code q.name}, or the
+     * module's own) maps to the module's own symbol; any other is itself.
+     *
+     * @throws IllegalStateException when a module variable names no known module global
+     */
     public VariableSymbol target(VariableSymbol variable) {
         if (variable.getOwnerClass() == null) return variable;
-        VariableSymbol own = moduleVariables.get(variable.getOwnerClass() + "." + variable.getFieldName());
-        return own != null ? own : variable;
+        String key = variable.getOwnerClass() + "." + variable.getFieldName();
+        VariableSymbol own = moduleVariables.get(key);
+        if (own == null) throw new IllegalStateException("SiyoLLVM cannot resolve " + variable.getName()
+                + " (" + key + ") to a module global");
+        return own;
     }
 }

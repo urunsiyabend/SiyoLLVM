@@ -72,4 +72,26 @@ class CliNativeTest {
         assertEquals("manuel\n", new String(program.stdout(), StandardCharsets.UTF_8));
         assertEquals(0, program.exitCode());
     }
+
+    @Test
+    void buildsAMultiFileProgramFromAnUnrelatedWorkingDirectory() throws Exception {
+        Path root = Files.createDirectories(TestPaths.tempRoot().resolve("cli-modules"));
+        Path project = Files.createDirectories(root.resolve("proj"));
+        Files.createDirectories(project.resolve("lib"));
+        Path elsewhere = Files.createDirectories(root.resolve("elsewhere"));
+        Files.writeString(project.resolve("lib/util.siyo"),
+                "mut calls = 0\nfn init() { println(\"util init\") }\nfn twice(x: int) -> int { calls = calls + 1\n x * 2 }\n");
+        Path source = root.resolve("proj/main.siyo");
+        Files.writeString(source, "import \"lib/util\"\nfn main() { println(util.twice(21))\n println(util.calls) }\n");
+        Path exe = root.resolve("modules-program");
+
+        // Relative to the working directory, which is neither the project nor its parent.
+        NativeRunner.Run compile = NativeRunner.run(siyollvm("build", "../proj/main.siyo", "-o", exe.toString(),
+                "--clang", clang.executable().toString()), elsewhere, Map.of());
+        assertEquals(0, compile.exitCode(), compile.stderr());
+
+        NativeRunner.Run program = NativeRunner.run(List.of(exe.toString()), elsewhere, Map.of());
+        assertEquals("util init\n42\n1\n", new String(program.stdout(), StandardCharsets.UTF_8));
+        assertEquals(0, program.exitCode());
+    }
 }

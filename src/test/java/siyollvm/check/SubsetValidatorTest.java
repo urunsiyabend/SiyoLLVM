@@ -529,4 +529,22 @@ class SubsetValidatorTest {
         assertEquals(1, diagnostics.size(), diagnostics.toString());
         assertEquals("m.siyo(3, 11): [llvm] float values are not supported by SiyoLLVM", diagnostics.get(0).format());
     }
+
+    @Test
+    void aQualifiedSymbolThatNamesNoSingleModuleMemberIsRejected(@TempDir java.nio.file.Path dir) throws Exception {
+        // Every program the binder accepts resolves; this is the safety net
+        // for a key that maps to no module member, or to two.
+        java.nio.file.Files.writeString(dir.resolve("m.siyo"), "mut tag = 1\nfn ok(x: int) -> int { x }\n");
+        java.nio.file.Path main = dir.resolve("main.siyo");
+        java.nio.file.Files.writeString(main, "import \"m\"\nfn main() {\n  println(m.ok(1))\n  println(m.tag)\n}\n");
+        siyollvm.frontend.LoweredProgram p = Frontend.analyze("main.siyo", main,
+                java.nio.file.Files.readString(main)).program();
+        siyollvm.frontend.LoweredProgram ambiguous = new siyollvm.frontend.LoweredProgram(p.units(), p.unitOf(),
+                p.moduleFunctions(), java.util.Set.copyOf(p.moduleFunctions().keySet()), java.util.Map.of());
+        List<String> diagnostics = SubsetValidator.validate(ambiguous).stream().map(SourceDiagnostic::format).toList();
+        assertEquals(List.of(
+                "main.siyo(3, 11): [llvm] calls to m.ok, which names no single module function, are not supported by SiyoLLVM",
+                "main.siyo(4, 11): [llvm] m.tag, which names no module global, is not supported by SiyoLLVM"),
+                diagnostics);
+    }
 }

@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FrontendTest {
@@ -89,6 +90,113 @@ class FrontendTest {
         assertNull(result.program());
         SourceDiagnostic d = result.diagnostics().get(0);
         assertEquals("shapes.siyo(1, 1): [llvm] type declarations are not supported by SiyoLLVM", d.format());
+    }
+
+    @Test
+    void twoFilesWithTheSameModuleClassNameAreRejected(@TempDir Path dir) throws Exception {
+        // siyoc names both Util (after the import string), so one's functions
+        // and the other's globals would be mixed.
+        write(dir, "util.siyo", "mut tag = \"top\"\nfn who() -> string { \"top\" }\n");
+        write(dir, "lib/util.siyo", "mut tag = \"lib\"\nfn who() -> string { \"lib\" }\n");
+        write(dir, "lib/b.siyo", "import \"util\"\nfn via() -> string { util.who() + util.tag }\n");
+        Path main = write(dir, "main.siyo",
+                "import \"util\"\nimport \"lib/b\"\nfn main() { println(util.who() + util.tag + b.via()) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertNull(result.program());
+        assertEquals(List.of("lib/b.siyo(1, 8): [llvm] two modules named Util (util.siyo, lib/util.siyo) are"
+                        + " not supported by SiyoLLVM"),
+                result.diagnostics().stream().map(SourceDiagnostic::format).toList());
+    }
+
+    @Test
+    void oneFileImportedUnderTwoClassNamesIsRejected(@TempDir Path dir) throws Exception {
+        write(dir, "lib/util.siyo", "mut tag = \"lib\"\nfn who() -> string { \"lib\" }\n");
+        write(dir, "lib/b.siyo", "import \"util\"\nfn via() -> string { util.who() + util.tag }\n");
+        Path main = write(dir, "main.siyo",
+                "import \"lib/util\"\nimport \"lib/b\"\nfn main() { println(util.who() + b.via()) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertNull(result.program());
+        assertEquals(List.of("lib/b.siyo(1, 8): [llvm] the module lib/util.siyo imported under two names"
+                        + " (Lib_Util, Util) is not supported by SiyoLLVM"),
+                result.diagnostics().stream().map(SourceDiagnostic::format).toList());
+    }
+
+    @Test
+    void oneFileImportedUnderTwoSpellingsOfOneNameMapsToIt(@TempDir Path dir) throws Exception {
+        write(dir, "util.siyo", "mut tag = \"top\"\nfn who() -> string { \"top\" }\n");
+        write(dir, "b.siyo", "import \"./util\"\nfn via() -> string { util.who() + util.tag }\n");
+        Path main = write(dir, "main.siyo",
+                "import \"util\"\nimport \"b\"\nfn main() { println(util.who() + b.via()) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        LoweredProgram program = result.program();
+        assertEquals(List.of("util.siyo", "b.siyo", "main.siyo"),
+                program.units().stream().map(LoweredProgram.Unit::file).toList());
+        FunctionSymbol who = program.units().get(0).functions().keySet().iterator().next();
+        FunctionSymbol imported = new FunctionSymbol("util.who", who.getParameters(), who.getReturnType(), "Util");
+        imported.setJvmMethodName("who");
+        assertTrue(program.target(imported) == who);
+    }
+
+    @Test
+    void anImportTheBinderDroppedSilentlyIsReported(@TempDir Path dir) throws Exception {
+        // siyoc resolves x.siyo, fails to read the directory and reports nothing.
+        Files.createDirectories(dir.resolve("x.siyo"));
+        Path main = write(dir, "main.siyo", "import \"x\"\nfn main() { println(\"ran\") }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertNull(result.program());
+        assertEquals(List.of("main.siyo(1, 8): [llvm] module 'x' could not be compiled (x.siyo)"),
+                result.diagnostics().stream().map(SourceDiagnostic::format).toList());
+
+        // Using it is the binder's error, after the import's.
+        Path using = write(dir, "using.siyo", "import \"x\"\nfn main() { println(x.f()) }\n");
+        FrontendResult used = Frontend.analyze("using.siyo", using, Files.readString(using));
+        assertNull(used.program());
+        assertEquals("using.siyo(1, 8): [llvm] module 'x' could not be compiled (x.siyo)",
+                used.diagnostics().get(0).format());
+        assertEquals(2, used.diagnostics().size(), used.diagnostics().toString());
+    }
+
+    @Test
+    void anUnknownQualifiedSymbolFailsLoudly(@TempDir Path dir) throws Exception {
+        write(dir, "util.siyo", "fn who() -> string { \"top\" }\n");
+        Path main = write(dir, "main.siyo", "import \"util\"\nfn main() { println(util.who()) }\n");
+        LoweredProgram program = Frontend.analyze("main.siyo", main, Files.readString(main)).program();
+        FunctionSymbol who = program.units().get(0).functions().keySet().iterator().next();
+        FunctionSymbol stray = new FunctionSymbol("other.who", who.getParameters(), who.getReturnType(), "Other");
+        stray.setJvmMethodName("who");
+        assertThrows(IllegalStateException.class, () -> program.target(stray));
+        codeanalysis.VariableSymbol strayVariable = new codeanalysis.VariableSymbol("other.tag", false, String.class);
+        strayVariable.setOwner("Other", "tag");
+        assertThrows(IllegalStateException.class, () -> program.target(strayVariable));
+    }
+
+    @Test
+    void nestedFunctionsOfOneNameInAModuleHaveDistinctKeys(@TempDir Path dir) throws Exception {
+        // The binder names each nested function uniquely, so no key is
+        // ambiguous; one that were would not resolve (SubsetValidatorTest).
+        write(dir, "shapes.siyo", "fn n1(x: int) -> int {\n  fn inner(y: int) -> int { y * 10 }\n  return inner(x)\n}\n"
+                + "fn n2(x: int) -> int {\n  fn inner(y: int) -> int { y * 100 }\n  return inner(x)\n}\n");
+        Path main = write(dir, "main.siyo", "import \"shapes\"\nfn main() { println(shapes.n1(1) + shapes.n2(2)) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        LoweredProgram program = result.program();
+        assertTrue(program.ambiguousFunctions().isEmpty(), program.ambiguousFunctions().toString());
+        assertEquals(4, program.units().get(0).functions().size());
+        for (FunctionSymbol function : program.units().get(0).functions().keySet()) {
+            assertTrue(program.target(function) == function, function.getName());
+        }
+    }
+
+    @Test
+    void aModuleSyntaxErrorIsReportedOnce(@TempDir Path dir) throws Exception {
+        write(dir, "bad.siyo", "fn f( -> int { 1 }\n");
+        Path main = write(dir, "main.siyo", "import \"bad\"\nfn main() { println(\"ran\") }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, Files.readString(main));
+        assertNull(result.program());
+        assertFalse(result.diagnostics().isEmpty());
+        assertEquals(result.diagnostics().size(), new java.util.HashSet<>(result.diagnostics()).size(),
+                result.diagnostics().toString());
     }
 
     private static Path write(Path dir, String name, String text) throws Exception {

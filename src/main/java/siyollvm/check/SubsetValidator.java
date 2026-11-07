@@ -2,6 +2,7 @@ package siyollvm.check;
 
 import codeanalysis.BuiltinFunctions;
 import codeanalysis.FunctionSymbol;
+import codeanalysis.VariableSymbol;
 import codeanalysis.ParameterSymbol;
 import codeanalysis.SiyoArray;
 import codeanalysis.SiyoMap;
@@ -334,9 +335,12 @@ public final class SubsetValidator {
         _emptyStack = false;
         switch (expression) {
             case BoundLiteralExpression literal -> validateLiteral(literal);
-            case BoundVariableExpression variable -> requireValueType(variable.getVariable().getType(), "variables");
+            case BoundVariableExpression variable -> {
+                if (resolves(variable.getVariable())) requireValueType(variable.getVariable().getType(), "variables");
+            }
             case BoundAssignmentExpression assignment -> {
                 _emptyStack = emptyStack;
+                if (!resolves(assignment.getVariable())) break;
                 if (validatesCleanly(assignment.getExpression())
                         && requireValueType(assignment.getVariable().getType(), "variables")) {
                     // The JVM backend stores the primitive unboxed, which fails verification.
@@ -519,10 +523,17 @@ public final class SubsetValidator {
     private void validateCall(BoundCallExpression call, boolean emptyStack) {
         FunctionSymbol function = call.getFunction();
         boolean builtinPrint = function == BuiltinFunctions.PRINT || function == BuiltinFunctions.PRINTLN;
+        FunctionSymbol target;
+        try {
+            target = _program.target(function);
+        } catch (IllegalStateException e) {
+            report("calls to " + function.getName() + ", which names no single module function, are");
+            return;
+        }
         // A user function's or toString's first argument is the first thing the
         // JVM backend pushes; print and println push System.out before theirs.
         boolean firstOnEmptyStack = emptyStack
-                && (function == BuiltinFunctions.TO_STRING || _program.target(function) != null);
+                && (function == BuiltinFunctions.TO_STRING || target != null);
         if (function == BuiltinFunctions.TO_STRING) {
             _emptyStack = firstOnEmptyStack;
             for (BoundExpression argument : call.getArguments()) {
@@ -583,7 +594,7 @@ public final class SubsetValidator {
             report(FOR_IN_HELPERS.get(function));
             return;
         }
-        if (!builtinPrint && !STRING_BUILTINS.contains(function) && _program.target(function) == null) {
+        if (!builtinPrint && !STRING_BUILTINS.contains(function) && target == null) {
             report("the builtin " + function.getName() + "() is");
             return;
         }
@@ -663,6 +674,17 @@ public final class SubsetValidator {
             return;
         }
         report(CONSTRUCTS.getOrDefault(node.getType(), node.getType() + " is"));
+    }
+
+    /** Whether a module variable names a known module global; reports it when not. */
+    private boolean resolves(VariableSymbol variable) {
+        try {
+            _program.target(variable);
+            return true;
+        } catch (IllegalStateException e) {
+            report(variable.getName() + ", which names no module global, is");
+            return false;
+        }
     }
 
     private void report(String constructIsOrAre) {

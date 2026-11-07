@@ -12,6 +12,7 @@ import codeanalysis.binding.BoundGlobalScope;
 import codeanalysis.lowering.Lowerer;
 import codeanalysis.syntax.FunctionDeclarationSyntax;
 import codeanalysis.syntax.ImplDeclarationSyntax;
+import codeanalysis.syntax.ImportStatementSyntax;
 import codeanalysis.syntax.SyntaxNode;
 import codeanalysis.syntax.SyntaxTree;
 import codeanalysis.syntax.SyntaxType;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -82,11 +84,23 @@ public final class Frontend {
         ModuleRegistry registry = new ModuleRegistry();
         BoundGlobalScope scope = Binder.bindGlobalScope(null, tree.getRoot(), registry, absolute.toString(), true);
         diagnostics = convert(file, text, scope.getDiagnostics(), absolute);
-        if (!diagnostics.isEmpty()) return new FrontendResult(null, diagnostics);
+        if (!diagnostics.isEmpty()) {
+            // A module the binder dropped silently explains what follows from it.
+            List<SourceDiagnostic> dropped = new ArrayList<>();
+            Set<String> diagnosed = new HashSet<>();
+            for (SourceDiagnostic d : diagnostics) diagnosed.add(d.file());
+            new Imports(registry, absolute, diagnosed).check(tree.getRoot(), absolute.toString(), file, text, dropped);
+            dropped.addAll(diagnostics);
+            return new FrontendResult(null, dedupe(dropped));
+        }
 
         List<LoweredProgram.Unit> units = new ArrayList<>();
         Map<String, FunctionSymbol> moduleFunctions = new HashMap<>();
+        Set<String> ambiguousFunctions = new HashSet<>();
         Map<String, VariableSymbol> moduleVariables = new HashMap<>();
+        // The main file's imports first: the binder reaches them first.
+        Imports imports = new Imports(registry, absolute, null);
+        imports.check(tree.getRoot(), absolute.toString(), file, text, diagnostics);
         for (ModuleSymbol module : registry.getAllModules()) {
             String display = displayName(absolute, module.getFilePath());
             String moduleSource;
@@ -98,20 +112,26 @@ public final class Frontend {
             }
             SyntaxTree moduleTree = SyntaxTree.parse(moduleSource);
             findUnsupportedDeclarations(moduleTree.getRoot(), display, moduleTree.getText(), diagnostics);
+            imports.check(moduleTree.getRoot(), module.getFilePath(), display, moduleTree.getText(), diagnostics);
             BoundBlockStatement topLevel = module.getTopLevelBlock() != null
                     ? module.getTopLevelBlock() : new BoundBlockStatement(new ArrayList<>());
             LoweredProgram.Unit unit = unit(display, moduleTree, module.getFunctionBodies(), topLevel,
                     module.initFunction());
             units.add(unit);
             for (FunctionSymbol function : unit.functions().keySet()) {
-                moduleFunctions.putIfAbsent(LoweredProgram.key(module.getClassName(),
-                        function.getName().replace('.', '$'), function.getParameters().size()), function);
+                // Two functions under one key (nested functions of the same
+                // name and arity) are ambiguous to an importer: a qualified
+                // call to that key is rejected rather than bound to either.
+                String key = LoweredProgram.key(module.getClassName(),
+                        function.getName().replace('.', '$'), function.getParameters().size());
+                FunctionSymbol previous = moduleFunctions.putIfAbsent(key, function);
+                if (previous != null && previous != function) ambiguousFunctions.add(key);
             }
             for (var entry : module.getVariables().entrySet()) {
                 moduleVariables.put(module.getClassName() + "." + entry.getKey(), entry.getValue());
             }
         }
-        if (!diagnostics.isEmpty()) return new FrontendResult(null, diagnostics);
+        if (!diagnostics.isEmpty()) return new FrontendResult(null, dedupe(diagnostics));
 
         // The main file's own functions; an imported symbol's body is its module's.
         Map<FunctionSymbol, BoundBlockStatement> own = new HashMap<>();
@@ -128,7 +148,8 @@ public final class Frontend {
         for (LoweredProgram.Unit unit : units) {
             for (FunctionSymbol function : unit.functions().keySet()) unitOf.put(function, unit);
         }
-        return new FrontendResult(new LoweredProgram(List.copyOf(units), unitOf, moduleFunctions, moduleVariables),
+        return new FrontendResult(new LoweredProgram(List.copyOf(units), unitOf, moduleFunctions,
+                Set.copyOf(ambiguousFunctions), moduleVariables),
                 List.of());
     }
 
@@ -252,6 +273,105 @@ public final class Frontend {
                     ? SourceDiagnostic.at(displayName(main, source), d.getSourceText(), d.getSpan().getStart(), d.toString())
                     : SourceDiagnostic.at(file, text, d.getSpan().getStart(), d.toString()));
         }
-        return result;
+        return dedupe(result);
+    }
+
+    /** Drops repeated identical diagnostics (a module's errors can reach the box more than once). */
+    private static List<SourceDiagnostic> dedupe(List<SourceDiagnostic> diagnostics) {
+        return new ArrayList<>(new LinkedHashSet<>(diagnostics));
+    }
+
+    /**
+     * Checks every {@code import} against what the binder registered.
+     *
+     * <p>The binder can give up on a module without a diagnostic (siyoc's
+     * {@code compileModule} swallows an exception, say when the path is a
+     * directory), so an import that resolves to no registered module is
+     * reported here. And siyoc names a module's JVM class after the import
+     * string, not the file: {@code import "util"} beside two different files
+     * names both {@code Util}, and one file imported as {@code "lib/util"} and
+     * as {@code "util"} gets two class names. Qualified symbols are matched
+     * to a module by that class name, so either case is rejected.
+     */
+    private static final class Imports {
+        private final ModuleRegistry registry;
+        private final Path main;
+        private final Map<String, Path> fileOfClass = new HashMap<>();
+        private final Map<Path, String> classOfFile = new HashMap<>();
+        /** After a failed bind: the files the binder reported on; only silent failures are added then. */
+        private final Set<String> diagnosed;
+
+        Imports(ModuleRegistry registry, Path main, Set<String> diagnosed) {
+            this.registry = registry;
+            this.main = main;
+            this.diagnosed = diagnosed;
+        }
+
+        void check(SyntaxNode node, String importer, String display, SourceText text, List<SourceDiagnostic> out) {
+            if (node instanceof ImportStatementSyntax syntax) {
+                checkImport(syntax, importer, display, text, out);
+                return;
+            }
+            for (Iterator<SyntaxNode> it = node.getChildren(); it.hasNext(); ) {
+                SyntaxNode child = it.next();
+                if (child != null) check(child, importer, display, text, out);
+            }
+        }
+
+        private void checkImport(ImportStatementSyntax syntax, String importer, String display, SourceText text,
+                                 List<SourceDiagnostic> out) {
+            String moduleName = moduleName(syntax);
+            if (moduleName == null) return;
+            int offset = syntax.getModuleName().getSpan().getStart();
+            var handler = new Binder(null).getModuleHandler();
+            handler.setFilePath(importer);
+            String resolved = handler.resolveModulePath(moduleName);
+            if (diagnosed != null && (resolved == null || diagnosed.contains(displayName(main, resolved)))) return;
+            if (resolved == null || !registry.isCompiled(resolved)) {
+                out.add(SourceDiagnostic.at(display, text, offset, SourceDiagnostic.UNSUPPORTED_PREFIX
+                        + "module '" + moduleName + "' could not be compiled"
+                        + (resolved == null ? "" : " (" + displayName(main, resolved) + ")")));
+                return;
+            }
+            Path path = Path.of(resolved).toAbsolutePath().normalize();
+            String className = moduleClassName(moduleName);
+            Path other = fileOfClass.putIfAbsent(className, path);
+            if (other != null && !other.equals(path)) {
+                out.add(SourceDiagnostic.unsupported(display, text, offset, "two modules named " + className
+                        + " (" + displayName(main, other.toString()) + ", " + displayName(main, resolved) + ") are"));
+                return;
+            }
+            String otherClass = classOfFile.putIfAbsent(path, className);
+            if (otherClass != null && !otherClass.equals(className)) {
+                out.add(SourceDiagnostic.unsupported(display, text, offset, "the module "
+                        + displayName(main, resolved) + " imported under two names (" + otherClass + ", "
+                        + className + ") is"));
+            }
+        }
+
+        /** The module path as the binder reads it from the import. */
+        private static String moduleName(ImportStatementSyntax syntax) {
+            String moduleName = (String) syntax.getModuleName().getValue();
+            if (moduleName == null) {
+                moduleName = syntax.getModuleName().getData();
+                if (moduleName != null && moduleName.startsWith("\"")) {
+                    moduleName = moduleName.substring(1, moduleName.length() - 1);
+                }
+            }
+            return moduleName;
+        }
+
+        /** siyoc's {@code ModuleHandler.moduleClassName} (package-private there). */
+        static String moduleClassName(String moduleName) {
+            boolean isStd = moduleName.startsWith("std/") || moduleName.startsWith("std.");
+            StringBuilder name = new StringBuilder(isStd ? "Siyo" : "");
+            for (String segment : moduleName.split("[/.]")) {
+                if (segment.isEmpty()) continue;
+                if (isStd && segment.equals("std")) continue;
+                if (name.length() > 0) name.append('_');
+                name.append(Character.toUpperCase(segment.charAt(0))).append(segment.substring(1));
+            }
+            return name.toString();
+        }
     }
 }
