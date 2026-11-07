@@ -74,10 +74,10 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Next step (2026-11-07, after F4 publish at 242c7ac): F5 `projects/ledger` — plan
-  `docs/superpowers/plans/2026-11-07-f5-ledger.md`, then SDD. Known F5 hazards: cross-module array
-  returns have `any` elements (bind to `string` first); avoid a function named `fields`; maps use
-  method forms `m.has(k)`, `m.keys()`.
+- Next step (2026-11-07, F5 in progress): ledger app (134bd0d, reviewed) and independent Python
+  oracle (c6ceebe, 16/16 agreement) are local. Remaining: Task 2 review, Task 3 (fixture-gap fix wave,
+  large-input measurement, fresh-clone gates, docs incl. remaining limitations, whole-feature review,
+  final gates, publish, CI). Ledger: `.superpowers/sdd/2026-11-07-f5-ledger/progress.md`.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
