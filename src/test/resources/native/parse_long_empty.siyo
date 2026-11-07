@@ -1,0 +1,5 @@
+// parseLong("") is uncaught: Java's NumberFormatException message for the empty string.
+fn main() {
+    println("before")
+    println(parseLong(""))
+}

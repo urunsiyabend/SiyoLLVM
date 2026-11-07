@@ -296,10 +296,17 @@ static int32_t siyo_rt_next_unit(SiyoUnits *it) {
     return (int32_t)siyo_rt_high_of(cp);
 }
 
+/* Scratch memory the caller releases with free(); unlike siyo_rt_alloc's. */
+static void *siyo_rt_scratch(size_t size) {
+    void *p = malloc(size == 0 ? 1 : size);
+    if (p == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+    return p;
+}
+
 /* s's UTF-16 units in a temporary array the caller frees; *count gets their number. */
 static uint16_t *siyo_rt_to_units(const SiyoStr *s, int64_t *count) {
     int64_t n = siyo_rt_str_utf16_len(s);
-    uint16_t *units = siyo_rt_alloc((size_t)n * sizeof(uint16_t));
+    uint16_t *units = siyo_rt_scratch((size_t)n * sizeof(uint16_t));
     SiyoUnits it = siyo_rt_units_from(s, 0);
     for (int64_t i = 0; i < n; i++) units[i] = (uint16_t)siyo_rt_next_unit(&it);
     *count = n;
@@ -505,7 +512,7 @@ SiyoStr *siyo_rt_str_replace(const SiyoStr *s, const SiyoStr *target, const Siyo
     uint16_t *with = siyo_rt_to_units(replacement, &r);
     int64_t total = n + matches * (r - m);
     if (total > INT32_MAX) siyo_rt_fail("java.lang.OutOfMemoryError\n");
-    uint16_t *out = siyo_rt_alloc((size_t)total * sizeof(uint16_t));
+    uint16_t *out = siyo_rt_scratch((size_t)total * sizeof(uint16_t));
     int64_t k = 0;
     if (m == 0) {
         for (int64_t i = 0; i <= n; i++) {

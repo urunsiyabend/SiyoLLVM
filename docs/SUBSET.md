@@ -93,8 +93,9 @@ array); `main`/`init` with parameters or a return value.
 - `toInt(long)` keeps the low 32 bits; `toLong(int)` widens.
 - `toUpper`/`toLower` map each code point with glibc's `towupper`/`towlower`
   in the `C.UTF-8` locale (whatever the program's locale), plus Java's
-  `ß` → `SS` and `İ` → `i̇`. If `C.UTF-8` cannot be loaded only ASCII
-  letters change.
+  `ß` → `SS` and `İ` → `i̇`. If `C.UTF-8` cannot be loaded, the
+  `towupper`/`towlower` mapping covers only ASCII letters; `ß` and `İ` still
+  map as above.
 - A null string (a global read before its initialiser) passed to a string
   builtin or ordered with `<` etc. raises `java.lang.NullPointerException`.
 

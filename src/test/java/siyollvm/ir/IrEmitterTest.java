@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("unchecked")
 class IrEmitterTest {
 
     static String emit(String source) {
@@ -227,6 +228,31 @@ class IrEmitterTest {
     void refusesNodesItDoesNotKnow() {
         FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut a = [1] }");
         assertThrows(IllegalStateException.class, () -> IrEmitter.emit(result.program()));
+    }
+
+    /**
+     * No valid source reaches text() with a non-string reference type (the
+     * binder rejects {@code "a" + [1]} and the emitter refuses the array
+     * literal first), so this calls the private method by reflection with a
+     * value of an unsupported type to pin its contract: refuse, naming the type.
+     */
+    @Test
+    void refusesToConvertNonStringReferenceTypesToText() throws Exception {
+        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { }");
+        java.lang.reflect.Constructor<IrEmitter> ctor = IrEmitter.class.getDeclaredConstructors().length == 1
+                ? (java.lang.reflect.Constructor<IrEmitter>) IrEmitter.class.getDeclaredConstructors()[0] : null;
+        ctor.setAccessible(true);
+        IrEmitter emitter = ctor.newInstance(result.program());
+        Class<?> valueClass = Class.forName("siyollvm.ir.IrEmitter$Value");
+        java.lang.reflect.Constructor<?> valueCtor = valueClass.getDeclaredConstructor(String.class, Class.class);
+        valueCtor.setAccessible(true);
+        Object value = valueCtor.newInstance("%v", Object[].class);
+        java.lang.reflect.Method text = IrEmitter.class.getDeclaredMethod("text", valueClass);
+        text.setAccessible(true);
+        java.lang.reflect.InvocationTargetException e =
+                assertThrows(java.lang.reflect.InvocationTargetException.class, () -> text.invoke(emitter, value));
+        assertTrue(e.getCause() instanceof IllegalStateException, String.valueOf(e.getCause()));
+        assertTrue(e.getCause().getMessage().contains("conversion of " + Object[].class), e.getCause().getMessage());
     }
 
     private static int count(String haystack, String needle) {
