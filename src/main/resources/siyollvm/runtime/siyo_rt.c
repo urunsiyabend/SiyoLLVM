@@ -1396,13 +1396,21 @@ _Noreturn void siyo_rt_stack_overflow(void) {
  * freed explicitly: a collection frees what is no longer reachable. Objects
  * never move, so every pointer the IR and the runtime hold stays valid.
  *
- * Heap. Small blocks (up to 2 KiB) come from 64 KiB pages aligned to 64 KiB,
- * one size class per page; a larger block is a mapping of its own, aligned to
- * 64 KiB. A page table (open addressing, keyed by address >> 16) maps every
- * 64 KiB a page or large block spans to its descriptor, so any address,
- * interior ones included, resolves to its block or to nothing. Descriptors,
- * the page table and the mark stack are malloc'd and never scanned; blocks
- * are zeroed when handed out.
+ * Heap. Small blocks (up to 2 KiB, so requests up to 2047 bytes) come from
+ * 64 KiB pages aligned to 64 KiB, one size class per page; a larger block is a
+ * mapping of its own, aligned to 64 KiB. A page table (open addressing, keyed
+ * by address >> 16) maps every 64 KiB a page or large block spans to its
+ * descriptor, so any address, interior ones included, resolves to its block
+ * or to nothing.
+ *
+ * Invariant: every block has at least one byte of slack past the requested
+ * size. A request for n bytes takes the smallest class of at least n + 1
+ * bytes, or a large block of round8(n + 1) bytes, so the one-past-the-end
+ * pointer start + n (which the IR or C code may hold as a loop bound) still
+ * resolves to the same block and keeps it alive, never to the next block.
+ *
+ * Descriptors, the page table and the mark stack are malloc'd and never
+ * scanned; blocks are zeroed when handed out.
  *
  * Roots, scanned conservatively (any aligned word that resolves to an
  * allocated block keeps it): the program thread's stack from the collector's
@@ -1448,7 +1456,7 @@ static const uint32_t siyo_gc_class_sizes[SIYO_GC_CLASSES] = {
 typedef struct SiyoGcPage {
     uintptr_t base;          /* 64 KiB aligned */
     size_t span;             /* bytes mapped at base */
-    size_t block_size;       /* a small page's class size; a large block's size, rounded to a word */
+    size_t block_size;       /* a small page's class size; a large block's request + 1, rounded to a word */
     int32_t size_class;      /* index into siyo_gc_class_sizes, SIYO_GC_LARGE or SIYO_GC_POOLED */
     uint32_t block_count;    /* blocks in the page (1 for a large block) */
     uint32_t bump;           /* blocks below this index have been handed out at least once */
@@ -1645,8 +1653,10 @@ static void *siyo_gc_alloc_small(int32_t c, uint8_t kind) {
     return block;
 }
 
-static void *siyo_gc_alloc_large(size_t size, uint8_t kind) {
-    size_t bytes = (size + 7) & ~(size_t)7;
+/* A large block for a request of size bytes, with the slack byte (see above);
+   *span_out is the bytes mapped for it. */
+static void *siyo_gc_alloc_large(size_t size, uint8_t kind, size_t *span_out) {
+    size_t bytes = (size + 1 + 7) & ~(size_t)7;
     size_t span = (bytes + 4095) & ~(size_t)4095;
     SiyoGcPage *page = malloc(sizeof(SiyoGcPage) + 1);
     if (page == NULL) siyo_gc_out_of_memory();
@@ -1661,6 +1671,7 @@ static void *siyo_gc_alloc_large(size_t size, uint8_t kind) {
     page->next = NULL;
     page->state[0] = (uint8_t)(SIYO_GC_ALLOCATED | kind);
     siyo_gc_register(page);
+    *span_out = span;
     return (void *)page->base;
 }
 
@@ -1721,8 +1732,11 @@ static void siyo_gc_drain(void) {
     }
 }
 
-/* Marks from every root. Its frame lies below the collector's, which holds
-   the spilled registers, so scanning from here up covers them. */
+/* Marks from every root: the jmp_buf of registers (also inside the stack
+   range scanned next, since it lives in siyo_gc_collect's frame above this
+   one; scanned on its own as well, which costs nothing and does not depend on
+   that frame layout), the stack from this frame up, the data and bss, and the
+   pending exception. */
 __attribute__((noinline))
 static void siyo_gc_mark_roots(void *registers, size_t size) {
     volatile uintptr_t here = 0;
@@ -1816,14 +1830,16 @@ static void *siyo_gc_alloc(size_t size, uint8_t kind) {
     }
     void *block;
     uint64_t bytes;
-    if (size <= SIYO_GC_SMALL_MAX) {
+    if (size < SIYO_GC_SMALL_MAX) {
+        /* size + 1: the slack byte that keeps start + size inside the block. */
         int32_t c = 0;
-        while (siyo_gc_class_sizes[c] < size) c++;
+        while (siyo_gc_class_sizes[c] < size + 1) c++;
         block = siyo_gc_alloc_small(c, kind);
         bytes = siyo_gc_class_sizes[c];
     } else {
-        block = siyo_gc_alloc_large(size, kind);
-        bytes = siyo_gc_pages[siyo_gc_page_count - 1]->span;
+        size_t span;
+        block = siyo_gc_alloc_large(size, kind, &span);
+        bytes = span;
     }
     siyo_gc_since += bytes;
     siyo_gc_heap_bytes += bytes;

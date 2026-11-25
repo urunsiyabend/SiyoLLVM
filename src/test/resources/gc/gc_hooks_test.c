@@ -342,6 +342,52 @@ static void pending_exception_root(void) {
             "tls: a raised exception's message survives a collection");
 }
 
+/* Request sizes whose end pointer (start + size) would land exactly on a block
+   boundary without the collector's one-byte slack: every small class size and
+   page-multiple large sizes. */
+static const size_t end_sizes[] = {
+    8, 16, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2047, 2048, 2049,
+    4096, 8192, 65536 - 8, 65536, 3 * 65536
+};
+
+/* Allocates size bytes, then a neighbour of the same size (so that the next
+   block of the class exists); returns the first, hidden, and stores its end
+   pointer (start + size), hidden, in *end_out. */
+__attribute__((noinline))
+static uintptr_t make_with_end(size_t size, int scan, uint64_t fill, uintptr_t *end_out) {
+    uintptr_t hidden = hidden_block(size, scan, fill);
+    hidden_block(size, scan, fill + 1);
+    *end_out = ((uintptr_t)reveal(hidden) + size) ^ MASK;
+    return hidden;
+}
+
+static void end_pointers(void) {
+    char name[96];
+    for (size_t k = 0; k < sizeof end_sizes / sizeof end_sizes[0]; k++) {
+        size_t size = end_sizes[k];
+        char *p = siyo_rt_alloc_noscan(size);
+        char *next = siyo_rt_alloc_noscan(size);
+        snprintf(name, sizeof name, "end: block_of(p + %zu) == block_of(p)", size);
+        check(siyo_rt_gc_block_of(p) == p && siyo_rt_gc_block_of(p + size) == p
+                && siyo_rt_gc_block_of(next + size) == next, name);
+    }
+    /* A block referenced only by its end pointer survives; its neighbour, unreferenced, does not. */
+    static const size_t kept_sizes[] = {16, 32, 2048, 4096, 65536};
+    for (size_t k = 0; k < sizeof kept_sizes / sizeof kept_sizes[0]; k++) {
+        size_t size = kept_sizes[k];
+        uintptr_t end;
+        uintptr_t block = make_with_end(size, (int)(k % 2), FILL + 8 + k, &end);
+        global_root = reveal(end);
+        collect();
+        snprintf(name, sizeof name, "end: a %zu-byte block held only by its end pointer survives", size);
+        check(alive_with(block, FILL + 8 + k), name);
+        global_root = NULL;
+        collect();
+        snprintf(name, sizeof name, "end: the %zu-byte block goes once its end pointer does", size);
+        check(reclaimed(block), name);
+    }
+}
+
 static void box_cache(void) {
     void *small = siyo_rt_box_int(7);
     check(siyo_rt_gc_block_of(small) == NULL, "boxes: the small-int cache is static, not heap");
@@ -362,6 +408,7 @@ void siyo_program(void) {
     register_roots();
     pending_exception_root();
     box_cache();
+    end_pointers();
     printf("done %d\n", failures);
     fflush(stdout);
     if (failures != 0) exit(1);

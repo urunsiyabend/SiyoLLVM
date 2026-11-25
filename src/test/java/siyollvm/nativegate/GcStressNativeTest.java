@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * must be byte-identical to the existing expectations.
  *
  * <p>{@code SIYO_RT_STATS=1} is set too; its line is split off stderr before the comparison and its
- * collection count is checked: a case that allocated anything collected at least once.
+ * collection count is checked: every case collects at least once, except the cases in
+ * {@link #NO_ALLOCATION}, which must collect exactly never.
  *
  * <p>Stress is {@code 1} (a collection before every allocation) for every case except the few in
  * {@link #SLOW_CASES}, where a collection per allocation is quadratic; each of those gets the
@@ -53,6 +55,19 @@ class GcStressNativeTest {
             "range_large", "97",
             "array_self_print", "4001",
             "ledger/large", "7");
+    /**
+     * Corpus and module cases that allocate nothing at all: they compute with ints, longs, doubles and bools, print
+     * those and string literals (static, never heap), and fail, if at all, with static messages, so
+     * the collector never runs. Measured 2026-11-25: at n = 1 the collection comes before every
+     * allocation, so {@code collections=0} at n = 1 means exactly zero allocations. These are checked
+     * for {@code collections == 0}; a case that starts allocating fails and must leave this set.
+     */
+    private static final Set<String> NO_ALLOCATION = Set.of(
+            "any_null_literal", "any_unbox_null", "arith_edges", "dead_code", "div_zero_int", "div_zero_long",
+            "fall_off_return", "fall_off_return_defaults", "globals_init_order", "loops", "modules_init_error",
+            "nested_functions", "null_global_string", "nul_strings", "ord_empty", "parse_long_null",
+            "print_all_types", "recursion", "rem_zero", "short_circuit", "stack_overflow", "string_parse",
+            "strings_and_bools", "throw_uncaught_string", "unicode_names");
     /** As ModulesNativeTest: cases whose expectations hold only for a user other than root. */
     private static final Set<String> UNPRIVILEGED = Set.of("stdio_readonly");
 
@@ -79,8 +94,15 @@ class GcStressNativeTest {
 
     private static void checkCollected(NativeRunner.Stats stats, String name) {
         totalCollections.addAndGet(stats.collections());
-        // Every program allocates at least its os.args() array or a string; at n = 1 that is a collection.
-        assertTrue(stats.collections() >= 1 || stats.heapPeakKb() == 0, name + ": no collection under stress");
+        if (NO_ALLOCATION.contains(name)) {
+            assertEquals(0, stats.collections(), name + " is listed as allocating nothing");
+            return;
+        }
+        // At n = 1 the collection comes before each allocation, so a single allocation is a collection;
+        // the SLOW_CASES allocate hundreds of thousands of blocks, so at their n they collect too.
+        // heap_peak_kb cannot excuse a case: it rounds down, and a case under 1 KiB still allocates.
+        assertTrue(stats.collections() >= 1, name + ": no collection under stress (heap_peak_kb="
+                + stats.heapPeakKb() + ")");
     }
 
     @TestFactory

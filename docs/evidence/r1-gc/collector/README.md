@@ -50,3 +50,38 @@ live data: gc_arrays' kept array is live growth by design.
 
 The ledger `large` case at n = 1 (a collection before every one of its 573 413 allocations) produced
 byte-identical stdout and report; it is run at n = 7 in the suite only for time.
+
+## Fix round 1: one-past-the-end pointers
+
+Every block now has at least one byte of slack: a request for n bytes takes the smallest class of at
+least n + 1 bytes (so small requests go up to 2047 bytes), or a large block of round8(n + 1) bytes. Then
+`start + n` always resolves to the same block.
+
+RED (`end-pointer-red.log`, receipt `end-pointer-red-receipt.json`: child returncode 1, oom_kill_delta 0).
+This is the new `end_pointers()` section of `gc_hooks_test.c` run against the 77f5281 runtime. 24 checks
+failed:
+- 19 lookups: `block_of(p + n) != p` for n = 16, 32, ..., 2048, 4096, 8192, 65528, 65536 and 196608.
+  Only n = 8, 2047 and 2049 had slack by chance.
+- 5 survival checks: a 16, 32, 2048, 4096 or 65536-byte block held only by its end pointer was freed.
+
+GREEN at the fix: all pass.
+
+The fix costs memory: a 16-byte request now takes a 32-byte block. The MemoryBoundsNativeTest table
+below (bounds unchanged) shows more collections at the same 4 MiB trigger. RSS stays within noise of
+the table above.
+
+| Workload | collections N1/N2/N3 | heap_peak_kb N1/N2/N3 | rss N1 / N2 / N3 (KiB) |
+|---|---|---|---|
+| gc_arrays | 20 / 40 / 81 | 4 612 / 5 124 / 6 148 | 6 396 / 6 800 / 7 536 |
+| gc_cycles | 14 / 29 / 59 | 4 096 | 6 056 / 5 992 / 5 992 |
+| gc_exceptions | 13 / 26 / 53 | 4 096 | 5 992 / 5 992 / 5 992 |
+| gc_lines | 8 / 16 / 33 | 4 199 | 6 388 / 6 812 / 6 580 |
+| gc_maps | 15 / 31 / 63 | 4 100 | 5 992 / 6 004 / 6 096 |
+| gc_modules | 18 / 36 / 73 | 4 102 | 6 092 / 6 364 / 6 316 |
+| gc_strings | 13 / 27 / 54 | 4 096 | 6 016 / 5 992 / 6 052 |
+| gc_structs | 14 / 28 / 57 | 4 097 | 6 048 / 6 380 / 6 352 |
+
+GcStressNativeTest no longer excuses a case by `heap_peak_kb == 0`, because that value rounds down. At
+n = 1, `collections=0` means exactly zero allocations. The 25 corpus and module cases that measured
+`collections=0` are listed in `NO_ALLOCATION`, and the test asserts that they stay at 0. Every other case
+must collect.
