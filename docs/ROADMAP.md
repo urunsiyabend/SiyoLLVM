@@ -120,9 +120,9 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Status (2026-11-25): R1 published at f61099c. R2 Task 1 (probe matrix + RED cases) committed locally at
-  3d785fd, not pushed (native gate red until Task 2). Next: R2 Task 2 (use-site checks). Ledger:
-  `.superpowers/sdd/2026-11-25-r2-typing-gaps/progress.md`.
+- Status (2026-11-25, run 7): R1 published at f61099c. R2 Tasks 1–2 reviewed locally (3d785fd..a83579d), not
+  pushed. Next: R2 Task 3 (ledger workaround removal with unchanged oracle outputs), whole-feature review,
+  final gates, fresh clone, publish. Ledger: `.superpowers/sdd/2026-11-25-r2-typing-gaps/progress.md`.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
