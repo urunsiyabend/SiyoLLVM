@@ -1,0 +1,1 @@
+{"exit": [3, 3], "stdout_equal": true, "stderr_equal": true, "report_equal": true, "stats": "siyo-rt: collections=19 heap_peak_kb=6637 rss_peak_kb=9468", "match": true}
