@@ -1,0 +1,38 @@
+// Memory-bound workload: throw and catch with string payloads built per
+// throw, from a function two calls deep, every iteration.
+import "std/os"
+
+fn inner(i: int) -> int {
+    if i % 3 != 2 {
+        throw "fail-" + toString(i) + "-" + toString(i * 31)
+    }
+    return i
+}
+
+fn outer(i: int) -> int {
+    return inner(i) + 1
+}
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    mut caught = 0
+    mut lengths = 0L
+    mut check = 0
+    mut i = 0
+    while i < n {
+        try {
+            check = (check + outer(i)) % 1000003
+        } catch e: string {
+            caught += 1
+            lengths += len(e)
+            check = (check * 3 + ord(e[len(e) - 1])) % 1000003
+        }
+        imut v = try { parseInt("x" + toString(i)) } catch e { -1 }
+        check = (check + v + 1) % 1000003
+        i += 1
+    }
+    println("gc_exceptions n=" + toString(n))
+    println("caught=" + toString(caught) + " lengths=" + toString(lengths) + " check=" + toString(check))
+}

@@ -1,0 +1,37 @@
+// Memory-bound workload: per iteration an array is created, filled (with
+// ints outside the small-int cache, so each element is a fresh box), read and
+// dropped; one array grows for the whole run and stays live (small ints,
+// which need no box), so only its item block is live growth: 8 bytes per
+// iteration.
+import "std/os"
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    mut kept: int[] = []
+    mut check = 0
+    mut i = 0
+    while i < n {
+        mut xs: int[] = []
+        mut j = 0
+        while j < 24 {
+            push(xs, 1000 + i + j)
+            j += 1
+        }
+        mut sum = 0
+        for x in xs {
+            sum += x % 97
+        }
+        imut copy = [xs[0], xs[len(xs) - 1], sum]
+        check = (check * 17 + copy[0] % 13 + copy[1] % 11 + copy[2]) % 1000003
+        push(kept, i % 100)
+        i += 1
+    }
+    mut keptSum = 0
+    for k in kept {
+        keptSum += k
+    }
+    println("gc_arrays n=" + toString(n))
+    println("kept=" + toString(len(kept)) + " keptSum=" + toString(keptSum) + " check=" + toString(check))
+}

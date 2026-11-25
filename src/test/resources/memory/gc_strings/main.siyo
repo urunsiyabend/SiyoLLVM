@@ -1,0 +1,26 @@
+// Memory-bound workload: per iteration, a local string built with += and
+// joined once more, then dropped. Live data stays a few hundred bytes.
+import "std/os"
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    mut total = 0L
+    mut check = 0
+    mut i = 0
+    while i < n {
+        mut s = ""
+        mut j = 0
+        while j < 16 {
+            s += toString(i * 7 + j) + ","
+            j += 1
+        }
+        imut t = "<" + s + "#" + toString(i) + ">"
+        total += len(t)
+        check = (check * 31 + ord(t[len(t) / 2]) + len(t)) % 1000003
+        i += 1
+    }
+    println("gc_strings n=" + toString(n))
+    println("total=" + toString(total) + " check=" + toString(check))
+}

@@ -1,0 +1,477 @@
+BOUNDED evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-084703-ff509b8f8aa74daea1a46f35476870f0
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< com.siyo:siyollvm >--------------------------
+[INFO] Building SiyoLLVM 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- build-helper:3.6.0:add-source (add-upstream-frontend) @ siyollvm ---
+[INFO] Source directory: /home/urunsiyabend/development/SiyoLLVM-native/upstream/siyocompiler/src/main/java added.
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ siyollvm ---
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] The encoding used to copy filtered properties files has not been set. This means that the same encoding will be used to copy filtered properties files as when copying other filtered resources. This might not be what you want! Run your build with --debug to see which files might be affected. Read more at https://maven.apache.org/plugins/maven-resources-plugin/examples/filtering-properties-files.html
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ siyollvm ---
+[INFO] Copying 342 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ siyollvm ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 29 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- antrun:3.1.0:run (create-test-tmpdir) @ siyollvm ---
+[INFO] Executing tasks
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ siyollvm ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running siyollvm.nativegate.MemoryBoundsNativeTest
+MEMORY gc_arrays N=50000 collections=0 heap_peak_kb=24610 rss_peak_kb=99132
+MEMORY gc_arrays N=100000 collections=0 heap_peak_kb=49219 rss_peak_kb=127204
+MEMORY gc_arrays N=200000 collections=0 heap_peak_kb=98438 rss_peak_kb=253220
+MEMORY gc_cycles N=50000 collections=0 heap_peak_kb=37809 rss_peak_kb=100608
+MEMORY gc_cycles N=100000 collections=0 heap_peak_kb=75651 rss_peak_kb=123620
+MEMORY gc_cycles N=200000 collections=0 heap_peak_kb=151628 rss_peak_kb=245284
+MEMORY gc_exceptions N=120000 collections=0 heap_peak_kb=37765 rss_peak_kb=102272
+MEMORY gc_exceptions N=240000 collections=0 heap_peak_kb=75734 rss_peak_kb=111780
+MEMORY gc_exceptions N=480000 collections=0 heap_peak_kb=151774 rss_peak_kb=221732
+MEMORY gc_lines N=60000 collections=0 heap_peak_kb=44555 rss_peak_kb=104064
+MEMORY gc_lines N=120000 collections=0 heap_peak_kb=88862 rss_peak_kb=104064
+MEMORY gc_lines N=240000 collections=0 heap_peak_kb=177476 rss_peak_kb=138404
+MEMORY gc_maps N=16000 collections=0 heap_peak_kb=34921 rss_peak_kb=104192
+MEMORY gc_maps N=32000 collections=0 heap_peak_kb=69845 rss_peak_kb=115364
+MEMORY gc_maps N=64000 collections=0 heap_peak_kb=139692 rss_peak_kb=229220
+MEMORY gc_modules N=24000 collections=0 heap_peak_kb=37887 rss_peak_kb=105344
+MEMORY gc_modules N=48000 collections=0 heap_peak_kb=75855 rss_peak_kb=124580
+MEMORY gc_modules N=96000 collections=0 heap_peak_kb=151795 rss_peak_kb=247584
+MEMORY gc_strings N=12000 collections=0 heap_peak_kb=39385 rss_peak_kb=105344
+MEMORY gc_strings N=24000 collections=0 heap_peak_kb=79306 rss_peak_kb=112676
+MEMORY gc_strings N=48000 collections=0 heap_peak_kb=159345 rss_peak_kb=224548
+MEMORY gc_structs N=50000 collections=0 heap_peak_kb=36404 rss_peak_kb=105344
+MEMORY gc_structs N=100000 collections=0 heap_peak_kb=72830 rss_peak_kb=120228
+MEMORY gc_structs N=200000 collections=0 heap_peak_kb=145877 rss_peak_kb=239140
+[ERROR] Tests run: 8, Failures: 8, Errors: 0, Skipped: 0, Time elapsed: 6.527 s <<< FAILURE! -- in siyollvm.nativegate.MemoryBoundsNativeTest
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.963 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_arrays memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_arrays: rss_peak_kb(N3=200000) = 253220 > bound 65536; gc_arrays [Measure[n=50000, heapKb=24610, rssKb=99132], Measure[n=100000, heapKb=49219, rssKb=127204], Measure[n=200000, heapKb=98438, rssKb=253220]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_arrays: rss_peak_kb(N3=200000) = 253220 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 198998; gc_arrays [Measure[n=50000, heapKb=24610, rssKb=99132], Measure[n=100000, heapKb=49219, rssKb=127204], Measure[n=200000, heapKb=98438, rssKb=253220]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_arrays: rss_peak_kb(N3=200000) = 253220 > bound 65536; gc_arrays [Measure[n=50000, heapKb=24610, rssKb=99132], Measure[n=100000, heapKb=49219, rssKb=127204], Measure[n=200000, heapKb=98438, rssKb=253220]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+	Suppressed: org.opentest4j.AssertionFailedError: gc_arrays: rss_peak_kb(N3=200000) = 253220 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 198998; gc_arrays [Measure[n=50000, heapKb=24610, rssKb=99132], Measure[n=100000, heapKb=49219, rssKb=127204], Measure[n=200000, heapKb=98438, rssKb=253220]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$5(MemoryBoundsNativeTest.java:119)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.824 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_cycles memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_cycles: rss_peak_kb(N3=200000) = 245284 > bound 65536; gc_cycles [Measure[n=50000, heapKb=37809, rssKb=100608], Measure[n=100000, heapKb=75651, rssKb=123620], Measure[n=200000, heapKb=151628, rssKb=245284]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_cycles: rss_peak_kb(N3=200000) = 245284 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 193622; gc_cycles [Measure[n=50000, heapKb=37809, rssKb=100608], Measure[n=100000, heapKb=75651, rssKb=123620], Measure[n=200000, heapKb=151628, rssKb=245284]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_cycles: rss_peak_kb(N3=200000) = 245284 > bound 65536; gc_cycles [Measure[n=50000, heapKb=37809, rssKb=100608], Measure[n=100000, heapKb=75651, rssKb=123620], Measure[n=200000, heapKb=151628, rssKb=245284]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+	Suppressed: org.opentest4j.AssertionFailedError: gc_cycles: rss_peak_kb(N3=200000) = 245284 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 193622; gc_cycles [Measure[n=50000, heapKb=37809, rssKb=100608], Measure[n=100000, heapKb=75651, rssKb=123620], Measure[n=200000, heapKb=151628, rssKb=245284]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$5(MemoryBoundsNativeTest.java:119)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.804 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_exceptions memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_exceptions: rss_peak_kb(N3=480000) = 221732 > bound 65536; gc_exceptions [Measure[n=120000, heapKb=37765, rssKb=102272], Measure[n=240000, heapKb=75734, rssKb=111780], Measure[n=480000, heapKb=151774, rssKb=221732]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_exceptions: rss_peak_kb(N3=480000) = 221732 > 1.5 * rss_peak_kb(N2=240000) + 8 MiB = 175862; gc_exceptions [Measure[n=120000, heapKb=37765, rssKb=102272], Measure[n=240000, heapKb=75734, rssKb=111780], Measure[n=480000, heapKb=151774, rssKb=221732]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_exceptions: rss_peak_kb(N3=480000) = 221732 > bound 65536; gc_exceptions [Measure[n=120000, heapKb=37765, rssKb=102272], Measure[n=240000, heapKb=75734, rssKb=111780], Measure[n=480000, heapKb=151774, rssKb=221732]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+	Suppressed: org.opentest4j.AssertionFailedError: gc_exceptions: rss_peak_kb(N3=480000) = 221732 > 1.5 * rss_peak_kb(N2=240000) + 8 MiB = 175862; gc_exceptions [Measure[n=120000, heapKb=37765, rssKb=102272], Measure[n=240000, heapKb=75734, rssKb=111780], Measure[n=480000, heapKb=151774, rssKb=221732]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$5(MemoryBoundsNativeTest.java:119)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.641 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_lines memory bounds (1 failure)
+	org.opentest4j.AssertionFailedError: gc_lines: rss_peak_kb(N3=240000) = 138404 > bound 65536; gc_lines [Measure[n=60000, heapKb=44555, rssKb=104064], Measure[n=120000, heapKb=88862, rssKb=104064], Measure[n=240000, heapKb=177476, rssKb=138404]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_lines: rss_peak_kb(N3=240000) = 138404 > bound 65536; gc_lines [Measure[n=60000, heapKb=44555, rssKb=104064], Measure[n=120000, heapKb=88862, rssKb=104064], Measure[n=240000, heapKb=177476, rssKb=138404]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.801 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_maps memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_maps: rss_peak_kb(N3=64000) = 229220 > bound 65536; gc_maps [Measure[n=16000, heapKb=34921, rssKb=104192], Measure[n=32000, heapKb=69845, rssKb=115364], Measure[n=64000, heapKb=139692, rssKb=229220]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_maps: rss_peak_kb(N3=64000) = 229220 > 1.5 * rss_peak_kb(N2=32000) + 8 MiB = 181238; gc_maps [Measure[n=16000, heapKb=34921, rssKb=104192], Measure[n=32000, heapKb=69845, rssKb=115364], Measure[n=64000, heapKb=139692, rssKb=229220]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_maps: rss_peak_kb(N3=64000) = 229220 > bound 65536; gc_maps [Measure[n=16000, heapKb=34921, rssKb=104192], Measure[n=32000, heapKb=69845, rssKb=115364], Measure[n=64000, heapKb=139692, rssKb=229220]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+	Suppressed: org.opentest4j.AssertionFailedError: gc_maps: rss_peak_kb(N3=64000) = 229220 > 1.5 * rss_peak_kb(N2=32000) + 8 MiB = 181238; gc_maps [Measure[n=16000, heapKb=34921, rssKb=104192], Measure[n=32000, heapKb=69845, rssKb=115364], Measure[n=64000, heapKb=139692, rssKb=229220]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$5(MemoryBoundsNativeTest.java:119)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.840 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_modules memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_modules: rss_peak_kb(N3=96000) = 247584 > bound 65536; gc_modules [Measure[n=24000, heapKb=37887, rssKb=105344], Measure[n=48000, heapKb=75855, rssKb=124580], Measure[n=96000, heapKb=151795, rssKb=247584]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_modules: rss_peak_kb(N3=96000) = 247584 > 1.5 * rss_peak_kb(N2=48000) + 8 MiB = 195062; gc_modules [Measure[n=24000, heapKb=37887, rssKb=105344], Measure[n=48000, heapKb=75855, rssKb=124580], Measure[n=96000, heapKb=151795, rssKb=247584]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_modules: rss_peak_kb(N3=96000) = 247584 > bound 65536; gc_modules [Measure[n=24000, heapKb=37887, rssKb=105344], Measure[n=48000, heapKb=75855, rssKb=124580], Measure[n=96000, heapKb=151795, rssKb=247584]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+	Suppressed: org.opentest4j.AssertionFailedError: gc_modules: rss_peak_kb(N3=96000) = 247584 > 1.5 * rss_peak_kb(N2=48000) + 8 MiB = 195062; gc_modules [Measure[n=24000, heapKb=37887, rssKb=105344], Measure[n=48000, heapKb=75855, rssKb=124580], Measure[n=96000, heapKb=151795, rssKb=247584]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$5(MemoryBoundsNativeTest.java:119)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.785 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_strings memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_strings: rss_peak_kb(N3=48000) = 224548 > bound 65536; gc_strings [Measure[n=12000, heapKb=39385, rssKb=105344], Measure[n=24000, heapKb=79306, rssKb=112676], Measure[n=48000, heapKb=159345, rssKb=224548]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_strings: rss_peak_kb(N3=48000) = 224548 > 1.5 * rss_peak_kb(N2=24000) + 8 MiB = 177206; gc_strings [Measure[n=12000, heapKb=39385, rssKb=105344], Measure[n=24000, heapKb=79306, rssKb=112676], Measure[n=48000, heapKb=159345, rssKb=224548]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_strings: rss_peak_kb(N3=48000) = 224548 > bound 65536; gc_strings [Measure[n=12000, heapKb=39385, rssKb=105344], Measure[n=24000, heapKb=79306, rssKb=112676], Measure[n=48000, heapKb=159345, rssKb=224548]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+	Suppressed: org.opentest4j.AssertionFailedError: gc_strings: rss_peak_kb(N3=48000) = 224548 > 1.5 * rss_peak_kb(N2=24000) + 8 MiB = 177206; gc_strings [Measure[n=12000, heapKb=39385, rssKb=105344], Measure[n=24000, heapKb=79306, rssKb=112676], Measure[n=48000, heapKb=159345, rssKb=224548]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$5(MemoryBoundsNativeTest.java:119)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads -- Time elapsed: 0.815 s <<< FAILURE!
+org.opentest4j.MultipleFailuresError: 
+gc_structs memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_structs: rss_peak_kb(N3=200000) = 239140 > bound 65536; gc_structs [Measure[n=50000, heapKb=36404, rssKb=105344], Measure[n=100000, heapKb=72830, rssKb=120228], Measure[n=200000, heapKb=145877, rssKb=239140]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_structs: rss_peak_kb(N3=200000) = 239140 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 188534; gc_structs [Measure[n=50000, heapKb=36404, rssKb=105344], Measure[n=100000, heapKb=72830, rssKb=120228], Measure[n=200000, heapKb=145877, rssKb=239140]] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:44)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:2961)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.check(MemoryBoundsNativeTest.java:116)
+	at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$workloads$2(MemoryBoundsNativeTest.java:95)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: gc_structs: rss_peak_kb(N3=200000) = 239140 > bound 65536; gc_structs [Measure[n=50000, heapKb=36404, rssKb=105344], Measure[n=100000, heapKb=72830, rssKb=120228], Measure[n=200000, heapKb=145877, rssKb=239140]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$4(MemoryBoundsNativeTest.java:117)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+	Suppressed: org.opentest4j.AssertionFailedError: gc_structs: rss_peak_kb(N3=200000) = 239140 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 188534; gc_structs [Measure[n=50000, heapKb=36404, rssKb=105344], Measure[n=100000, heapKb=72830, rssKb=120228], Measure[n=200000, heapKb=145877, rssKb=239140]] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at siyollvm.nativegate.MemoryBoundsNativeTest.lambda$check$5(MemoryBoundsNativeTest.java:119)
+		at org.junit.jupiter.api.AssertAll.lambda$assertAll$0(AssertAll.java:68)
+		at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+		at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+		at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+		at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+		at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+		at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+		at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+		at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:77)
+		... 7 more
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR] siyollvm.nativegate.MemoryBoundsNativeTest.workloads
+[ERROR]   Run 1: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_arrays memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_arrays: rss_peak_kb(N3=200000) = 253220 > bound 65536; gc_arrays [Measure[n=50000, heapKb=24610, rssKb=99132], Measure[n=100000, heapKb=49219, rssKb=127204], Measure[n=200000, heapKb=98438, rssKb=253220]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_arrays: rss_peak_kb(N3=200000) = 253220 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 198998; gc_arrays [Measure[n=50000, heapKb=24610, rssKb=99132], Measure[n=100000, heapKb=49219, rssKb=127204], Measure[n=200000, heapKb=98438, rssKb=253220]] ==> expected: <true> but was: <false>
+[ERROR]   Run 2: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_cycles memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_cycles: rss_peak_kb(N3=200000) = 245284 > bound 65536; gc_cycles [Measure[n=50000, heapKb=37809, rssKb=100608], Measure[n=100000, heapKb=75651, rssKb=123620], Measure[n=200000, heapKb=151628, rssKb=245284]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_cycles: rss_peak_kb(N3=200000) = 245284 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 193622; gc_cycles [Measure[n=50000, heapKb=37809, rssKb=100608], Measure[n=100000, heapKb=75651, rssKb=123620], Measure[n=200000, heapKb=151628, rssKb=245284]] ==> expected: <true> but was: <false>
+[ERROR]   Run 3: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_exceptions memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_exceptions: rss_peak_kb(N3=480000) = 221732 > bound 65536; gc_exceptions [Measure[n=120000, heapKb=37765, rssKb=102272], Measure[n=240000, heapKb=75734, rssKb=111780], Measure[n=480000, heapKb=151774, rssKb=221732]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_exceptions: rss_peak_kb(N3=480000) = 221732 > 1.5 * rss_peak_kb(N2=240000) + 8 MiB = 175862; gc_exceptions [Measure[n=120000, heapKb=37765, rssKb=102272], Measure[n=240000, heapKb=75734, rssKb=111780], Measure[n=480000, heapKb=151774, rssKb=221732]] ==> expected: <true> but was: <false>
+[ERROR]   Run 4: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_lines memory bounds (1 failure)
+	org.opentest4j.AssertionFailedError: gc_lines: rss_peak_kb(N3=240000) = 138404 > bound 65536; gc_lines [Measure[n=60000, heapKb=44555, rssKb=104064], Measure[n=120000, heapKb=88862, rssKb=104064], Measure[n=240000, heapKb=177476, rssKb=138404]] ==> expected: <true> but was: <false>
+[ERROR]   Run 5: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_maps memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_maps: rss_peak_kb(N3=64000) = 229220 > bound 65536; gc_maps [Measure[n=16000, heapKb=34921, rssKb=104192], Measure[n=32000, heapKb=69845, rssKb=115364], Measure[n=64000, heapKb=139692, rssKb=229220]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_maps: rss_peak_kb(N3=64000) = 229220 > 1.5 * rss_peak_kb(N2=32000) + 8 MiB = 181238; gc_maps [Measure[n=16000, heapKb=34921, rssKb=104192], Measure[n=32000, heapKb=69845, rssKb=115364], Measure[n=64000, heapKb=139692, rssKb=229220]] ==> expected: <true> but was: <false>
+[ERROR]   Run 6: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_modules memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_modules: rss_peak_kb(N3=96000) = 247584 > bound 65536; gc_modules [Measure[n=24000, heapKb=37887, rssKb=105344], Measure[n=48000, heapKb=75855, rssKb=124580], Measure[n=96000, heapKb=151795, rssKb=247584]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_modules: rss_peak_kb(N3=96000) = 247584 > 1.5 * rss_peak_kb(N2=48000) + 8 MiB = 195062; gc_modules [Measure[n=24000, heapKb=37887, rssKb=105344], Measure[n=48000, heapKb=75855, rssKb=124580], Measure[n=96000, heapKb=151795, rssKb=247584]] ==> expected: <true> but was: <false>
+[ERROR]   Run 7: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_strings memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_strings: rss_peak_kb(N3=48000) = 224548 > bound 65536; gc_strings [Measure[n=12000, heapKb=39385, rssKb=105344], Measure[n=24000, heapKb=79306, rssKb=112676], Measure[n=48000, heapKb=159345, rssKb=224548]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_strings: rss_peak_kb(N3=48000) = 224548 > 1.5 * rss_peak_kb(N2=24000) + 8 MiB = 177206; gc_strings [Measure[n=12000, heapKb=39385, rssKb=105344], Measure[n=24000, heapKb=79306, rssKb=112676], Measure[n=48000, heapKb=159345, rssKb=224548]] ==> expected: <true> but was: <false>
+[ERROR]   Run 8: MemoryBoundsNativeTest.lambda$workloads$2:95->check:116 gc_structs memory bounds (2 failures)
+	org.opentest4j.AssertionFailedError: gc_structs: rss_peak_kb(N3=200000) = 239140 > bound 65536; gc_structs [Measure[n=50000, heapKb=36404, rssKb=105344], Measure[n=100000, heapKb=72830, rssKb=120228], Measure[n=200000, heapKb=145877, rssKb=239140]] ==> expected: <true> but was: <false>
+	org.opentest4j.AssertionFailedError: gc_structs: rss_peak_kb(N3=200000) = 239140 > 1.5 * rss_peak_kb(N2=100000) + 8 MiB = 188534; gc_structs [Measure[n=50000, heapKb=36404, rssKb=105344], Measure[n=100000, heapKb=72830, rssKb=120228], Measure[n=200000, heapKb=145877, rssKb=239140]] ==> expected: <true> but was: <false>
+[INFO] 
+[INFO] 
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.297 s
+[INFO] Finished at: 2026-11-25T08:47:12+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project siyollvm: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /home/urunsiyabend/development/SiyoLLVM-native/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+BOUNDED accepted=False evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-084703-ff509b8f8aa74daea1a46f35476870f0

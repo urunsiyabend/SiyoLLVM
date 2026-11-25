@@ -1,0 +1,32 @@
+// Memory-bound workload: a map with string keys is rebuilt every iteration,
+// read, and dropped.
+import "std/os"
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    mut check = 0
+    mut sizes = 0L
+    mut i = 0
+    while i < n {
+        mut m: Map<string, int> = {}
+        mut j = 0
+        while j < 12 {
+            m["k" + toString(j)] = i * 3 + j + 200
+            j += 1
+        }
+        m.remove("k5")
+        m["k" + toString(i % 20)] = i
+        sizes += m.size()
+        mut acc = 0
+        for k in m {
+            imut v: int = m[k]
+            acc = (acc + v % 1009 + len(k)) % 1000003
+        }
+        check = (check * 7 + acc) % 1000003
+        i += 1
+    }
+    println("gc_maps n=" + toString(n))
+    println("sizes=" + toString(sizes) + " check=" + toString(check))
+}

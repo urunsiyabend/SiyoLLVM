@@ -1,0 +1,18 @@
+// Memory-bound workload: all allocation happens inside an imported module's
+// functions; the module's global counter stays live.
+import "std/os"
+import "churn"
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    mut total = 0L
+    mut i = 0
+    while i < n {
+        total += churn.step(i)
+        i += 1
+    }
+    println("gc_modules n=" + toString(n))
+    println("total=" + toString(total) + " calls=" + toString(churn.calls) + " digest=" + toString(churn.digest))
+}

@@ -1,0 +1,24 @@
+mut calls = 0
+mut digest = 0
+
+fn label(i: int) -> string {
+    mut s = "item"
+    mut j = 0
+    while j < 6 {
+        s += "-" + toString(i + j * 1000)
+        j += 1
+    }
+    return s
+}
+
+fn step(i: int) -> int {
+    calls += 1
+    imut parts = split(label(i), "-")
+    mut m: Map<string, int> = {}
+    for p in parts {
+        imut q: string = p
+        m[q] = len(q)
+    }
+    digest = (digest * 11 + len(parts) + m.size()) % 1000003
+    return len(parts) + m.size()
+}
