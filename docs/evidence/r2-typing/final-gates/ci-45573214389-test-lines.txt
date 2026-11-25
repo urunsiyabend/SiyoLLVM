@@ -1,0 +1,9 @@
+Tests run: 145, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 77.21 s -- in siyollvm.nativegate.GcStressNativeTest
+Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.458 s -- in siyollvm.nativegate.ModulesNativeTest
+Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.777 s -- in siyollvm.nativegate.LedgerAppNativeTest
+Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.566 s -- in siyollvm.nativegate.LedgerOracleNativeTest
+Tests run: 101, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 51.12 s -- in siyollvm.nativegate.NativeCorpusTest
+Tests run: 780, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 393, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0

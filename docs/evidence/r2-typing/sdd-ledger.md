@@ -23,3 +23,4 @@ Task 3: 7eb6acd (ledger workarounds removed; 3 kept with reasons: declared struc
 Final review: Important struct-in-any coverage + doc placeholders; ONE fix wave e89ce49
 Final wave re-review: all addressed; controller oracle regen byte-identical
 Final gates at c33bbb2213b4171b2ef95bb78f79f9d4923ccfc2: java 393+2, native 780+2 (GcStress 145, corpus 101, modules 17, ledger 27+27, MemoryBounds 8; 0 skipped), requires-clang OK, receipts rc 0 / oom 0
+Published: 60b785f (remote verified), CI run 45573214389 success (Java + Native; R2 suites ran, 0 skipped); fresh remote clone gates green (393+2 / 780+2)

@@ -24,7 +24,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 | # | Feature | Depends on | Status | Commit | Evidence |
 |---|---|---|---|---|---|
 | R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | done | a984cbc..e231e8e, pushed at f61099c; CI run 45564871470 green; fresh clone green | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
-| R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | in progress (publishing) | a8d52b1..e89ce49 | `docs/evidence/r2-typing/` (probe matrix, RED log, probes, ledger ×1/×10 against the oracle) |
+| R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | done | a8d52b1..e89ce49, pushed at 60b785f; CI run 45573214389 green; fresh clone green | `docs/evidence/r2-typing/` (probe matrix, RED log, probes, ledger ×1/×10 against the oracle) |
 | R3 | Scalability: cached UTF-16 offsets for non-ASCII indexing; a native sort for distinct keys if a lambda-free API fits the reference | R1 | planned | | |
 
 Historical baseline (supervisor acceptance, 2026-11-25, automation evidence `acceptance-20261125/`; not re-measured here):
@@ -126,9 +126,9 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Status (2026-11-25, run 7): R2 complete locally (a8d52b1..e89ce49, reviewed, final fix wave e89ce49); publishing:
-  final gates, push, exact-head CI, fresh remote clone. Remaining open item from the supervisor: independent
-  final acceptance of R1 (frequent-GC root/alias/cycle/exception/module/interior-pointer and scaling).
+- Status (2026-11-25, run 7): R1 and R2 published (R2 at 60b785f, CI 45573214389 green, fresh remote clone green;
+  `docs/evidence/r2-typing/`). Open: the supervisor's independent final acceptance of R1/R2. R3 (Unicode index
+  cache, sorting) is optional scalability work; its limits are documented in the section above and docs/SUBSET.md.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
