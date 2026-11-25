@@ -343,11 +343,15 @@ static void pending_exception_root(void) {
 }
 
 /* Request sizes whose end pointer (start + size) would land exactly on a block
-   boundary without the collector's one-byte slack: every small class size and
-   page-multiple large sizes. 17 and 23 go to the 24-byte class. */
+   boundary without the collector's one-byte slack: every class size and the
+   size below it, the class/own-mapping boundary (32767 is the largest request
+   a class takes) and page-multiple large sizes. 17 and 23 go to the 24-byte
+   class. */
 static const size_t end_sizes[] = {
     8, 16, 17, 23, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2047, 2048, 2049,
-    4096, 8192, 65536 - 8, 65536, 3 * 65536
+    2559, 2560, 3071, 3072, 4095, 4096, 5455, 5456, 6543, 6544, 8191, 8192, 10911, 10912,
+    13103, 13104, 16383, 16384, 21839, 21840, 32766, 32767, 32768, 32769,
+    65536 - 8, 65536, 3 * 65536
 };
 
 /* Allocates size bytes, then a neighbour of the same size (so that the next
@@ -372,7 +376,7 @@ static void end_pointers(void) {
                 && siyo_rt_gc_block_of(next + size) == next, name);
     }
     /* A block referenced only by its end pointer survives; its neighbour, unreferenced, does not. */
-    static const size_t kept_sizes[] = {16, 23, 32, 2048, 4096, 65536};
+    static const size_t kept_sizes[] = {16, 23, 32, 2048, 4096, 3071, 21839, 32767, 32768, 65536};
     for (size_t k = 0; k < sizeof kept_sizes / sizeof kept_sizes[0]; k++) {
         size_t size = kept_sizes[k];
         uintptr_t end;
@@ -403,6 +407,89 @@ static void class_24(void) {
             "class 24: an int box takes a 24-byte block");
 }
 
+/* The medium classes, carved from shared 64 KiB pages like the small ones. */
+static const size_t medium_classes[] = {2560, 3072, 4096, 5456, 6544, 8192, 10912, 13104, 16384, 21840, 32768};
+
+/* Lines of /proc/self/maps: the process's kernel mappings. */
+static long mapping_count(void) {
+    FILE *maps = fopen("/proc/self/maps", "r");
+    if (maps == NULL) return -1;
+    long lines = 0;
+    int c;
+    while ((c = fgetc(maps)) != EOF) lines += c == '\n';
+    fclose(maps);
+    return lines;
+}
+
+/* count blocks of size bytes, held by a SCAN array (returned hidden), each starting with fill + i. */
+__attribute__((noinline))
+static uintptr_t make_held(size_t count, size_t size, uint64_t fill) {
+    void **held = siyo_rt_alloc(count * sizeof(void *));
+    for (size_t i = 0; i < count; i++) {
+        uint64_t *p = siyo_rt_alloc_noscan(size);
+        p[0] = fill + i;
+        held[i] = p;
+    }
+    return (uintptr_t)held ^ MASK;
+}
+
+static void medium_blocks(void) {
+    char name[128];
+    for (size_t k = 0; k < sizeof medium_classes / sizeof medium_classes[0]; k++) {
+        size_t c = medium_classes[k];
+        size_t blocks = 65536 / c;
+        /* c - 1 bytes plus the slack byte fill the class exactly. */
+        char *p = siyo_rt_alloc_noscan(c - 1);
+        char *next = siyo_rt_alloc_noscan(c - 1);
+        snprintf(name, sizeof name, "medium %zu: a %zu-byte block spans [p, p + %zu)", c, c - 1, c);
+        check(siyo_rt_gc_block_of(p + c - 1) == p && siyo_rt_gc_block_of(p + c) != p
+                && siyo_rt_gc_block_of(next + c - 1) == next, name);
+        uintptr_t base = (uintptr_t)p & ~(uintptr_t)65535;
+        snprintf(name, sizeof name, "medium %zu: the block lies on a block boundary of its 64 KiB page", c);
+        check(((uintptr_t)p - base) % c == 0 && (uintptr_t)p + c <= base + 65536, name);
+        if (blocks * c < 65536) {
+            /* Fill p's page (allocations may first take free blocks elsewhere), so every
+               block of it has been handed out; the tail past the last block is no block. */
+            for (size_t i = 0; i < 64 * blocks && siyo_rt_gc_block_of((void *)(base + (blocks - 1) * c)) == NULL; i++) {
+                siyo_rt_alloc_noscan(c - 1);
+            }
+            snprintf(name, sizeof name, "medium %zu: block %zu of the page is handed out", c, blocks - 1);
+            check(siyo_rt_gc_block_of((void *)(base + (blocks - 1) * c)) == (void *)(base + (blocks - 1) * c), name);
+            snprintf(name, sizeof name, "medium %zu: the page tail past %zu blocks is no block", c, blocks);
+            check(siyo_rt_gc_block_of((void *)(base + blocks * c)) == NULL
+                    && siyo_rt_gc_block_of((void *)(base + 65535)) == NULL, name);
+        }
+    }
+
+    /* Thousands of live 2.1 KB, 8 KB and 30 KB blocks share pages: a few hundred mappings, not one each. */
+    collect();
+    long before = mapping_count();
+    uintptr_t small = make_held(3000, 2100, FILL);
+    uintptr_t mid = make_held(200, 8000, FILL + 5000);
+    uintptr_t big = make_held(50, 30000, FILL + 9000);
+    void *volatile roots[3] = {reveal(small), reveal(mid), reveal(big)};
+    collect();
+    long after = mapping_count();
+    snprintf(name, sizeof name, "medium: 3250 live 2.1/8/30 KB blocks add %ld mappings (< 300)", after - before);
+    check(before > 0 && after - before < 300, name);
+    int intact = 1;
+    for (size_t i = 0; i < 3000; i++) intact &= *(uint64_t *)((void **)roots[0])[i] == FILL + i;
+    for (size_t i = 0; i < 200; i++) intact &= *(uint64_t *)((void **)roots[1])[i] == FILL + 5000 + i;
+    for (size_t i = 0; i < 50; i++) intact &= *(uint64_t *)((void **)roots[2])[i] == FILL + 9000 + i;
+    check(intact, "medium: the held blocks survive collection intact");
+    uint64_t held_bytes = live_bytes();
+    roots[0] = roots[1] = roots[2] = NULL;
+    collect();
+    check(reclaimed(small) && reclaimed(mid) && reclaimed(big), "medium: reclaimed once unreachable");
+    snprintf(name, sizeof name, "medium: heap bytes drop by at least 7 MB (%llu -> %llu)",
+            (unsigned long long)held_bytes, (unsigned long long)live_bytes());
+    check(live_bytes() + 7000000 < held_bytes, name);
+    /* Their emptied pages serve other classes. */
+    uintptr_t reuse = make_held(2000, 40, FILL + 20000);
+    collect();
+    check(reclaimed(reuse), "medium: small blocks come and go after the medium pages are emptied");
+}
+
 static void box_cache(void) {
     void *small = siyo_rt_box_int(7);
     check(siyo_rt_gc_block_of(small) == NULL, "boxes: the small-int cache is static, not heap");
@@ -425,6 +512,7 @@ void siyo_program(void) {
     box_cache();
     end_pointers();
     class_24();
+    medium_blocks();
     printf("done %d\n", failures);
     fflush(stdout);
     if (failures != 0) exit(1);

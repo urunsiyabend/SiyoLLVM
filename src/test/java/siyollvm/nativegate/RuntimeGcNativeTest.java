@@ -341,6 +341,83 @@ class RuntimeGcNativeTest {
         runStressed(exe, 1, expected);
     }
 
+    /**
+     * 20 000 live ~2.1 KB strings, 300 ~8 KB and 60 ~30 KB ones share 64 KiB pages: the process keeps a
+     * few hundred kernel mappings (lines of /proc/self/maps, read by the program), not one per string,
+     * which on a host with the default vm.max_map_count (65 530) would end in a false OutOfMemoryError.
+     */
+    @Test
+    void manyLiveMediumStringsShareMappings() throws Exception {
+        Path exe = build("gc_medium_strings", """
+                import "std/io"
+
+                fn pad(n: int) -> string {
+                    mut s = ""
+                    mut i = 0
+                    while i < n {
+                        s += toString(i % 10)
+                        i += 1
+                    }
+                    return s
+                }
+
+                fn keep(out: string[], count: int, body: string) {
+                    mut i = 0
+                    while i < count {
+                        push(out, toString(i) + body)
+                        i += 1
+                    }
+                }
+
+                fn digest(xs: string[]) -> string {
+                    mut total = 0L
+                    mut check = 0
+                    for x in xs {
+                        imut s: string = x
+                        total += len(s)
+                        check = (check * 31 + ord(s[0]) + ord(s[len(s) / 2]) + ord(s[len(s) - 1])) % 1000003
+                    }
+                    return toString(len(xs)) + " " + toString(total) + " " + toString(check)
+                }
+
+                fn main() {
+                    mut small: string[] = []
+                    mut mid: string[] = []
+                    mut big: string[] = []
+                    keep(small, 20000, pad(1050))
+                    keep(mid, 300, pad(4000))
+                    keep(big, 60, pad(15000))
+                    imut maps = io.readLines("/proc/self/maps")
+                    println(digest(small))
+                    println(digest(mid))
+                    println(digest(big))
+                    println(len(maps))
+                }
+                """);
+        String expected = digest(20000, 1050) + "\n" + digest(300, 4000) + "\n" + digest(60, 15000) + "\n";
+        NativeRunner.Run run = NativeRunner.run(List.of(exe.toString()), exe.getParent(),
+                Map.of("LC_ALL", "C", "SIYO_RT_STATS", "1"));
+        String stdout = new String(run.stdout(), StandardCharsets.UTF_8);
+        assertEquals(0, run.exitCode(), stdout + run.stderr());
+        assertTrue(stdout.startsWith(expected), stdout);
+        long mappings = Long.parseLong(stdout.substring(expected.length()).strip());
+        assertTrue(mappings > 0 && mappings < 2000, "mappings with 20 360 live strings: " + mappings);
+    }
+
+    /** What the program's digest prints for count strings toString(i) + pad(width). */
+    private static String digest(int count, int width) {
+        StringBuilder pad = new StringBuilder();
+        for (int i = 0; i < width; i++) pad.append((char) ('0' + i % 10));
+        long total = 0;
+        long check = 0;
+        for (int i = 0; i < count; i++) {
+            String s = i + pad.toString();
+            total += s.length();
+            check = (check * 31 + s.charAt(0) + s.charAt(s.length() / 2) + s.charAt(s.length() - 1)) % 1000003;
+        }
+        return count + " " + total + " " + check;
+    }
+
     @Test
     void exceptionsInLoops() throws Exception {
         Path exe = build("gc_exception_loop", """
