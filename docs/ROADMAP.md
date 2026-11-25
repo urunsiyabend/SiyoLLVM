@@ -24,7 +24,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 | # | Feature | Depends on | Status | Commit | Evidence |
 |---|---|---|---|---|---|
 | R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | done | a984cbc..e231e8e, pushed at f61099c; CI run 45564871470 green; fresh clone green | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
-| R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | in progress | | |
+| R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | in progress (publishing) | a8d52b1..<final> | `docs/evidence/r2-typing/` (probe matrix, RED log, probes, ledger ×1/×10 against the oracle) |
 | R3 | Scalability: cached UTF-16 offsets for non-ASCII indexing; a native sort for distinct keys if a lambda-free API fits the reference | R1 | planned | | |
 
 Historical baseline (supervisor acceptance, 2026-11-25, automation evidence `acceptance-20261125/`; not re-measured here):
@@ -91,9 +91,15 @@ after it; F5's status is in the table above.
   `reduce`, `forEach`; the ledger hand-writes an insertion sort); sets; interfaces, actors, generic functions,
   `scope`/`spawn`/`send`; `import java` and every other Java interop; most of the std library beyond `std/io`,
   `std/os` and `std/strings` (docs/SUBSET.md, "Rejected").
-- **Typing gaps met by the application** (accepted by the reference, rejected here or untyped): array elements
-  returned from another module and struct values read through a map local inferred from a field are `any`;
-  each needs a typed local or a struct-typed parameter (docs/SUBSET.md, "Accepted").
+- **Typing gaps met by the application** (R2): array elements returned from another module, map keys and
+  the fields of a struct read through a map local inferred from a field are still `any` to the binder, but
+  their use sites the reference runs are accepted with the JVM's checked casts (string-builtin arguments,
+  `len`, `for … in`, arithmetic and ordering beside an int or long, field arithmetic). Still rejected because
+  the reference cannot run them: a method call on a struct read from an `any` (`No matching method` at run
+  time), `<` between a string and an `any` and `+=` on an `any` local (`VerifyError`), and `any op any` or a
+  member/index directly on an `any` (bind errors). The ledger keeps two such workarounds: a declared struct
+  type on a value read through a map local inferred from a field, and reading the account map through the
+  field where two `any` fields are added (docs/SUBSET.md, "Accepted" and "Rejected").
 - **Error message deviations:** some `NullPointerException` messages lack the JVM's helpful `because …` text (see
   docs/SUBSET.md, Deviations); uncaught exceptions print no stack trace. The Deviations table lists further
   deviations (e.g. `toUpper`/`toLower` Unicode tables).

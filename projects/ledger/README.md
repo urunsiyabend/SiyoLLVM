@@ -67,10 +67,13 @@ writes the report, `expected.report`.
 - `readLines` reads the whole input, and the lines stay live until the run ends, so peak memory still grows
   with the input. Since the R1 collector, growth is about 4.6 bytes of RSS per additional input byte. The
   never-free runtime grew by about 87 bytes per input byte. See Resource use.
-- Subset workarounds, each noted in the source: elements of arrays returned from another module are bound to
-  typed variables; a struct read from a map is passed to a function taking a struct parameter so that its
-  fields are typed (a map local inferred from a struct field has `any` values, docs/SUBSET.md); the `sort`
-  builtin (which takes a lambda) is replaced by a hand-written sort.
+- Subset workarounds, each noted in the source. Since R2, elements of arrays returned from another module,
+  map keys and the fields of structs read from a map are used directly (the JVM's checked casts apply).
+  What remains is what the reference itself cannot run: a struct read through a map local inferred from a
+  struct field is declared with its struct type (`imut account: Account = accounts[k]`; a member of a plain
+  `any` is a bind error on the reference), and the report reads accounts through `book.accounts` where it
+  adds two of their fields (`credits + debits` on two `any`s is a bind error on the reference;
+  docs/SUBSET.md). The `sort` builtin (which takes a lambda) is replaced by a hand-written sort.
 
 ## Resource use
 
