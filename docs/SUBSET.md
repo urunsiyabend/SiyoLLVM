@@ -132,7 +132,15 @@ returning one from a function returning `any` (the reference fails with
   (a positive decimal) also collects every n allocations, a test and debug
   mode. A word that merely looks like a heap address keeps its block alive
   (conservative scanning), which can retain extra memory but is never
-  unsafe. `s += x` and `a + b`
+  unsafe. Collections stop the program while they run (stop-the-world, on
+  the one program thread). Everything still reachable stays in memory: for
+  example, a file read with `readLines` or `readFile` stays live while its
+  lines or text are referenced, so peak memory grows with the input that a
+  program keeps. Heap blocks come in size classes from 16 bytes to 2 KiB, or
+  as separate mappings for larger blocks. Each block carries at least one
+  spare byte past the requested size, so a pointer just past an object's end
+  still keeps that object alive. Programs cannot observe block sizes; they
+  show only in `heap_peak_kb`. `s += x` and `a + b`
   append in place into a growing buffer when `a` is the newest string built
   on it, so building a string by repeated appends costs memory linear in its
   final size (100 000 appends: about 8 MB peak RSS). Other operations each

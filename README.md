@@ -129,6 +129,34 @@ JVM cannot decode non-ASCII file names given on the command line, so
 `java -jar` you get a clear error instead. Compiled programs always write
 UTF-8 bytes.
 
+## Memory
+
+Compiled programs free memory with a conservative, non-moving mark-sweep
+collector in the C runtime. A string, array, struct or map that nothing
+reachable refers to is reclaimed, cycles included. Objects never move. The
+collector runs whenever the bytes allocated since the previous collection
+reach 4 MiB or the bytes still live after it, whichever is larger. Two
+environment variables help with testing:
+
+- `SIYO_RT_STATS=1` makes the program write
+  `siyo-rt: collections=<c> heap_peak_kb=<h> rss_peak_kb=<r>` as the last
+  stderr line at exit.
+- `SIYO_GC_STRESS=<n>` adds a collection every n allocations.
+
+On the ledger, 3 MB of input now peaks at about 20 MB of RSS. With the
+earlier never-free runtime it peaked at 268 MB. The measurements are in
+[docs/evidence/r1-gc/ledger/](docs/evidence/r1-gc/ledger/README.md).
+
+Limits:
+
+- Data that stays reachable stays in memory. For example, a file read with
+  `readLines` stays in memory while its lines are referenced.
+- The conservative scan can keep some garbage alive: any word that happens to
+  look like a heap address counts as a reference.
+- Collections stop the single program thread while they run.
+
+See [docs/SUBSET.md](docs/SUBSET.md) for details.
+
 ## Layout
 
 | Path | What |

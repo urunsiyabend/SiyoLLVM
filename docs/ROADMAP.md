@@ -23,7 +23,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 
 | # | Feature | Depends on | Status | Commit | Evidence |
 |---|---|---|---|---|---|
-| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress | | `docs/evidence/r1-gc/` |
+| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress (publishing) | a984cbc..HEAD (local, not yet pushed) | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
 | R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | planned | | |
 | R3 | Scalability: cached UTF-16 offsets for non-ASCII indexing; a native sort for distinct keys if a lambda-free API fits the reference | R1 | planned | | |
 
@@ -75,10 +75,16 @@ against both oracles, and is part of the native gate.
 The milestone application is `projects/ledger` (F5). This section lists what the toolchain still does not do
 after it; F5's status is in the table above.
 
-- **Memory is never freed.** Strings, arrays, structs and maps live until the process exits (no GC, no
-  reference counting). Measured on the ledger (`projects/ledger/README.md`, "Resource use"): 313 KB of input
-  peaks at 28 MB RSS, ten times that input at 268 MB (about 87 bytes per additional input byte), while the
-  JVM reference stays near 100 MB. Long-running or large-input programs will run out of memory.
+- **Memory: collector with remaining limits.** The runtime has a conservative, non-moving mark-sweep
+  collector (R1), so unreachable strings, arrays, structs and maps are freed, cycles included. On the ledger
+  (`projects/ledger/README.md`, "Resource use"; `docs/evidence/r1-gc/ledger/`), 313 KB / 939 KB / 3.1 MB of
+  input peak at 7.3 / 9.4 / 19.9 MB RSS with output identical to the Python oracle. The never-free runtime
+  peaked at 28 / 82 / 268 MB. Remaining limits:
+  - Live data stays in memory. An input read whole by `readLines` (or `readFile`) stays live while it is
+    referenced, so the ledger's peak still grows with its input, at about 4.6 bytes per input byte.
+  - Conservative scanning can retain some garbage that a word merely appears to reference.
+  - Collections are stop-the-world pauses.
+  - The collector is single-threaded, like the programs it serves.
 - **Not in the subset:** `float`; sum types and `match`; lambdas and closures (so no `sort`, `map`, `filter`,
   `reduce`, `forEach`; the ledger hand-writes an insertion sort); sets; interfaces, actors, generic functions,
   `scope`/`spawn`/`send`; `import java` and every other Java interop; most of the std library beyond `std/io`,

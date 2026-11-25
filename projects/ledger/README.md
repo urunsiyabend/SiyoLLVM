@@ -64,14 +64,39 @@ writes the report, `expected.report`.
   overflow; the contract's inputs stay far below it.
 - Sorting is an insertion sort over the distinct account and category names (quadratic in their number, not in
   the number of rows).
-- Memory is never reclaimed during a native run (docs/SUBSET.md), so peak memory grows with the input (about
-  87 bytes of RSS per additional input byte, see Resource use).
+- `readLines` reads the whole input, and the lines stay live until the run ends, so peak memory still grows
+  with the input. Since the R1 collector, growth is about 4.6 bytes of RSS per additional input byte. The
+  never-free runtime grew by about 87 bytes per input byte. See Resource use.
 - Subset workarounds, each noted in the source: elements of arrays returned from another module are bound to
   typed variables; a struct read from a map is passed to a function taking a struct parameter so that its
   fields are typed (a map local inferred from a struct field has `any` values, docs/SUBSET.md); the `sort`
   builtin (which takes a lambda) is replaced by a hand-written sort.
 
 ## Resource use
+
+### With the collector (R1, measured 2026-11-25 at c66bc5b)
+
+Each run was bounded (768 MiB, no swap) under `LC_ALL=C` and `/usr/bin/time -v`, with `SIYO_RT_STATS=1`.
+The inputs were built as in the supervisor acceptance: the header of `large.csv`, then its data lines repeated
+N times. The independent Python oracle ran on the same input. For every size, exit code, stdout, stderr (the
+native `siyo-rt:` line excluded) and report were byte-identical. Raw outputs, receipts and scripts are in
+[docs/evidence/r1-gc/ledger/](../../docs/evidence/r1-gc/ledger/README.md).
+
+| Input | bytes | native peak RSS | heap_peak_kb | collections | native wall | Python oracle RSS / wall | Exit |
+|---|---|---|---|---|---|---|---|
+| large ×1 | 313 141 | 7 344 KB | 4 927 | 6 | 0.02 s | 17 728 KB / 0.04 s | 3 |
+| large ×3 | 939 355 | 9 372 KB | 6 637 | 19 | 0.07 s | 26 236 KB / 0.11 s | 3 |
+| large ×10 | 3 131 104 | 19 948 KB | 16 186 | 34 | 0.26 s | 56 244 KB / 0.33 s | 3 |
+
+The remaining growth is the input itself: `readLines` keeps every line reachable for the whole run. At ×1,
+the same program linked with the pre-collector runtime ran in 0.04 s at 28 MB, and with the collector in
+0.02 to 0.03 s at 7 MB (5 runs each, 10 ms resolution).
+
+The historical figures below come from the never-free runtime. They are kept for comparison and were not
+re-measured. The supervisor acceptance of 2026-11-25 (automation evidence `acceptance-20261125/`) measured
+28 404 / 81 620 / 268 416 KB for ×1 / ×3 / ×10.
+
+### Historical: never-free runtime (2026-11-07)
 
 Measured on 2026-11-07 (x86_64, glibc, clang 19 via `SIYOLLVM_CLANG`), each run in a scratch copy of the input,
 inside the automation's bounded scope (768 MiB, no swap), with `/usr/bin/time -v`. "large" is
@@ -87,7 +112,7 @@ ten times (56 001 lines, 3 131 104 bytes; generated in scratch, not committed).
 
 Exit 3 is expected (the inputs have rejected rows). For each input the native and JVM stdout and reports are
 byte-identical, and the native report on large equals `tests/large/expected.report`. Native peak RSS grows
-roughly linearly with the input (×9.5 for ×10 input) because nothing is freed; the JVM's RSS grows far less
+roughly linearly with the input (×9.5 for ×10 input) because nothing was freed then; the JVM's RSS grows far less
 (67 → 101 MB). Commands (from the repository root `$REPO`; `$S` is a scratch
 directory holding copies of `large.csv` in `native/` and `jvm/`):
 
