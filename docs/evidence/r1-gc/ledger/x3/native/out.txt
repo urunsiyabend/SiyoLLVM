@@ -1,0 +1,547 @@
+LEDGER REPORT
+source: input.csv
+rows: 16239 accepted, 492 rejected, 16731 total
+period: 2024-01-01 to 2025-12-28
+
+ACCOUNTS
+ACCOUNT          COUNT        CREDITS         DEBITS            NET
+Acme, Inc.         720      519122.40     -730543.26     -211420.86
+Brokerage          669      465447.09     -613909.65     -148462.56
+Cash               681      419674.95     -732622.53     -312947.58
+Checking           660      423541.11     -645721.77     -222180.66
+Credit Card        624      347101.20     -673282.86     -326181.66
+Garanti BBVA       648      425796.24     -632307.27     -206511.03
+Joint Account      645      371247.45     -659078.28     -287830.83
+Main "Gold"        675      510715.29     -647583.96     -136868.67
+Petty cash         681      512983.83     -721012.89     -208029.06
+Savings            663      453292.95     -679912.89     -226619.94
+Ziraat             678      377481.03     -675242.67     -297761.64
+ağaç Kooperatif    663      502118.97     -593585.73      -91466.76
+zebra fund         663      442959.45     -640847.16     -197887.71
+Öğrenci Kartı      675      360847.14     -719227.65     -358380.51
+Ünal Ailesi        756      359604.39     -791312.16     -431707.77
+İş Bankası         630      427852.80     -654266.19     -226413.39
+Şirket Hesabı      738      435675.93     -750937.47     -315261.54
+工商银行               723      407067.12     -733356.39     -326289.27
+東京三菱               594      353361.27     -608855.91     -255494.64
+銀行口座               726      527615.01     -694913.88     -167298.87
+🏦 Reserve         687      615803.40     -652545.39      -36741.99
+💳 Travel Card     684      234602.19     -707690.88     -473088.69
+😀 Wallet          660      378549.36     -640229.76     -261680.40
+Ａ Fullwidth        696      412684.56     -683767.38     -271082.82
+TOTAL            16239    10285145.13   -16282753.98    -5997608.85
+
+CATEGORIES
+CATEGORY      COUNT            NET
+Salary          900     4496828.01
+Refunds         795     3984464.67
+🎉 Parties      834     -790439.64
+☕ Kahve         858     -817297.65
+Travel          846     -842245.17
+Health          903     -852481.92
+食品              912     -865066.71
+交通              894     -872246.52
+ｶﾌｪ             897     -875740.11
+Market/Pazar    873     -912483.06
+Insurance       894     -917098.05
+Rent            939     -934013.01
+Dining          969     -934019.76
+Gifts, misc     948     -937218.66
+Groceries       951     -937980.96
+Kira            951     -955396.08
+Utilities       978    -1004339.25
+Transport       897    -1030834.98
+
+REJECTED
+line 33: invalid date '2024/01/20'
+line 58: empty account
+line 76: malformed quotes
+line 129: invalid date '2025/07/26'
+line 154: invalid amount '-1350.575'
+line 205: empty account
+line 211: invalid date '2025-13-15'
+line 317: expected 5 fields, found 6
+line 341: invalid date '2024-13-14'
+line 345: unterminated quote
+line 358: malformed quotes
+line 374: invalid amount '-268.065'
+line 386: empty account
+line 559: unterminated quote
+line 578: invalid date '2025/12/21'
+line 615: expected 5 fields, found 6
+line 625: empty category
+line 664: invalid amount '-219.495'
+line 703: unterminated quote
+line 705: expected 5 fields, found 6
+line 730: expected 5 fields, found 6
+line 781: invalid amount '-184.035'
+line 788: expected 5 fields, found 4
+line 797: expected 5 fields, found 4
+line 888: unterminated quote
+line 946: invalid date '2024/05/22'
+line 950: expected 5 fields, found 6
+line 959: malformed quotes
+line 983: empty account
+line 1026: empty category
+line 1203: unterminated quote
+line 1221: expected 5 fields, found 6
+line 1223: empty account
+line 1259: empty category
+line 1266: unterminated quote
+line 1289: expected 5 fields, found 6
+line 1298: unterminated quote
+line 1321: empty account
+line 1378: expected 5 fields, found 6
+line 1452: invalid date '2024-13-25'
+line 1472: expected 5 fields, found 4
+line 1489: empty account
+line 1506: expected 5 fields, found 4
+line 1519: invalid date '2024-13-27'
+line 1528: empty account
+line 1534: invalid amount '-159.265'
+line 1596: empty category
+line 1658: expected 5 fields, found 4
+line 1779: invalid date '2024/08/19'
+line 1824: expected 5 fields, found 4
+line 1869: unterminated quote
+line 1909: expected 5 fields, found 4
+line 1916: expected 5 fields, found 6
+line 1947: unterminated quote
+line 1974: invalid date '2024-13-27'
+line 2151: invalid date '2024-13-11'
+line 2156: invalid amount '-1392.715'
+line 2164: invalid date '2025-13-23'
+line 2205: invalid date '2024/04/17'
+line 2207: empty category
+line 2247: expected 5 fields, found 6
+line 2317: empty category
+line 2337: expected 5 fields, found 6
+line 2342: invalid date '2024-13-10'
+line 2411: malformed quotes
+line 2412: empty account
+line 2423: malformed quotes
+line 2486: invalid amount '7878.075'
+line 2494: malformed quotes
+line 2506: empty category
+line 2545: invalid amount '-1760.055'
+line 2600: expected 5 fields, found 6
+line 2632: expected 5 fields, found 6
+line 2634: invalid amount '-683.415'
+line 2697: expected 5 fields, found 6
+line 2744: expected 5 fields, found 4
+line 2756: malformed quotes
+line 2804: expected 5 fields, found 4
+line 2825: empty category
+line 2960: invalid date '2025-13-01'
+line 2990: invalid date '2025/05/07'
+line 2992: expected 5 fields, found 6
+line 3012: invalid date '2024-13-04'
+line 3056: expected 5 fields, found 6
+line 3087: invalid amount '-491.835'
+line 3093: expected 5 fields, found 4
+line 3132: invalid date '2025/01/22'
+line 3250: expected 5 fields, found 6
+line 3297: expected 5 fields, found 4
+line 3313: invalid date '2025-13-10'
+line 3348: invalid date '2024-13-24'
+line 3351: expected 5 fields, found 4
+line 3478: empty category
+line 3493: malformed quotes
+line 3520: expected 5 fields, found 4
+line 3531: expected 5 fields, found 4
+line 3536: expected 5 fields, found 6
+line 3545: expected 5 fields, found 6
+line 3579: empty category
+line 3610: expected 5 fields, found 6
+line 3647: expected 5 fields, found 6
+line 3654: unterminated quote
+line 3701: invalid date '2024/02/23'
+line 3702: empty account
+line 3719: expected 5 fields, found 6
+line 3752: empty category
+line 3761: empty account
+line 3766: invalid amount '-174.885'
+line 3806: empty account
+line 3815: expected 5 fields, found 4
+line 3855: expected 5 fields, found 4
+line 3913: malformed quotes
+line 3951: expected 5 fields, found 4
+line 3954: malformed quotes
+line 3996: invalid date '2025-13-08'
+line 4005: expected 5 fields, found 6
+line 4011: invalid date '2024/06/23'
+line 4028: invalid amount '-429.605'
+line 4035: invalid amount '6297.895'
+line 4039: unterminated quote
+line 4063: expected 5 fields, found 4
+line 4213: invalid date '2025/04/23'
+line 4252: expected 5 fields, found 6
+line 4257: expected 5 fields, found 6
+line 4282: unterminated quote
+line 4323: invalid amount '-187.175'
+line 4380: malformed quotes
+line 4387: invalid date '2024-13-15'
+line 4416: unterminated quote
+line 4478: invalid amount '-895.505'
+line 4490: expected 5 fields, found 4
+line 4518: invalid date '2024-13-20'
+line 4605: expected 5 fields, found 4
+line 4614: expected 5 fields, found 6
+line 4620: empty category
+line 4628: unterminated quote
+line 4702: invalid date '2024-13-12'
+line 4721: expected 5 fields, found 6
+line 4723: unterminated quote
+line 4736: invalid date '2025/09/09'
+line 4758: unterminated quote
+line 4779: empty category
+line 4846: unterminated quote
+line 4874: malformed quotes
+line 4887: malformed quotes
+line 4943: invalid amount '-532.285'
+line 4959: invalid date '2025/04/16'
+line 4986: unterminated quote
+line 5065: empty category
+line 5092: malformed quotes
+line 5094: expected 5 fields, found 6
+line 5151: invalid date '2024-13-26'
+line 5201: expected 5 fields, found 6
+line 5222: invalid date '2024-13-09'
+line 5255: empty account
+line 5299: invalid date '2025-13-01'
+line 5308: invalid date '2025-13-28'
+line 5354: expected 5 fields, found 6
+line 5400: invalid date '2024/04/01'
+line 5447: expected 5 fields, found 6
+line 5463: expected 5 fields, found 6
+line 5466: expected 5 fields, found 4
+line 5486: malformed quotes
+line 5514: expected 5 fields, found 6
+line 5633: invalid date '2024/01/20'
+line 5658: empty account
+line 5676: malformed quotes
+line 5729: invalid date '2025/07/26'
+line 5754: invalid amount '-1350.575'
+line 5805: empty account
+line 5811: invalid date '2025-13-15'
+line 5917: expected 5 fields, found 6
+line 5941: invalid date '2024-13-14'
+line 5945: unterminated quote
+line 5958: malformed quotes
+line 5974: invalid amount '-268.065'
+line 5986: empty account
+line 6159: unterminated quote
+line 6178: invalid date '2025/12/21'
+line 6215: expected 5 fields, found 6
+line 6225: empty category
+line 6264: invalid amount '-219.495'
+line 6303: unterminated quote
+line 6305: expected 5 fields, found 6
+line 6330: expected 5 fields, found 6
+line 6381: invalid amount '-184.035'
+line 6388: expected 5 fields, found 4
+line 6397: expected 5 fields, found 4
+line 6488: unterminated quote
+line 6546: invalid date '2024/05/22'
+line 6550: expected 5 fields, found 6
+line 6559: malformed quotes
+line 6583: empty account
+line 6626: empty category
+line 6803: unterminated quote
+line 6821: expected 5 fields, found 6
+line 6823: empty account
+line 6859: empty category
+line 6866: unterminated quote
+line 6889: expected 5 fields, found 6
+line 6898: unterminated quote
+line 6921: empty account
+line 6978: expected 5 fields, found 6
+line 7052: invalid date '2024-13-25'
+line 7072: expected 5 fields, found 4
+line 7089: empty account
+line 7106: expected 5 fields, found 4
+line 7119: invalid date '2024-13-27'
+line 7128: empty account
+line 7134: invalid amount '-159.265'
+line 7196: empty category
+line 7258: expected 5 fields, found 4
+line 7379: invalid date '2024/08/19'
+line 7424: expected 5 fields, found 4
+line 7469: unterminated quote
+line 7509: expected 5 fields, found 4
+line 7516: expected 5 fields, found 6
+line 7547: unterminated quote
+line 7574: invalid date '2024-13-27'
+line 7751: invalid date '2024-13-11'
+line 7756: invalid amount '-1392.715'
+line 7764: invalid date '2025-13-23'
+line 7805: invalid date '2024/04/17'
+line 7807: empty category
+line 7847: expected 5 fields, found 6
+line 7917: empty category
+line 7937: expected 5 fields, found 6
+line 7942: invalid date '2024-13-10'
+line 8011: malformed quotes
+line 8012: empty account
+line 8023: malformed quotes
+line 8086: invalid amount '7878.075'
+line 8094: malformed quotes
+line 8106: empty category
+line 8145: invalid amount '-1760.055'
+line 8200: expected 5 fields, found 6
+line 8232: expected 5 fields, found 6
+line 8234: invalid amount '-683.415'
+line 8297: expected 5 fields, found 6
+line 8344: expected 5 fields, found 4
+line 8356: malformed quotes
+line 8404: expected 5 fields, found 4
+line 8425: empty category
+line 8560: invalid date '2025-13-01'
+line 8590: invalid date '2025/05/07'
+line 8592: expected 5 fields, found 6
+line 8612: invalid date '2024-13-04'
+line 8656: expected 5 fields, found 6
+line 8687: invalid amount '-491.835'
+line 8693: expected 5 fields, found 4
+line 8732: invalid date '2025/01/22'
+line 8850: expected 5 fields, found 6
+line 8897: expected 5 fields, found 4
+line 8913: invalid date '2025-13-10'
+line 8948: invalid date '2024-13-24'
+line 8951: expected 5 fields, found 4
+line 9078: empty category
+line 9093: malformed quotes
+line 9120: expected 5 fields, found 4
+line 9131: expected 5 fields, found 4
+line 9136: expected 5 fields, found 6
+line 9145: expected 5 fields, found 6
+line 9179: empty category
+line 9210: expected 5 fields, found 6
+line 9247: expected 5 fields, found 6
+line 9254: unterminated quote
+line 9301: invalid date '2024/02/23'
+line 9302: empty account
+line 9319: expected 5 fields, found 6
+line 9352: empty category
+line 9361: empty account
+line 9366: invalid amount '-174.885'
+line 9406: empty account
+line 9415: expected 5 fields, found 4
+line 9455: expected 5 fields, found 4
+line 9513: malformed quotes
+line 9551: expected 5 fields, found 4
+line 9554: malformed quotes
+line 9596: invalid date '2025-13-08'
+line 9605: expected 5 fields, found 6
+line 9611: invalid date '2024/06/23'
+line 9628: invalid amount '-429.605'
+line 9635: invalid amount '6297.895'
+line 9639: unterminated quote
+line 9663: expected 5 fields, found 4
+line 9813: invalid date '2025/04/23'
+line 9852: expected 5 fields, found 6
+line 9857: expected 5 fields, found 6
+line 9882: unterminated quote
+line 9923: invalid amount '-187.175'
+line 9980: malformed quotes
+line 9987: invalid date '2024-13-15'
+line 10016: unterminated quote
+line 10078: invalid amount '-895.505'
+line 10090: expected 5 fields, found 4
+line 10118: invalid date '2024-13-20'
+line 10205: expected 5 fields, found 4
+line 10214: expected 5 fields, found 6
+line 10220: empty category
+line 10228: unterminated quote
+line 10302: invalid date '2024-13-12'
+line 10321: expected 5 fields, found 6
+line 10323: unterminated quote
+line 10336: invalid date '2025/09/09'
+line 10358: unterminated quote
+line 10379: empty category
+line 10446: unterminated quote
+line 10474: malformed quotes
+line 10487: malformed quotes
+line 10543: invalid amount '-532.285'
+line 10559: invalid date '2025/04/16'
+line 10586: unterminated quote
+line 10665: empty category
+line 10692: malformed quotes
+line 10694: expected 5 fields, found 6
+line 10751: invalid date '2024-13-26'
+line 10801: expected 5 fields, found 6
+line 10822: invalid date '2024-13-09'
+line 10855: empty account
+line 10899: invalid date '2025-13-01'
+line 10908: invalid date '2025-13-28'
+line 10954: expected 5 fields, found 6
+line 11000: invalid date '2024/04/01'
+line 11047: expected 5 fields, found 6
+line 11063: expected 5 fields, found 6
+line 11066: expected 5 fields, found 4
+line 11086: malformed quotes
+line 11114: expected 5 fields, found 6
+line 11233: invalid date '2024/01/20'
+line 11258: empty account
+line 11276: malformed quotes
+line 11329: invalid date '2025/07/26'
+line 11354: invalid amount '-1350.575'
+line 11405: empty account
+line 11411: invalid date '2025-13-15'
+line 11517: expected 5 fields, found 6
+line 11541: invalid date '2024-13-14'
+line 11545: unterminated quote
+line 11558: malformed quotes
+line 11574: invalid amount '-268.065'
+line 11586: empty account
+line 11759: unterminated quote
+line 11778: invalid date '2025/12/21'
+line 11815: expected 5 fields, found 6
+line 11825: empty category
+line 11864: invalid amount '-219.495'
+line 11903: unterminated quote
+line 11905: expected 5 fields, found 6
+line 11930: expected 5 fields, found 6
+line 11981: invalid amount '-184.035'
+line 11988: expected 5 fields, found 4
+line 11997: expected 5 fields, found 4
+line 12088: unterminated quote
+line 12146: invalid date '2024/05/22'
+line 12150: expected 5 fields, found 6
+line 12159: malformed quotes
+line 12183: empty account
+line 12226: empty category
+line 12403: unterminated quote
+line 12421: expected 5 fields, found 6
+line 12423: empty account
+line 12459: empty category
+line 12466: unterminated quote
+line 12489: expected 5 fields, found 6
+line 12498: unterminated quote
+line 12521: empty account
+line 12578: expected 5 fields, found 6
+line 12652: invalid date '2024-13-25'
+line 12672: expected 5 fields, found 4
+line 12689: empty account
+line 12706: expected 5 fields, found 4
+line 12719: invalid date '2024-13-27'
+line 12728: empty account
+line 12734: invalid amount '-159.265'
+line 12796: empty category
+line 12858: expected 5 fields, found 4
+line 12979: invalid date '2024/08/19'
+line 13024: expected 5 fields, found 4
+line 13069: unterminated quote
+line 13109: expected 5 fields, found 4
+line 13116: expected 5 fields, found 6
+line 13147: unterminated quote
+line 13174: invalid date '2024-13-27'
+line 13351: invalid date '2024-13-11'
+line 13356: invalid amount '-1392.715'
+line 13364: invalid date '2025-13-23'
+line 13405: invalid date '2024/04/17'
+line 13407: empty category
+line 13447: expected 5 fields, found 6
+line 13517: empty category
+line 13537: expected 5 fields, found 6
+line 13542: invalid date '2024-13-10'
+line 13611: malformed quotes
+line 13612: empty account
+line 13623: malformed quotes
+line 13686: invalid amount '7878.075'
+line 13694: malformed quotes
+line 13706: empty category
+line 13745: invalid amount '-1760.055'
+line 13800: expected 5 fields, found 6
+line 13832: expected 5 fields, found 6
+line 13834: invalid amount '-683.415'
+line 13897: expected 5 fields, found 6
+line 13944: expected 5 fields, found 4
+line 13956: malformed quotes
+line 14004: expected 5 fields, found 4
+line 14025: empty category
+line 14160: invalid date '2025-13-01'
+line 14190: invalid date '2025/05/07'
+line 14192: expected 5 fields, found 6
+line 14212: invalid date '2024-13-04'
+line 14256: expected 5 fields, found 6
+line 14287: invalid amount '-491.835'
+line 14293: expected 5 fields, found 4
+line 14332: invalid date '2025/01/22'
+line 14450: expected 5 fields, found 6
+line 14497: expected 5 fields, found 4
+line 14513: invalid date '2025-13-10'
+line 14548: invalid date '2024-13-24'
+line 14551: expected 5 fields, found 4
+line 14678: empty category
+line 14693: malformed quotes
+line 14720: expected 5 fields, found 4
+line 14731: expected 5 fields, found 4
+line 14736: expected 5 fields, found 6
+line 14745: expected 5 fields, found 6
+line 14779: empty category
+line 14810: expected 5 fields, found 6
+line 14847: expected 5 fields, found 6
+line 14854: unterminated quote
+line 14901: invalid date '2024/02/23'
+line 14902: empty account
+line 14919: expected 5 fields, found 6
+line 14952: empty category
+line 14961: empty account
+line 14966: invalid amount '-174.885'
+line 15006: empty account
+line 15015: expected 5 fields, found 4
+line 15055: expected 5 fields, found 4
+line 15113: malformed quotes
+line 15151: expected 5 fields, found 4
+line 15154: malformed quotes
+line 15196: invalid date '2025-13-08'
+line 15205: expected 5 fields, found 6
+line 15211: invalid date '2024/06/23'
+line 15228: invalid amount '-429.605'
+line 15235: invalid amount '6297.895'
+line 15239: unterminated quote
+line 15263: expected 5 fields, found 4
+line 15413: invalid date '2025/04/23'
+line 15452: expected 5 fields, found 6
+line 15457: expected 5 fields, found 6
+line 15482: unterminated quote
+line 15523: invalid amount '-187.175'
+line 15580: malformed quotes
+line 15587: invalid date '2024-13-15'
+line 15616: unterminated quote
+line 15678: invalid amount '-895.505'
+line 15690: expected 5 fields, found 4
+line 15718: invalid date '2024-13-20'
+line 15805: expected 5 fields, found 4
+line 15814: expected 5 fields, found 6
+line 15820: empty category
+line 15828: unterminated quote
+line 15902: invalid date '2024-13-12'
+line 15921: expected 5 fields, found 6
+line 15923: unterminated quote
+line 15936: invalid date '2025/09/09'
+line 15958: unterminated quote
+line 15979: empty category
+line 16046: unterminated quote
+line 16074: malformed quotes
+line 16087: malformed quotes
+line 16143: invalid amount '-532.285'
+line 16159: invalid date '2025/04/16'
+line 16186: unterminated quote
+line 16265: empty category
+line 16292: malformed quotes
+line 16294: expected 5 fields, found 6
+line 16351: invalid date '2024-13-26'
+line 16401: expected 5 fields, found 6
+line 16422: invalid date '2024-13-09'
+line 16455: empty account
+line 16499: invalid date '2025-13-01'
+line 16508: invalid date '2025-13-28'
+line 16554: expected 5 fields, found 6
+line 16600: invalid date '2024/04/01'
+line 16647: expected 5 fields, found 6
+line 16663: expected 5 fields, found 6
+line 16666: expected 5 fields, found 4
+line 16686: malformed quotes
+line 16714: expected 5 fields, found 6

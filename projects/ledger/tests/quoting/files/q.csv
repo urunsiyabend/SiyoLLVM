@@ -1,0 +1,24 @@
+date,account,category,amount,memo
+2025-03-01,"Main ""Gold"" Account",Shopping,-10.00,"He said ""hi"""
+2025-03-02,"Acme, Inc.",Income,250.00,"Invoice 7, paid"
+2025-03-03," Spaced ",Shopping,-1.00,quoted spaces kept
+2025-03-03,Spaced,Shopping,-2.00,unquoted
+2025-03-04,"",Shopping,-1.00,quoted empty account
+2025-03-05,Main,Shop"ping,-3.00,quote inside unquoted
+2025-03-06,Main,Shopping,-3.00,"unterminated
+2025-03-07,Main,"Shopping" ,-3.00,space after closing quote
+2025-03-08,Main,Shopping,"-4.00",quoted amount
+2025-03-08,Main,Shopping," -4.00",quoted amount keeps its space
+2025-03-09,Main,Shopping,-4.00,"a""b"
+2025-03-10,Main,Shopping,-4.00,"trailing",
+2025-03-11,Main,Shopping,-4.00,"quote at end"
+2025-03-12,Main,Shopping,-4.00,"ends with doubled """
+2025-03-13,Main,Shopping,-4.00,"""
+2025-03-14,Main,"Shop""",-1.00,x
+"2025-03-15",Main,Shopping,1.00,quoted date
+2025-03-16,Main,Shopping,1.00,
+2025-03-17,Main,Shopping,1.00,"
+2025-03-18,Main,Shopping,1.00,memo "with" quotes
+2025-03-19,Main,"a,b,c",1.00,commas in a quoted category
+"2025-03-20,Main,Shopping,1.00,whole line quoted
+2025-03-21,Main,"Shopping"""x,1.00,malformed after doubled quote

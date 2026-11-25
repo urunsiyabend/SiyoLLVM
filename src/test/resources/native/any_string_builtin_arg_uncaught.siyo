@@ -1,0 +1,8 @@
+// An int held in an any passed to trim: an uncaught ClassCastException.
+fn probe(a: any) -> string { return trim(a) }
+
+fn main() {
+    println(probe(" ok "))
+    println(probe(5))
+    println("unreached")
+}

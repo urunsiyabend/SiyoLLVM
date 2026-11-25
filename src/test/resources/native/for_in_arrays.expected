@@ -1,0 +1,36 @@
+x=1
+x=3
+x=4
+8
+alpha:5
+beta:4
+:0
+false
+true
+2
+18000000000
+[1;2;]
+[3;]
+[]
+10
+30
+item 1
+false
+item two
+false
+item null
+true
+item [3, 4]
+false
+item true
+false
+after empty
+[0, 2, 4, 6, 8]
+15
+-1
+[1, 0]
+[2, 0]
+1
+caught stop at 2
+try 8
+aa ab ba bb 

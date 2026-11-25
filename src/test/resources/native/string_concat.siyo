@@ -1,0 +1,38 @@
+// String + any F1 value type, both directions; + binds left to right.
+mut suffix = "!"
+fn label(n: int) -> string { return "n" + n }
+fn main() {
+    println("int " + 2147483647 + " " + (-2147483647 - 1))
+    println("long " + 9223372036854775807L + " " + (0L - 9223372036854775807L - 1L))
+    println(-2147483647 - 1 + " is int min")
+    println("bools " + true + false)
+    println(true + " first")
+    println(1 + 2 + "x")
+    println("x" + 1 + 2)
+    println("x" + (1 + 2))
+    println(1L + 2 + "y" + 3L)
+    println("" + "")
+    println("empty" + "")
+    println("" + 0)
+    println("héllo" + " wörld 😀" + "—✓")
+    println("a\0b" + "\0c")
+    println("a\0b" + "\0c" == "a\0b\0c")
+    println("ab" == "a" + "b")
+    println(label(7) + suffix)
+    mut s = "start"
+    s += "-"
+    s += 42
+    s += true
+    s += 5L
+    s += suffix
+    println(s)
+    mut t = ""
+    mut i = 0
+    while i < 5 {
+        t = t + i
+        i += 1
+    }
+    println(t)
+    println(toString(-2147483647 - 1) + toString(9223372036854775807L) + toString(true) + toString("s"))
+    println(toString(0) + toString(0L - 1L) + toString(false))
+}

@@ -1,0 +1,3 @@
+write /proc/version (Permission denied)
+append /proc/version (Permission denied)
+true

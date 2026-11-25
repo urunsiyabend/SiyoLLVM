@@ -1,0 +1,7 @@
+// A missing key read into an int, uncaught.
+fn main() {
+    mut m: Map<string, int> = {"a": 1}
+    println(m["a"])
+    imut v: int = m["nope"]
+    println(v)
+}

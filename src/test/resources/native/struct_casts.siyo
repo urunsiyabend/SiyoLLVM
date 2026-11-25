@@ -1,0 +1,32 @@
+// An any read as a struct is a checkcast to Map, except for an argument,
+// which the reference casts to LinkedHashMap; a struct read as anything else
+// names the JVM class SiyoObject.
+struct Point {
+    x: int,
+    name: string
+}
+
+fn take(p: Point) -> int {
+    return 1
+}
+
+fn back(a: any) -> Point {
+    return a
+}
+
+fn main() {
+    imut text: any = "str"
+    imut list: any = [1]
+    imut point: any = Point { x: 1, name: "p" }
+    try { println(take(text)) } catch e { println(e) }
+    try { println(back(list)) } catch e { println(e) }
+    try { imut p: Point = text println(p) } catch e { println(e) }
+    try { imut n: int = point println(n) } catch e { println(e) }
+    try { imut s: string = point println(s) } catch e { println(e) }
+    try { imut xs: int[] = point println(xs) } catch e { println(e) }
+    try { throw Point { x: 2, name: "thrown" } } catch e: Point { println(e.name) }
+    println(take(point) + take(null))
+    imut ps: any[] = [point]
+    imut first: Point = ps[0]
+    println(first)
+}

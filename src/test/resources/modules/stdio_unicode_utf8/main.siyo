@@ -1,0 +1,47 @@
+import "std/io"
+import "std/os"
+
+// Under a UTF-8 locale (main.locale) file names and arguments are UTF-8:
+// the program creates, lists and reads non-ASCII names itself.
+fn show(label: string, s: string) {
+    println(label + " [" + s + "] " + toString(len(s)))
+}
+
+fn main() {
+    imut args = os.args()
+    println(args)
+    for a in args {
+        show("arg", a)
+    }
+
+    // One entry per directory, as the reference's listDir order is the file system's.
+    io.mkdir("latin/café")
+    io.writeFile("latin/café/naïve résumé.txt", "Latin: é ï")
+    io.mkdir("turkish")
+    io.writeFile("turkish/ışık ĞÜŞÖÇİ.txt", "Turkish: ğüşöçı")
+    io.mkdir("emoji")
+    io.writeFile("emoji/😀 smile.txt", "emoji: 😀")
+
+    println(io.listDir("latin"))
+    println(io.listDir("latin/café"))
+    println(io.listDir("turkish"))
+    println(io.listDir("emoji"))
+    println(io.isDir("latin/café") + " " + io.isFile("turkish/ışık ĞÜŞÖÇİ.txt") + " " + io.exists("emoji/? smile.txt"))
+
+    show("latin", io.readFile("latin/café/naïve résumé.txt"))
+    println(io.readLines("turkish/ışık ĞÜŞÖÇİ.txt"))
+    io.appendFile("emoji/😀 smile.txt", "\nmore 😀")
+    show("emoji", io.readFile("emoji/😀 smile.txt"))
+    for name in io.listDir("emoji") {
+        show("name", name)
+        println(io.readLines("emoji/" + name))
+    }
+
+    // A name argument round-trips through the file system.
+    io.writeFile(args[0] + ".txt", args[1])
+    println(io.exists(args[0] + ".txt") + " " + io.isFile("çağrı ışık.txt"))
+    show("from arg", io.readFile(args[0] + ".txt"))
+    try { io.readFile("yok/ğ.txt") } catch e { println(e) }
+    println(io.delete("emoji/😀 smile.txt"))
+    println(io.listDir("emoji"))
+}

@@ -1,0 +1,6 @@
+date,account,category,amount,memo
+2024-01-01,a,Ａ,1.00,fullwidth A category
+2024-01-01,a,😀,1.00,emoji category (surrogate pair)
+2024-01-01,a,Z,1.00,ASCII category
+2024-01-02,Ａ,b,0,fullwidth A account
+2024-01-02,😀,b,0,emoji account

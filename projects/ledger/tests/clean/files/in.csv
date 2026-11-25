@@ -1,0 +1,11 @@
+date,account,category,amount,memo
+2025-01-03,Checking,Salary,2500.00,January pay
+2025-01-04,Checking,Groceries,-82.17,Market
+2025-01-05,Savings,Transfer,500,From checking
+2025-01-05,Checking,Transfer,-500.00,To savings
+2025-01-12,Credit Card,Dining,-45.90,"Dinner, with friends"
+2025-01-15,Checking,Utilities,-120.05,Electricity
+2025-01-20,Credit Card,Groceries,-17.83,
+2025-01-31,Savings,Interest,0.42,Monthly interest
+2025-01-31,Checking,Fees,0,no charge this month
+2024-12-31,Credit Card,Refund,12.50,Returned item

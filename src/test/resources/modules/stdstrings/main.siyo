@@ -1,0 +1,26 @@
+import "std/strings"
+import "std/strings" as s
+
+fn main() {
+    println(strings.join(["a", "b", "c"], ", "))
+    println("[" + strings.join([""], "-") + "]")
+    imut none: string[] = []
+    println("[" + strings.join(none, "-") + "]")
+    println(strings.repeat("ab", 3) + "|" + strings.repeat("x", 0) + "|" + strings.repeat("x", -2) + "|")
+    println(strings.padLeft("7", 3, "0") + " " + strings.padLeft("1234", 3, "0") + " " + strings.padLeft("7", 4, "ab"))
+    println(strings.padRight("7", 3, ".") + "|" + strings.padRight("é", 3, "ü") + "|")
+    println("[" + strings.trimStart(" \t\n\r x y \n") + "]")
+    println("[" + strings.trimEnd(" x y \t\r\n ") + "]")
+    println("[" + strings.trimStart("   ") + "][" + strings.trimEnd("   ") + "][" + strings.trimEnd("") + "]")
+    println(strings.lastIndexOf("abcabc", "bc") + " " + strings.lastIndexOf("abc", "") + " " + strings.lastIndexOf("ab", "abc") + " " + strings.lastIndexOf("aaa", "aa"))
+    println(strings.chars("héy"))
+    println(len(strings.chars("")))
+    println(len(strings.chars("😀")))
+    println(strings.lines("a\nb\n"))
+    println(strings.lines(""))
+    println(len(s.lines("x\ny")))
+    for t in ["0", "-0", "007", "2147483647", "2147483648", "-2147483648", "-2147483649", "00000000002147483647",
+              "", "-", "+1", " 1", "1a", "٣", "99999999999999999999", "-00", "12"] {
+        println("isInt(" + t + ") = " + toString(strings.isInt(t)))
+    }
+}

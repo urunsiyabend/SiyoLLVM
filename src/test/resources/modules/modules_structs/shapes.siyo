@@ -1,0 +1,19 @@
+struct Point { x: int, y: int }
+
+enum Color { Red, Green, Blue }
+
+impl Point {
+    fn new(x: int, y: int) -> Point { Point { x: x, y: y } }
+    fn sum(self) -> int { self.x + self.y }
+}
+
+fn mk(x: int, y: int) -> Point { Point.new(x, y) }
+
+fn origin() -> Point { Point { x: 0, y: 0 } }
+
+fn area(p: Point) -> int { p.x * p.y }
+
+fn colorName(c: int) -> string {
+    if c == Color.Green { return "green" }
+    return "other"
+}

@@ -1,0 +1,10 @@
+// parseLong of a null string, from a global read before its initialiser.
+mut early = read()
+mut later = "1"
+fn read() -> string { return later }
+fn main() {
+    println(parseInt(early))
+    println(toInt(early))
+    println(parseLong(later))
+    println(parseLong(early))
+}

@@ -1,0 +1,9 @@
+// substring never clamps: an out-of-range call is an uncaught
+// StringIndexOutOfBoundsException.
+fn main() {
+    println(substring("abc", 1, 3))
+    println(substring("😀", 0, 2))
+    println("before")
+    println(substring("abc", 2, 9))
+    println("after")
+}

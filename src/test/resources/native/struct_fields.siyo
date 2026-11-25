@@ -1,0 +1,78 @@
+// Every field type, read back at its declared type; compound assignment;
+// equality of structs held in any values (maps, the type name ignored).
+struct All {
+    i: int,
+    l: long,
+    b: bool,
+    s: string,
+    xs: int[],
+    a: any
+}
+
+struct Other {
+    i: int,
+    l: long,
+    b: bool,
+    s: string,
+    xs: int[],
+    a: any
+}
+
+struct Counter {
+    n: int,
+    total: long,
+    log: string
+}
+
+fn main() {
+    imut v = All { i: 1, l: 2, b: true, s: "s", xs: [1, 2], a: 5L }
+    imut i: int = v.i
+    imut l: long = v.l
+    imut b: bool = v.b
+    imut s: string = v.s
+    imut xs: int[] = v.xs
+    imut a: any = v.a
+    println(i + 1)
+    println(l * 3000000000L)
+    println(!b)
+    println(s + "!")
+    imut second: int = xs[1]
+    println(second + len(xs))
+    println(a)
+    push(v.xs, 3)
+    println(v.xs)
+    v.xs[0] = 7
+    println(xs)
+    v.a = "now text"
+    println(v.a)
+    v.a = 3
+    println(v)
+
+    imut c = Counter { n: 0, total: 0L, log: "" }
+    for k in range(0, 5) {
+        c.n += 1
+        c.total += k
+        c.log += toString(k)
+    }
+    c.n *= 3
+    c.n -= 1
+    println(c)
+    println(c.n / 2 + c.total)
+
+    imut x1: any = All { i: 1, l: 2, b: true, s: "s", xs: [1], a: null }
+    imut x2: any = All { a: null, xs: [1], s: "s", b: true, l: 2, i: 1 }
+    imut x3: any = Other { i: 1, l: 2, b: true, s: "s", xs: [1], a: null }
+    imut x4: any = All { i: 1, l: 2, b: true, s: "s", xs: [1], a: 0 }
+    imut x5: any = All { i: 1, l: 2, b: true, s: "s", xs: [1] }
+    println(x1 == x2)
+    println(x1 == x3)
+    println(x1 == x4)
+    println(x1 == x5)
+    println(x1 != x2)
+    imut wide: any = Counter { n: 1, total: 1, log: "" }
+    imut narrow: any = Counter { n: 1, total: 1L, log: "" }
+    println(wide == narrow)
+    imut asString: any = "Counter { n: 1, total: 1, log:  }"
+    println(wide == asString)
+    println(toString(wide) == asString)
+}

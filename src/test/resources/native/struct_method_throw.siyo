@@ -1,0 +1,38 @@
+// A method that throws; the caller catches it, and an uncaught one ends the
+// program.
+struct Account {
+    balance: int
+}
+
+impl Account {
+    fn withdraw(self, amount: int) -> int {
+        if amount > self.balance {
+            throw "insufficient: " + self.balance
+        }
+        self.balance = self.balance - amount
+        return self.balance
+    }
+
+    fn check(self) {
+        error("check failed at " + self.balance)
+    }
+}
+
+fn main() {
+    imut a = Account { balance: 10 }
+    println(a.withdraw(3))
+    try {
+        a.withdraw(100)
+        println("not reached")
+    } catch e {
+        println("caught " + e)
+    }
+    println(a.balance)
+    try {
+        a.check()
+    } catch e {
+        println("caught " + e)
+    }
+    a.withdraw(50)
+    println("not reached")
+}

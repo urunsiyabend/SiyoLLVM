@@ -1,0 +1,49 @@
+// Struct literals, field reads and writes, structs as parameters, returns,
+// globals and any values.
+struct Point {
+    x: int,
+    y: int
+}
+
+struct Named {
+    name: string,
+    at: Point
+}
+
+mut origin = Point { x: 0, y: 0 }
+
+fn make(x: int, y: int) -> Point {
+    return Point { y: y, x: x }
+}
+
+fn sum(p: Point) -> int {
+    return p.x + p.y
+}
+
+fn main() {
+    imut p = make(3, 4)
+    println(p.x)
+    println(p.y)
+    println(sum(p))
+    p.x = 10
+    println(sum(p))
+    println(origin)
+    origin.y = -1
+    println(origin)
+    imut n = Named { name: "home", at: p }
+    println(n.at.x * 2)
+    println(n.name + "!")
+    imut a: any = n
+    println(a)
+    imut back: Named = a
+    println(back)
+    println(back.name)
+    println(typeName(p))
+    println(typeName(a))
+    println(typeName("text") == "")
+    mut nothing: Point = null
+    println(nothing == null)
+    println(nothing)
+    nothing = make(1, 1)
+    println(nothing != null)
+}

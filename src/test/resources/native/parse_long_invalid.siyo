@@ -1,0 +1,6 @@
+// parseLong throws NumberFormatException, unlike parseInt.
+fn main() {
+    println(parseInt("9223372036854775808"))
+    println(parseLong("-9223372036854775808"))
+    println(parseLong("9223372036854775808"))
+}

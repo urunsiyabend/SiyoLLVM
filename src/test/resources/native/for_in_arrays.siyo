@@ -1,0 +1,106 @@
+// for … in over arrays: the binder's desugaring into an index loop over
+// len and indexing, with break and continue, nested loops, any[] elements,
+// string and nested arrays, a returned array and loops inside try.
+fn evens(n: int) -> int[] {
+    mut xs: int[] = []
+    for i in range(0, n) {
+        if i % 2 == 1 { continue }
+        push(xs, i)
+    }
+    return xs
+}
+
+fn firstOver(xs: int[], limit: int) -> int {
+    for x in xs {
+        if x > limit { return x }
+    }
+    return -1
+}
+
+fn main() {
+    mut sum = 0
+    for x in [1, 2, 3, 4, 5, 6] {
+        if x == 2 { continue }
+        if x == 5 { break }
+        sum = sum + x
+        println("x=" + toString(x))
+    }
+    println(sum)
+
+    for s in ["alpha", "beta", ""] {
+        println(s + ":" + toString(len(s)))
+    }
+
+    for b in [true, false] { println(!b) }
+    for l in [1L, 9000000000L] { println(l * 2L) }
+
+    imut grid = [[1, 2], [3], []]
+    for row in grid {
+        mut line = ""
+        for cell in row {
+            line = line + toString(cell) + ";"
+        }
+        println("[" + line + "]")
+    }
+
+    // Labels in nested loops: break leaves only the inner loop.
+    for i in [1, 2, 3] {
+        for j in [10, 20, 30] {
+            if j == 20 { break }
+            if i == 2 { continue }
+            println(i * j)
+        }
+    }
+
+    mut mixed: any[] = []
+    push(mixed, 1)
+    push(mixed, "two")
+    push(mixed, null)
+    push(mixed, [3, 4])
+    push(mixed, true)
+    for m in mixed {
+        println("item " + m)
+        println(m == null)
+    }
+
+    mut empty: string[] = []
+    for e in empty { println("never " + e) }
+    println("after empty")
+
+    println(evens(9))
+    println(firstOver([4, 8, 15, 16], 9))
+    println(firstOver([], 9))
+
+    // A loop variable is fresh each iteration; its array stays shared.
+    for r in [[1], [2]] {
+        push(r, 0)
+        println(r)
+    }
+
+    try {
+        for x in [1, 2, 3] {
+            if x == 2 { throw "stop at " + toString(x) }
+            println(x)
+        }
+    } catch e {
+        println("caught " + e)
+    }
+
+    for x in [7, 8] {
+        try {
+            if x == 7 { continue }
+            println("try " + toString(x))
+        } catch e {
+            println(e)
+        }
+    }
+
+    imut words: string[] = ["a", "b"]
+    mut joined = ""
+    for w in words {
+        for v in words {
+            joined = joined + w + v + " "
+        }
+    }
+    println(joined)
+}

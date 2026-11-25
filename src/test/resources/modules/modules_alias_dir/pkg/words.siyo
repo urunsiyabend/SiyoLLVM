@@ -1,0 +1,3 @@
+imut hello = "hello"
+
+fn size() -> int { len(hello) }

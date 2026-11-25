@@ -1,0 +1,9 @@
+// A checked cast of an any holding an int to string raises
+// ClassCastException with the JVM's message; uncaught, it ends the program.
+fn f(x: any) -> any { return x }
+
+fn main() {
+  println("before")
+  imut s: string = f(3)
+  println(s)
+}

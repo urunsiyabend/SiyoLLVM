@@ -1,0 +1,8 @@
+// A string held in an any as an operand of int addition, uncaught.
+fn main() {
+    imut ok: any = 2
+    imut a: any = "5"
+    println(ok + 1)
+    println(a + 1)
+    println("unreached")
+}

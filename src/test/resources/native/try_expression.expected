@@ -1,0 +1,27 @@
+7
+q!
+-1
+12
+fallback: Range [5, 9) out of bounds for length 3
+body ran
+<42>
+c:Range [0, 9) out of bounds for length 34
+8
+2
+-1
+5
+9
+condition
+statement: For input string: "zz"
+thrown tx
+-100
+-5
+6
+4
+E
+3
+1
+null
+outer: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+outer: Cannot invoke "java.lang.Integer.intValue()"
+203

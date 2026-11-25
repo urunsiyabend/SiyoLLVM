@@ -1,0 +1,63 @@
+// Insertion order: overwrite keeps position, remove then reinsert appends,
+// many removes and inserts, growth past several table sizes.
+fn main() {
+    mut m = {"b": 1, "a": 2, "c": 3}
+    m["a"] = 20
+    println(m)
+    m.remove("b")
+    m["b"] = 10
+    println(m)
+    m.remove("a")
+    m.remove("c")
+    println(m)
+    m["a"] = 1
+    m["c"] = 1
+    println(m.keys())
+
+    mut big: Map<int, int> = {}
+    for i in range(0, 1000) {
+        big[i] = i * 2
+    }
+    println(len(big))
+    for i in range(0, 1000) {
+        if i % 7 != 0 {
+            big.remove(i)
+        }
+    }
+    println(len(big))
+    for i in range(0, 50) {
+        big[i] = -i
+    }
+    println(big.size())
+    println(big)
+
+    mut churn: Map<string, int> = {}
+    for round in range(0, 30) {
+        for i in range(0, 40) {
+            churn["k" + toString(i)] = round
+        }
+        for i in range(0, 40) {
+            if (i + round) % 3 == 0 {
+                churn.remove("k" + toString(i))
+            }
+        }
+    }
+    println(len(churn))
+    println(churn)
+
+    mut grow = map()
+    for i in range(0, 5000) {
+        grow[toString(i)] = i
+    }
+    mut ok = true
+    mut idx = 0
+    for k in grow {
+        if k != toString(idx) {
+            ok = false
+        }
+        idx = idx + 1
+    }
+    println(ok)
+    println(idx)
+    println(grow["4999"])
+}

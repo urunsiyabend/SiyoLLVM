@@ -1,0 +1,1332 @@
+BOUNDED evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-090547-4427f03e8cab46ac9e306a915008245f
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< com.siyo:siyollvm >--------------------------
+[INFO] Building SiyoLLVM 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- build-helper:3.6.0:add-source (add-upstream-frontend) @ siyollvm ---
+[INFO] Source directory: /home/urunsiyabend/development/SiyoLLVM-native/upstream/siyocompiler/src/main/java added.
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ siyollvm ---
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] The encoding used to copy filtered properties files has not been set. This means that the same encoding will be used to copy filtered properties files as when copying other filtered resources. This might not be what you want! Run your build with --debug to see which files might be affected. Read more at https://maven.apache.org/plugins/maven-resources-plugin/examples/filtering-properties-files.html
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ siyollvm ---
+[INFO] Copying 343 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ siyollvm ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 31 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- antrun:3.1.0:run (create-test-tmpdir) @ siyollvm ---
+[INFO] Executing tasks
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ siyollvm ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running siyollvm.nativegate.GcStressNativeTest
+[ERROR] Tests run: 129, Failures: 70, Errors: 0, Skipped: 0, Time elapsed: 39.05 s <<< FAILURE! -- in siyollvm.nativegate.GcStressNativeTest
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.385 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_values: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.383 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: array_aliasing: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.385 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: array_any_elements: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.379 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: array_bounds: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.381 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: array_nested: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.476 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: array_self_print: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.374 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: array_throw: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.387 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: arrays_basic: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.372 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: case_mapping: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.378 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: catch_payloads: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.382 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: concat_loop: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.401 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: for_in_arrays: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.379 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: for_in_mutation: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.370 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: interpolation: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.381 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: map_aliasing: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.393 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: map_basic: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.375 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: map_iteration_mutation: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.375 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: map_keys: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.390 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: map_order: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.378 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: map_typed_reads: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.377 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: range_basic: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.381 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: range_large: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.391 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: split_edges: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.394 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: string_builtins: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.377 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: string_concat: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.384 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: string_index: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.374 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: string_order: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.387 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: string_unicode: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.380 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_aliasing: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.379 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_basic: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.382 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_casts: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.389 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_fields: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.389 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_interactions: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.399 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_methods: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.377 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_null_field: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.375 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: struct_print: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.390 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: surrogate_rejoin: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.381 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: throw_mid_expression: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus -- Time elapsed: 0.382 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: try_expression: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$corpus$0(GcStressNativeTest.java:76)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: bad_header: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: bad_header_bom: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: bad_header_spaces: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.008 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: clean: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: crcr_final_cr: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: empty: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: header_after_blank: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: header_lone_cr: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: header_only: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: header_trailing_space: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.048 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: large: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: line_endings: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: missing_input: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: net_negative_cents: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: only_newline: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: quoting: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: rejected_only: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: rejections: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: report_directory: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: trim_boundary: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: unicode: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: unicode_ties: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: unwritable_report: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$ledger$5(GcStressNativeTest.java:108)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules -- Time elapsed: 0.371 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: modules_diamond: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$modules$3(GcStressNativeTest.java:94)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules -- Time elapsed: 0.389 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: stdio_errors: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$modules$3(GcStressNativeTest.java:94)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules -- Time elapsed: 0.400 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: stdio_files: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$modules$3(GcStressNativeTest.java:94)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules -- Time elapsed: 0.375 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: stdio_readonly: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$modules$3(GcStressNativeTest.java:94)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules -- Time elapsed: 0.387 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: stdio_unicode_utf8: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$modules$3(GcStressNativeTest.java:94)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules -- Time elapsed: 0.383 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: stdos_args: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$modules$3(GcStressNativeTest.java:94)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules -- Time elapsed: 0.405 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: stdstrings: no collection under stress ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.GcStressNativeTest.checkCollected(GcStressNativeTest.java:68)
+	at siyollvm.nativegate.GcStressNativeTest.lambda$modules$3(GcStressNativeTest.java:94)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.GcStressNativeTest -- Time elapsed: 39.05 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: collections over the whole stress run: 0 ==> expected: <true> but was: <false>
+	at siyollvm.nativegate.GcStressNativeTest.collectorRan(GcStressNativeTest.java:58)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.Collections$UnmodifiableCollection.forEach(Collections.java:1117)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running siyollvm.nativegate.RuntimeGcNativeTest
+[ERROR] Tests run: 7, Failures: 7, Errors: 0, Skipped: 0, Time elapsed: 2.007 s <<< FAILURE! -- in siyollvm.nativegate.RuntimeGcNativeTest
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.structCyclesAndSelfContainingArrays -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: [gc_cycles_alias.siyo(27, 26): Binary operator '+' is not defined for types <class java.lang.Object> and <class java.lang.Object>] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.RuntimeGcNativeTest.build(RuntimeGcNativeTest.java:79)
+	at siyollvm.nativegate.RuntimeGcNativeTest.structCyclesAndSelfContainingArrays(RuntimeGcNativeTest.java:109)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.largeArraysAndGrowth -- Time elapsed: 0.393 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+collections under stress: siyo-rt: collections=0 heap_peak_kb=0 rss_peak_kb=10024
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.RuntimeGcNativeTest.runStressed(RuntimeGcNativeTest.java:100)
+	at siyollvm.nativegate.RuntimeGcNativeTest.largeArraysAndGrowth(RuntimeGcNativeTest.java:219)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.stringBuffersBeyondTwoKiB -- Time elapsed: 0.431 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+collections under stress: siyo-rt: collections=0 heap_peak_kb=74516 rss_peak_kb=58060
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.RuntimeGcNativeTest.runStressed(RuntimeGcNativeTest.java:100)
+	at siyollvm.nativegate.RuntimeGcNativeTest.stringBuffersBeyondTwoKiB(RuntimeGcNativeTest.java:315)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.mapsOfStructsReferringBack -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: [gc_map_back.siyo(32, 33): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.RuntimeGcNativeTest.build(RuntimeGcNativeTest.java:79)
+	at siyollvm.nativegate.RuntimeGcNativeTest.mapsOfStructsReferringBack(RuntimeGcNativeTest.java:149)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.mapPastManyRehashes -- Time elapsed: 0.401 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+collections under stress: siyo-rt: collections=0 heap_peak_kb=3680 rss_peak_kb=8608
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.RuntimeGcNativeTest.runStressed(RuntimeGcNativeTest.java:100)
+	at siyollvm.nativegate.RuntimeGcNativeTest.mapPastManyRehashes(RuntimeGcNativeTest.java:285)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.collectorHooks -- Time elapsed: 0.370 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+build ==> expected: <> but was: </home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:48:48: error: call to undeclared function 'siyo_rt_alloc_noscan'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   48 |     uint64_t *p = scan ? siyo_rt_alloc(size) : siyo_rt_alloc_noscan(size);
+      |                                                ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:48:24: error: pointer/integer type mismatch in conditional expression ('void *' and 'int') [-Werror,-Wconditional-type-mismatch]
+   48 |     uint64_t *p = scan ? siyo_rt_alloc(size) : siyo_rt_alloc_noscan(size);
+      |                        ^ ~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:63:12: error: call to undeclared function 'siyo_rt_gc_block_of'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   63 |     return siyo_rt_gc_block_of(p) == p && *(uint64_t *)p == fill;
+      |            ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:63:35: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   63 |     return siyo_rt_gc_block_of(p) == p && *(uint64_t *)p == fill;
+      |            ~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:68:12: error: call to undeclared function 'siyo_rt_gc_block_of'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   68 |     return siyo_rt_gc_block_of(reveal(hidden)) == NULL;
+      |            ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:68:48: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   68 |     return siyo_rt_gc_block_of(reveal(hidden)) == NULL;
+      |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:74:5: error: call to undeclared function 'siyo_rt_gc_collect'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   74 |     siyo_rt_gc_collect();
+      |     ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:79:5: error: call to undeclared function 'siyo_rt_gc_counts'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   79 |     siyo_rt_gc_counts(&blocks, &bytes);
+      |     ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:85:5: error: call to undeclared function 'siyo_rt_gc_counts'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   85 |     siyo_rt_gc_counts(&blocks, &bytes);
+      |     ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:94:11: error: call to undeclared function 'siyo_rt_gc_block_of'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   94 |     check(siyo_rt_gc_block_of(p) == p, "interior: start of a small block");
+      |           ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:94:34: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+   94 |     check(siyo_rt_gc_block_of(p) == p, "interior: start of a small block");
+      |           ~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:95:39: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+   95 |     check(siyo_rt_gc_block_of(p + 57) == p, "interior: middle of a small block");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:96:39: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+   96 |     check(siyo_rt_gc_block_of(p + 99) == p, "interior: last requested byte");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:98:39: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   98 |     check(siyo_rt_gc_block_of(&local) == NULL, "interior: stack address is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:99:45: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   99 |     check(siyo_rt_gc_block_of(&static_word) == NULL, "interior: static address is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:101:34: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+  101 |     check(siyo_rt_gc_block_of(m) == NULL, "interior: malloc memory is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:103:37: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+  103 |     check(siyo_rt_gc_block_of(NULL) == NULL, "interior: NULL is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:104:42: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+  104 |     check(siyo_rt_gc_block_of("literal") == NULL, "interior: a constant is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:108:34: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+  108 |     check(siyo_rt_gc_block_of(q) == q, "interior: start of a large block");
+      |           ~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at siyollvm.nativegate.RuntimeGcNativeTest.collectorHooks(RuntimeGcNativeTest.java:62)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.exceptionsInLoops -- Time elapsed: 0.374 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+collections under stress: siyo-rt: collections=0 heap_peak_kb=410 rss_peak_kb=2672
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.RuntimeGcNativeTest.runStressed(RuntimeGcNativeTest.java:100)
+	at siyollvm.nativegate.RuntimeGcNativeTest.exceptionsInLoops(RuntimeGcNativeTest.java:363)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR] siyollvm.nativegate.GcStressNativeTest.corpus
+[INFO]   Run 1: PASS
+[INFO]   Run 2: PASS
+[INFO]   Run 3: PASS
+[INFO]   Run 4: PASS
+[ERROR]   Run 5: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 any_values: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 6: PASS
+[ERROR]   Run 7: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 array_aliasing: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 8: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 array_any_elements: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 9: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 array_bounds: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 10: PASS
+[ERROR]   Run 11: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 array_nested: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 12: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 array_self_print: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 13: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 array_throw: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 14: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 arrays_basic: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 15: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 case_mapping: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 16: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 catch_payloads: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 17: PASS
+[ERROR]   Run 18: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 concat_loop: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 19: PASS
+[INFO]   Run 20: PASS
+[INFO]   Run 21: PASS
+[INFO]   Run 22: PASS
+[INFO]   Run 23: PASS
+[INFO]   Run 24: PASS
+[INFO]   Run 25: PASS
+[INFO]   Run 26: PASS
+[INFO]   Run 27: PASS
+[ERROR]   Run 28: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 for_in_arrays: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 29: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 for_in_mutation: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 30: PASS
+[ERROR]   Run 31: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 interpolation: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 32: PASS
+[ERROR]   Run 33: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 map_aliasing: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 34: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 map_basic: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 35: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 map_iteration_mutation: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 36: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 map_keys: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 37: PASS
+[ERROR]   Run 38: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 map_order: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 39: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 map_typed_reads: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 40: PASS
+[INFO]   Run 41: PASS
+[INFO]   Run 42: PASS
+[INFO]   Run 43: PASS
+[INFO]   Run 44: PASS
+[INFO]   Run 45: PASS
+[INFO]   Run 46: PASS
+[INFO]   Run 47: PASS
+[INFO]   Run 48: PASS
+[ERROR]   Run 49: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 range_basic: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 50: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 range_large: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 51: PASS
+[INFO]   Run 52: PASS
+[INFO]   Run 53: PASS
+[INFO]   Run 54: PASS
+[ERROR]   Run 55: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 split_edges: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 56: PASS
+[ERROR]   Run 57: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 string_builtins: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 58: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 string_concat: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 59: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 string_index: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 60: PASS
+[ERROR]   Run 61: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 string_order: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 62: PASS
+[ERROR]   Run 63: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 string_unicode: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 64: PASS
+[ERROR]   Run 65: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_aliasing: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 66: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_basic: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 67: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_casts: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 68: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_fields: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 69: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_interactions: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 70: PASS
+[ERROR]   Run 71: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_methods: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 72: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_null_field: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 73: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 struct_print: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 74: PASS
+[ERROR]   Run 75: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 surrogate_rejoin: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 76: PASS
+[ERROR]   Run 77: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 throw_mid_expression: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 78: PASS
+[INFO]   Run 79: PASS
+[INFO]   Run 80: PASS
+[INFO]   Run 81: PASS
+[INFO]   Run 82: PASS
+[INFO]   Run 83: PASS
+[INFO]   Run 84: PASS
+[ERROR]   Run 85: GcStressNativeTest.lambda$corpus$0:76->checkCollected:68 try_expression: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 86: PASS
+[INFO] 
+[ERROR] siyollvm.nativegate.GcStressNativeTest.ledger
+[ERROR]   Run 1: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 bad_header: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 2: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 bad_header_bom: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 3: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 bad_header_spaces: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 4: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 clean: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 5: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 crcr_final_cr: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 6: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 empty: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 7: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 header_after_blank: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 8: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 header_lone_cr: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 9: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 header_only: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 10: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 header_trailing_space: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 11: PASS
+[ERROR]   Run 12: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 large: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 13: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 line_endings: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 14: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 missing_input: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 15: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 net_negative_cents: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 16: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 only_newline: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 17: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 quoting: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 18: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 rejected_only: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 19: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 rejections: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 20: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 report_directory: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 21: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 trim_boundary: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 22: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 unicode: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 23: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 unicode_ties: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 24: GcStressNativeTest.lambda$ledger$5:108->checkCollected:68 unwritable_report: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 25: PASS
+[INFO]   Run 26: PASS
+[INFO]   Run 27: PASS
+[INFO] 
+[ERROR] siyollvm.nativegate.GcStressNativeTest.modules
+[INFO]   Run 1: PASS
+[INFO]   Run 2: PASS
+[ERROR]   Run 3: GcStressNativeTest.lambda$modules$3:94->checkCollected:68 modules_diamond: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 4: PASS
+[INFO]   Run 5: PASS
+[INFO]   Run 6: PASS
+[INFO]   Run 7: PASS
+[ERROR]   Run 8: GcStressNativeTest.lambda$modules$3:94->checkCollected:68 stdio_errors: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 9: GcStressNativeTest.lambda$modules$3:94->checkCollected:68 stdio_files: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 10: PASS
+[ERROR]   Run 11: GcStressNativeTest.lambda$modules$3:94->checkCollected:68 stdio_readonly: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 12: GcStressNativeTest.lambda$modules$3:94->checkCollected:68 stdio_unicode_utf8: no collection under stress ==> expected: <true> but was: <false>
+[ERROR]   Run 13: GcStressNativeTest.lambda$modules$3:94->checkCollected:68 stdos_args: no collection under stress ==> expected: <true> but was: <false>
+[INFO]   Run 14: PASS
+[ERROR]   Run 15: GcStressNativeTest.lambda$modules$3:94->checkCollected:68 stdstrings: no collection under stress ==> expected: <true> but was: <false>
+[INFO] 
+[ERROR]   GcStressNativeTest.collectorRan:58 collections over the whole stress run: 0 ==> expected: <true> but was: <false>
+[ERROR]   RuntimeGcNativeTest.collectorHooks:62 build ==> expected: <> but was: </home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:48:48: error: call to undeclared function 'siyo_rt_alloc_noscan'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   48 |     uint64_t *p = scan ? siyo_rt_alloc(size) : siyo_rt_alloc_noscan(size);
+      |                                                ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:48:24: error: pointer/integer type mismatch in conditional expression ('void *' and 'int') [-Werror,-Wconditional-type-mismatch]
+   48 |     uint64_t *p = scan ? siyo_rt_alloc(size) : siyo_rt_alloc_noscan(size);
+      |                        ^ ~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:63:12: error: call to undeclared function 'siyo_rt_gc_block_of'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   63 |     return siyo_rt_gc_block_of(p) == p && *(uint64_t *)p == fill;
+      |            ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:63:35: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   63 |     return siyo_rt_gc_block_of(p) == p && *(uint64_t *)p == fill;
+      |            ~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:68:12: error: call to undeclared function 'siyo_rt_gc_block_of'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   68 |     return siyo_rt_gc_block_of(reveal(hidden)) == NULL;
+      |            ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:68:48: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   68 |     return siyo_rt_gc_block_of(reveal(hidden)) == NULL;
+      |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:74:5: error: call to undeclared function 'siyo_rt_gc_collect'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   74 |     siyo_rt_gc_collect();
+      |     ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:79:5: error: call to undeclared function 'siyo_rt_gc_counts'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   79 |     siyo_rt_gc_counts(&blocks, &bytes);
+      |     ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:85:5: error: call to undeclared function 'siyo_rt_gc_counts'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   85 |     siyo_rt_gc_counts(&blocks, &bytes);
+      |     ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:94:11: error: call to undeclared function 'siyo_rt_gc_block_of'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   94 |     check(siyo_rt_gc_block_of(p) == p, "interior: start of a small block");
+      |           ^
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:94:34: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+   94 |     check(siyo_rt_gc_block_of(p) == p, "interior: start of a small block");
+      |           ~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:95:39: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+   95 |     check(siyo_rt_gc_block_of(p + 57) == p, "interior: middle of a small block");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:96:39: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+   96 |     check(siyo_rt_gc_block_of(p + 99) == p, "interior: last requested byte");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:98:39: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   98 |     check(siyo_rt_gc_block_of(&local) == NULL, "interior: stack address is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:99:45: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+   99 |     check(siyo_rt_gc_block_of(&static_word) == NULL, "interior: static address is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:101:34: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+  101 |     check(siyo_rt_gc_block_of(m) == NULL, "interior: malloc memory is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:103:37: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+  103 |     check(siyo_rt_gc_block_of(NULL) == NULL, "interior: NULL is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:104:42: error: comparison between pointer and integer ('int' and 'void *') [-Werror,-Wpointer-integer-compare]
+  104 |     check(siyo_rt_gc_block_of("literal") == NULL, "interior: a constant is not heap");
+      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^  ~~~~
+/home/urunsiyabend/development/SiyoLLVM-native/target/tmp/runtime-gc/hooks/gc_hooks_test.c:108:34: error: comparison between pointer and integer ('int' and 'char *') [-Werror,-Wpointer-integer-compare]
+  108 |     check(siyo_rt_gc_block_of(q) == q, "interior: start of a large block");
+      |           ~~~~~~~~~~~~~~~~~~~~~~ ^  ~
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+>
+[ERROR]   RuntimeGcNativeTest.exceptionsInLoops:363->runStressed:100 collections under stress: siyo-rt: collections=0 heap_peak_kb=410 rss_peak_kb=2672
+ ==> expected: <true> but was: <false>
+[ERROR]   RuntimeGcNativeTest.largeArraysAndGrowth:219->runStressed:100 collections under stress: siyo-rt: collections=0 heap_peak_kb=0 rss_peak_kb=10024
+ ==> expected: <true> but was: <false>
+[ERROR]   RuntimeGcNativeTest.mapPastManyRehashes:285->runStressed:100 collections under stress: siyo-rt: collections=0 heap_peak_kb=3680 rss_peak_kb=8608
+ ==> expected: <true> but was: <false>
+[ERROR]   RuntimeGcNativeTest.mapsOfStructsReferringBack:149->build:79 [gc_map_back.siyo(32, 33): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   RuntimeGcNativeTest.stringBuffersBeyondTwoKiB:315->runStressed:100 collections under stress: siyo-rt: collections=0 heap_peak_kb=74516 rss_peak_kb=58060
+ ==> expected: <true> but was: <false>
+[ERROR]   RuntimeGcNativeTest.structCyclesAndSelfContainingArrays:109->build:79 [gc_cycles_alias.siyo(27, 26): Binary operator '+' is not defined for types <class java.lang.Object> and <class java.lang.Object>] ==> expected: <true> but was: <false>
+[INFO] 
+[ERROR] Tests run: 11, Failures: 11, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  42.918 s
+[INFO] Finished at: 2026-11-25T09:06:30+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project siyollvm: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /home/urunsiyabend/development/SiyoLLVM-native/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+BOUNDED accepted=False evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-090547-4427f03e8cab46ac9e306a915008245f

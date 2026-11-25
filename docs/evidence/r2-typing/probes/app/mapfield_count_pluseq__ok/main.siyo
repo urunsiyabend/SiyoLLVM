@@ -1,0 +1,17 @@
+struct Account { count: int, net: long }
+impl Account {
+    fn show(self) -> string { "${self.count}/${self.net}" }
+}
+struct Book { accounts: Map<string, Account> }
+
+fn main() {
+    mut m: Map<string, Account> = {}
+    m["a"] = Account { count: 0, net: 0L }
+    imut book = Book { accounts: m }
+    imut amt = 5L
+    imut k = "a"
+    imut accounts = book.accounts
+    imut a: Account = accounts[k]
+    a.count += 1
+    println(m["a"].count)
+}

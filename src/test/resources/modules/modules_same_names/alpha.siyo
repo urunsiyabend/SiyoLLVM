@@ -1,0 +1,7 @@
+mut count = 0
+
+fn helper() -> string { "alpha" }
+
+fn bump() { count += 1 }
+
+fn viaHelper() -> string { helper() + toString(count) }

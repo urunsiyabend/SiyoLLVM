@@ -1,0 +1,71 @@
+// Array literals of each element type, typed empty literals, index reads and
+// writes, push/pop/removeAt/len (also as methods), printing and toString.
+fn main() {
+    mut ints = [3, 1, 2]
+    mut longs: long[] = [1, 2]
+    mut flags = [true, false]
+    mut words = ["a", "b\0c", "çağ😀"]
+    println(ints)
+    println(longs)
+    println(flags)
+    println(words)
+    println(len(ints) + len(longs) + len(flags) + len(words))
+
+    mut empty: int[] = []
+    println(empty)
+    println(len(empty))
+    push(empty, 7)
+    empty.push(-128)
+    push(empty, 127)
+    push(empty, 128)
+    push(empty, 2147483647)
+    println(empty)
+
+    mut names: Array<string> = []
+    names.push("x")
+    push(names, null)
+    println(names)
+
+    println(ints[0] + ints[2])
+    ints[1] = ints[0] * 10
+    ints[2] += 5
+    println(ints)
+    longs[0] = 9223372036854775807L
+    longs[1] = 5
+    println(longs[0] + longs[1])
+    flags[1] = !flags[0]
+    println(flags)
+    println(words[2] + len(words[2]))
+
+    // An index assignment's value is the element it replaced.
+    println(ints[0] = 42)
+    println(ints)
+
+    imut last = pop(ints)
+    println(last + 1)
+    println(ints)
+    imut word = words.pop()
+    println(word)
+    removeAt(words, 0)
+    println(words)
+    removeAt(longs, 1)
+    println(longs)
+
+    // A thousand pushes grow the array by doubling.
+    mut big: int[] = []
+    mut i = 0
+    while i < 1000 { push(big, i * i) i += 1 }
+    println(len(big))
+    println(big[999])
+    mut sum = 0L
+    i = 0
+    while i < len(big) { sum = sum + big[i] i += 1 }
+    println(sum)
+    while len(big) > 3 { pop(big) }
+    println(big)
+
+    println(toString(flags) + "|" + toString(empty))
+    println("words: ${words}, ints: $ints")
+    print(longs)
+    println("")
+}

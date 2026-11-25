@@ -1,0 +1,43 @@
+// An any as an operand of int arithmetic and ordering, either side, and as
+// the value of += on an int: the reference casts it to Integer, so a Long or
+// a String raises ClassCastException. (A null raises a helpful
+// NullPointerException naming the parameter; see docs/SUBSET.md, "Deviations".)
+fn probe(a: any) {
+    println(a + 1)
+    println(1 + a)
+    println(a - 1)
+    println(10 - a)
+    println(a * 2)
+    println(a / 2)
+    println(17 / a)
+    println(a < 6)
+    println(1 < a)
+    println(a > 4)
+    mut n = 1
+    n += a
+    println(n)
+    n -= a
+    println(n)
+}
+
+fn wrong(a: any) {
+    try { println(a + 1) } catch e { println("+: " + e) }
+    try { println(1 + a) } catch e { println("+ left: " + e) }
+    try { println(a - 1) } catch e { println("-: " + e) }
+    try { println(a * 2) } catch e { println("*: " + e) }
+    try { println(a / 2) } catch e { println("/: " + e) }
+    try { println(a < 6) } catch e { println("<: " + e) }
+    try {
+        mut n = 1
+        n += a
+        println(n)
+    } catch e { println("+=: " + e) }
+}
+
+fn main() {
+    probe(5)
+    probe(-3)
+    wrong("x")
+    wrong(5L)
+    wrong(true)
+}

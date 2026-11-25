@@ -1,0 +1,179 @@
+-- int
+2
+0
+true
+true
+false
+true
+side 3
+2
+side 3
+false
+true
+false
+false
+1
+2
+sideL 2
+7
+sideL 2
+-3
+sideL 3
+false
+sideL 3
+false
+endsWith1: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+endsWith2: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+replace1: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+replace2: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+replace3: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+toLower: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+ord: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+trim: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+contains2: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+indexOf2: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+startsWith2: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+split2: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+len: len is not defined for Integer
+-- long
+a%3: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+10%a: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+a<=5: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+5<=a: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+a>=6: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+6>=a: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+a%side: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+side 3
+side>=a: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')
+true
+false
+false
+1
+0
+sideL 2
+9
+sideL 2
+-5
+sideL 3
+false
+sideL 3
+false
+endsWith1: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+endsWith2: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+replace1: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+replace2: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+replace3: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+toLower: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+ord: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+trim: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+contains2: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+indexOf2: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+startsWith2: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+split2: class java.lang.Long cannot be cast to class java.lang.String (java.lang.Long and java.lang.String are in module java.base of loader 'bootstrap')
+len: len is not defined for Long
+-- string
+a%3: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+10%a: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+a<=5: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+5<=a: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+a>=6: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+6>=a: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+a%side: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+side 3
+side>=a: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+l>2L: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+2L>l: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+l<=2L: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+l%2L: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+7L%l: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+l+sideL: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+sideL 2
+sideL-l: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+l<=sideL: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+sideL 3
+sideL>l: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+false
+false
+sideS b
+x
+sideS x
+axc
+abc
+b
+98
+b
+true
+1
+false
+2
+1
+-- bool
+a%3: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+10%a: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+a<=5: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+5<=a: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+a>=6: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+6>=a: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+a%side: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+side 3
+side>=a: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+l>2L: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+2L>l: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+l<=2L: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+l%2L: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+7L%l: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+l+sideL: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+sideL 2
+sideL-l: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+l<=sideL: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+sideL 3
+sideL>l: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+endsWith1: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+endsWith2: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+replace1: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+replace2: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+replace3: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+toLower: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+ord: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+trim: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+contains2: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+indexOf2: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+startsWith2: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+split2: class java.lang.Boolean cannot be cast to class java.lang.String (java.lang.Boolean and java.lang.String are in module java.base of loader 'bootstrap')
+len: len is not defined for Boolean
+-- array
+a%3: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+10%a: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+a<=5: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+5<=a: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+a>=6: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+6>=a: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+a%side: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+side 3
+side>=a: class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+l>2L: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+2L>l: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+l<=2L: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+l%2L: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+7L%l: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+l+sideL: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+sideL 2
+sideL-l: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+l<=sideL: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+sideL 3
+sideL>l: class codeanalysis.SiyoArray cannot be cast to class java.lang.Long (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Long is in module java.base of loader 'bootstrap')
+endsWith1: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+endsWith2: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+replace1: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+replace2: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+replace3: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+toLower: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+ord: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+trim: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+contains2: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+indexOf2: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+startsWith2: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+split2: class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+2
+1
+b

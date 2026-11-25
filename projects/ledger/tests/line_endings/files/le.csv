@@ -1,0 +1,11 @@
+date,account,category,amount,memo
+2025-04-01,Cash,Food,-1.00,crlf
+2025-04-02,Cash,Food,-2.00,cr then crlf
+   	  
+2025-04-03,Bank,Pay,10.00,lf then two lone cr
+2025-04-04,Bank,Pay,bad,ends in lone cr,
+,,,,
+
+
+2025-04-05,Bank,Pay,5.00,trailing spaces after memo   
+2025-04-06 ,Cash, Food ,-3.00, spaced fields2025-04-07,Bank,Pay,5.00,last line has no terminator

@@ -17,16 +17,50 @@ command-line tool. The JVM compiler (`siyoc`) is not involved at run time.
 
 What it accepts, how programs behave, and where the behaviour differs from
 `siyoc run` is in **[docs/SUBSET.md](docs/SUBSET.md)**. In short: `int`,
-`long`, `bool` and `string` values, all statement-level control flow,
-functions and recursion, and `print`/`println`. Everything else is rejected
-with a diagnostic, including code that is never reached.
+`long`, `bool` and `string` values, `any` values holding them (boxed, with
+checked casts back), `null`, all statement-level control flow,
+functions and recursion, `print`/`println`, string concatenation and
+interpolation, and the string builtins (`len`, `substring`, `indexOf`, … with
+Java's UTF-16 indexing). Arrays (`T[]`, literals, indexing with
+bounds errors, `push`/`pop`/`removeAt`/`len`), `for … in` over arrays, strings
+and `range(a, b)`, `split`, and string indexing `s[i]`. Structs (literals, fields, `impl` methods, `Type.new`) and enums. Insertion-ordered maps (`Map<K, V>`, `{…}` literals, `map()`; index read and write, `has`/`get`/`set`/`remove`/`keys`/`size`, `len`, `for k in m`). Exceptions: `throw`, `error()`, `try`/`catch`
+statements, and `try` expressions in the positions SUBSET.md lists; runtime
+errors (`/ by zero`, a failed cast, `parseLong` of bad input, an index out
+of range, …) are catchable, and an uncaught one prints the JVM's exception
+line and exits with status 1. Multi-file programs: `import "x"`, `import "dir/x"`
+and `import "x" as y` of user modules, plus the native std modules `std/io`
+(file I/O), `std/os` (arguments, exit) and `std/strings`. Everything else is
+rejected with a diagnostic, including code that is never reached (and
+`import java`).
+
+Building a multi-file program and running it with arguments (imports resolve
+relative to the importing file, as in `siyoc`):
+
+```
+$ bin/siyollvm build path/to/main.siyo -o app
+$ ./app input.csv out.txt     # read in the program with os.args()
+```
+
+## Milestone application: `projects/ledger`
+
+[`projects/ledger`](projects/ledger/README.md) is a multi-module Siyo program (about 520 lines in five
+modules) that reconciles a CSV file of bank transactions into a per-account and per-category report. Its
+behaviour is specified in [FORMAT.md](projects/ledger/FORMAT.md); the native executable is checked case by case
+against committed expectations produced by the JVM reference (`tools/oracle-jvm.sh`) and an independent Python oracle (`LedgerAppNativeTest`, `LedgerOracleNativeTest` in
+the native gate). After `mvn package`:
+
+```
+$ bin/siyollvm build projects/ledger/src/main.siyo -o ledger
+$ ./ledger projects/ledger/tests/clean/files/in.csv report.txt
+```
 
 ## Requirements
 
 - Java 21 and Maven 3.9 to build.
-- clang 15 or newer to produce executables (CI uses clang 19). `emit-llvm`
-  works without clang.
-- Linux (glibc), x86_64 or aarch64.
+- clang to produce executables (`emit-llvm` works without clang). Tested with clang 19 (CI
+  ubuntu-24.04 and local 19.1.7); clang 15–18 are intended but untested (the code requires clang ≥ 15 for
+  opaque pointers).
+- Linux (glibc), tested on x86_64; aarch64 is intended but untested.
 
 ## Build
 
@@ -47,14 +81,27 @@ SIYOLLVM_CLANG=clang-19 mvn verify -Pnative
 ```
 bin/siyollvm emit-llvm <file.siyo> [-o out.ll]
 bin/siyollvm build <file.siyo> [-o exe] [--clang <path>] [--emit-llvm out.ll]
+bin/siyollvm emit-runtime <directory>
 bin/siyollvm --help | --version
+```
+
+`emit-runtime` writes `siyo_rt.c` and `siyo_rt.h` into the directory (created
+if missing; existing copies are overwritten). To link by hand:
+
+```
+bin/siyollvm emit-llvm prog.siyo -o prog.ll
+bin/siyollvm emit-runtime .
+clang -O1 -x ir prog.ll -x c -std=c11 siyo_rt.c -pthread -o prog
 ```
 
 `bin/siyollvm` runs `target/siyollvm-<version>.jar` (built by `mvn package`);
 `java -jar target/siyollvm-<version>.jar …` works the same way. clang is
 looked up as `--clang <path>`, then `$SIYOLLVM_CLANG` (a path or a command
 name), then `clang` on `PATH`. SiyoLLVM calls clang as
-`clang -O1 -fverify-intermediate-code -w -x ir <file.ll> -pthread -o <exe>`.
+`clang -O1 -fverify-intermediate-code -w -x ir <file.ll> -x c -std=c11 <dir>/siyo_rt.c -pthread -o <exe>`,
+where `<dir>` is a temporary copy of the C runtime shipped in the jar, created
+next to the executable and removed afterwards (a `.siyo-rt*` directory can be
+left behind if the compiler process is killed mid-build).
 
 Exit status: 0 on success, 1 for diagnostics, unreadable input or a clang
 problem, 2 for usage errors, refused outputs and internal errors. Diagnostics use siyoc's
@@ -82,17 +129,54 @@ JVM cannot decode non-ASCII file names given on the command line, so
 `java -jar` you get a clear error instead. Compiled programs always write
 UTF-8 bytes.
 
+## Memory
+
+Compiled programs free memory with a conservative, non-moving mark-sweep
+collector in the C runtime. A string, array, struct or map that nothing
+reachable refers to is reclaimed, cycles included. Objects never move. The
+collector runs whenever the bytes allocated since the previous collection
+reach 4 MiB or the bytes still live after it, whichever is larger. Two
+environment variables help with testing:
+
+- `SIYO_RT_STATS=1` makes the program write
+  `siyo-rt: collections=<c> heap_peak_kb=<h> rss_peak_kb=<r>` as the last
+  stderr line at exit.
+- `SIYO_GC_STRESS=<n>` adds a collection every n allocations.
+
+On the ledger, 3 MB of input now peaks at about 20 MB of RSS (20 376 KiB, measured
+at the final R1 runtime, 6a889ec). With the earlier never-free runtime it peaked
+at 268 MB. The measurements are in
+[docs/evidence/r1-gc/ledger/](docs/evidence/r1-gc/ledger/README.md).
+
+Limits:
+
+- Data that stays reachable stays in memory. For example, a file read with
+  `readLines` stays in memory while its lines are referenced.
+- The conservative scan can keep some garbage alive: any word that happens to
+  look like a heap address counts as a reference.
+- Collections stop the single program thread while they run.
+- Blocks up to 32 KiB share 64 KiB pages, mapped 1 MiB at a time. Each live
+  block of 32 KiB or more is its own kernel mapping, so tens of thousands of
+  them can hit Linux's `vm.max_map_count` (65 530 by default) and end in
+  `OutOfMemoryError` before memory runs out. `heap_peak_kb` counts whole
+  blocks and pages, so it exceeds the bytes the program asked for.
+
+See [docs/SUBSET.md](docs/SUBSET.md) for details.
+
 ## Layout
 
 | Path | What |
 |---|---|
-| `src/main/java/siyollvm/frontend` | runs the snapshot frontend; rejects imports and type declarations before binding |
+| `src/main/java/siyollvm/frontend` | runs the snapshot frontend; binds imports (rejects only `import java`), checks module class-name collisions and dropped imports, and builds multi-unit programs |
 | `src/main/java/siyollvm/check` | `SubsetValidator`: whitelist over every lowered statement and expression |
-| `src/main/java/siyollvm/ir` | `IrEmitter` and the runtime helpers written in IR |
-| `src/main/java/siyollvm/toolchain` | finding and running clang |
+| `src/main/java/siyollvm/ir` | `IrEmitter` and the runtime declarations |
+| `src/main/resources/siyollvm/runtime` | the C11 runtime (`siyo_rt.c`, `siyo_rt.h`): `main`, program thread, stack guard, printing, strings and string builtins, file I/O |
+| `src/main/resources/std` | SiyoLLVM's own std sources (`io`, `os`, `strings`); io and os are native intrinsics |
+| `src/main/java/siyollvm/toolchain` | finding and running clang; writing out the runtime source |
 | `src/main/java/siyollvm/cli` | the `siyollvm` command |
 | `upstream/siyocompiler` | the frontend snapshot, its provenance and checksums |
 | `examples/` | example programs with expected output |
+| `src/test/resources/modules` | directory corpus of multi-file programs, incl. `main.args`, `main.locale` and file fixtures |
 | `src/test/resources/native` | semantics corpus (expected output from `siyoc run` 0.9.0) |
 
 ## Frontend snapshot
@@ -104,6 +188,13 @@ Siyabend Ürün. Why each file is there and how to update the snapshot is in
 `scripts/update-upstream.sh` performs the update, and a test fails if the
 snapshot drifts from its checksum manifest. SiyoLLVM adds no licence terms
 for these files.
+
+Two pieces of SiyoLLVM's own code follow the reference and must be checked
+when the snapshot is updated: `Frontend.Imports.moduleClassName` copies
+siyoc's package-private `ModuleHandler.moduleClassName` (how it names a
+module's JVM class), and `src/main/resources/std/strings.siyo` reimplements
+the reference std's `strings` functions with the same algorithms (see
+[docs/SUBSET.md](docs/SUBSET.md#standard-library)).
 
 ## Status
 

@@ -1,0 +1,23 @@
+// for … in over an any: an array gives its elements, a map its keys, null no
+// iterations; another type raises "len is not defined for <class>".
+struct Pt { x: int, y: int }
+
+fn each(a: any) {
+    mut n = 0
+    for x in a {
+        println(x)
+        n += 1
+    }
+    println("count " + toString(n))
+}
+
+fn main() {
+    each([1, 2, 3])
+    each({"k": 1, "j": 2})
+    each(["a", "b"])
+    each(null)
+    try { each(5) } catch e { println("int: " + e) }
+    try { each("ab") } catch e { println("string: " + e) }
+    imut pt: any = Pt { x: 1, y: 2 }
+    try { each(pt) } catch e { println("struct: " + e) }
+}

@@ -1,0 +1,19 @@
+struct Q { v: any, w: int }
+fn side(n: int) -> int { println("side " + toString(n)) return n }
+fn g(a: any) {
+    imut q: Q = a
+    println(len(a))
+    try { for x in a { println(x) } } catch e { println("for: " + e) }
+    try { println(side(1) + q.v) } catch e { println("order: " + e) }
+    try { println(q.v < side(2)) } catch e { println("order2: " + e) }
+    println(q.w * 2)
+    println(q.v + 1)
+}
+fn main() {
+    g(Q { v: 3, w: 4 })
+    imut e: any = Q { v: true, w: 1 }
+    try { g(e) } catch x { println("bool: " + x) }
+    imut m: any = {"a": 1}
+    println(len(m))
+    g(Q { v: null, w: 1 })
+}

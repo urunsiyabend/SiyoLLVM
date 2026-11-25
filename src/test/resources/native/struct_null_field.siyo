@@ -1,0 +1,32 @@
+// A field the literal left out reads as null; into an int it raises
+// NullPointerException. Setting it appends the field after the others.
+struct Point {
+    x: int,
+    name: string,
+    on: bool
+}
+
+fn main() {
+    imut p = Point { name: "only" }
+    println(p)
+    println(p.name)
+    try { imut v: int = p.x println(v) } catch e { println(e) }
+    try { p.x += 1 } catch e { println("compound: " + e) }
+    try { println(p.on) } catch e { println(e) }
+    imut boxed: any = p
+    try { imut q: Point = boxed println(q.x) } catch e { println("via any: " + e) }
+    p.x = 3
+    println(p)
+    p.name = "renamed"
+    println(p)
+    p.on = true
+    println(p)
+    imut missing = Point { on: false }
+    println(missing.name == null)
+    println(missing.name)
+    println("name=" + missing.name)
+    imut q = Point { x: 1, name: null }
+    println(q)
+    println(q.x)
+    println(missing.x)
+}

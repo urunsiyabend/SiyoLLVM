@@ -1,0 +1,29 @@
+// Enum values in arrays, struct fields, any values and method results.
+enum Suit { Hearts, Spades = 5, Clubs }
+
+struct Card {
+    suit: int,
+    rank: int
+}
+
+impl Card {
+    fn isSpade(self) -> bool {
+        return self.suit == Suit.Spades
+    }
+}
+
+fn main() {
+    imut suits = [Suit.Hearts, Suit.Spades, Suit.Clubs]
+    println(suits)
+    for s in suits {
+        println(s == Suit.Clubs)
+    }
+    imut card = Card { suit: Suit.Spades, rank: 12 }
+    println(card)
+    println(card.isSpade())
+    card.suit = Suit.Clubs
+    println(card.isSpade())
+    imut a: any = Suit.Clubs
+    println(a == 6)
+    println(a)
+}

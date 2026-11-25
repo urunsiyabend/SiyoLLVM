@@ -1,0 +1,5 @@
+import "std/io"
+
+fn main() {
+    println(io.readFile("anything.txt"))
+}

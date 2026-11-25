@@ -1,0 +1,12 @@
+appended 100000 characters, 10000 of them two bytes wide
+true
+true
+false
+true
+false
+true
+true
+aaaaaaaaaé
+aaaaaaaaaéaaaaaaaaaé3
+[x0][x1][x2][x3][x4]
+x

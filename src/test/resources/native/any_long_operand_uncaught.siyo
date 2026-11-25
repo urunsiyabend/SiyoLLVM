@@ -1,0 +1,8 @@
+// A string held in an any as an operand of long multiplication, uncaught.
+fn main() {
+    imut ok: any = 3L
+    imut a: any = "3"
+    println(ok * 2L)
+    println(a * 2L)
+    println("unreached")
+}

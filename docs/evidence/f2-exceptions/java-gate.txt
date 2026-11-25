@@ -1,0 +1,17 @@
+BOUNDED evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261107-061258-64e41e4db84740e29263f793e1485d83
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.067 s -- in siyollvm.SnapshotManifestTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.030 s -- in siyollvm.frontend.FrontendTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.400 s -- in siyollvm.toolchain.ClangTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in siyollvm.toolchain.RuntimeSourceTest
+[INFO] Tests run: 129, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.167 s -- in siyollvm.check.SubsetValidatorTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.195 s -- in siyollvm.cli.CliProcessTest
+[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.861 s -- in siyollvm.cli.MainTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in siyollvm.ExamplesCompileTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in siyollvm.CompilerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s -- in siyollvm.ir.RuntimeIrTest
+[INFO] Tests run: 43, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.033 s -- in siyollvm.ir.IrEmitterTest
+[INFO] Tests run: 237, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.179 s -- in siyollvm.cli.LauncherIT
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+BOUNDED accepted=True evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261107-061258-64e41e4db84740e29263f793e1485d83

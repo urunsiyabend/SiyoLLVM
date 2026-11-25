@@ -1,0 +1,42 @@
+// Memory-bound workload: writes a 500-line file once, then reads it back
+// with io.readLines and aggregates it, N / 500 times (N lines read in all),
+// keeping only a small map of 10 buckets live. The file has a fixed size so
+// that the data live at any moment does not grow with N.
+import "std/io"
+import "std/os"
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    imut lines = 500
+    mut content = ""
+    mut i = 0
+    while i < lines {
+        content += "row" + toString(i) + "," + toString(i % 10) + "," + toString(i * 37 % 1000) + "\n"
+        i += 1
+    }
+    io.writeFile("lines.txt", content)
+    mut buckets: Map<string, long> = {}
+    mut rounds = 0
+    mut read = 0
+    while read < n {
+        imut rows = io.readLines("lines.txt")
+        for row in rows {
+            imut text: string = row
+            imut fields = split(text, ",")
+            imut key: string = "b" + fields[1]
+            imut value = parseLong(fields[2])
+            if buckets.has(key) {
+                imut old: long = buckets[key]
+                buckets[key] = old + value + rounds
+            } else {
+                buckets[key] = value + rounds
+            }
+        }
+        read += len(rows)
+        rounds += 1
+    }
+    println("gc_lines n=" + toString(n) + " rounds=" + toString(rounds) + " read=" + toString(read))
+    println(buckets)
+}

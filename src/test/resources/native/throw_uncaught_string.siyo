@@ -1,0 +1,11 @@
+// An uncaught throw of a string, three calls deep: stdout so far is flushed,
+// stderr gets the SiyoThrow line, exit status 1.
+fn c() { throw "boom" }
+fn b() { c() println("not after c") }
+fn a() -> int { b() return 1 }
+
+fn main() {
+    println("before")
+    println(a())
+    println("after")
+}

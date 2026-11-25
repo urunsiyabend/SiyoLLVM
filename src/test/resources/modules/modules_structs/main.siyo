@@ -1,0 +1,16 @@
+// Structs, enums and impl methods declared in a module and used by the importer.
+import "shapes"
+
+fn main() {
+    imut p = Point.new(3, 4)
+    println(p.sum())
+    imut q = Point { x: 1, y: 2 }
+    println(q.x + q.y)
+    println(shapes.origin())
+    println(shapes.area(shapes.mk(2, 5)))
+    println(Color.Blue)
+    println(shapes.colorName(Color.Green))
+    mut r = shapes.mk(1, 1)
+    r.x = 9
+    println(r.sum())
+}

@@ -1,0 +1,97 @@
+// Typed reads at erased sites: a missing key into int, long and bool; a
+// wrong-typed value (ClassCastException); m[k] += 1 counting; casts of maps
+// held in any; len of a null map is 0 (a null map's other uses are in
+// MapNullNativeTest: the JVM's message names its own locals).
+struct P { x: int }
+
+fn main() {
+    mut counts: Map<string, int> = {}
+    for w in split("x y x z x y", " ") {
+        if !counts.has(w) {
+            counts[w] = 0
+        }
+        counts[w] += 1
+    }
+    println(counts)
+    try {
+        counts["nope"] += 1
+    } catch e {
+        println("c1 " + e)
+    }
+    try {
+        imut v: int = counts.get("nope")
+        println(v)
+    } catch e {
+        println("c2 " + e)
+    }
+    try {
+        imut v: int = counts.get(5)
+        println(v)
+    } catch e {
+        println("c3 " + e)
+    }
+    mut lm: Map<string, long> = {"a": 1L}
+    try {
+        imut v: long = lm["nope"]
+        println(v)
+    } catch e {
+        println("c4 " + e)
+    }
+    mut bm: Map<string, bool> = {"t": true}
+    try {
+        imut v: bool = bm["nope"]
+        println(v)
+    } catch e {
+        println("c5 " + e)
+    }
+    try {
+        imut v: bool = bm.get("nope")
+        println(v)
+    } catch e {
+        println("c6 " + e)
+    }
+    mut wide: Map<string, any> = {"s": "str", "n": 1}
+    imut held: any = wide
+    imut narrow: Map<string, int> = held
+    println(narrow["n"] + 1)
+    try {
+        imut v: int = narrow["s"]
+        println(v)
+    } catch e {
+        println("c7 " + e)
+    }
+    imut text: any = "hello"
+    try {
+        imut bad: Map<string, int> = text
+        println(bad)
+    } catch e {
+        println("c8 " + e)
+    }
+    imut arr: any = [1]
+    try {
+        imut bad: Map<string, int> = arr
+        println(bad)
+    } catch e {
+        println("c9 " + e)
+    }
+    imut st: any = P { x: 1 }
+    try {
+        imut bad: Map<string, int> = st
+        println(bad)
+    } catch e {
+        println("c10 " + e)
+    }
+    try {
+        println(held[0])
+    } catch e {
+        println("c11 " + e)
+    }
+    try {
+        imut p: P = held
+        println(p)
+    } catch e {
+        println("c12 " + e)
+    }
+    mut none: Map<string, int> = null
+    println(len(none))
+}

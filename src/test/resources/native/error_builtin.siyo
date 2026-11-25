@@ -1,0 +1,14 @@
+// error(msg) throws its argument; uncaught it is a SiyoThrow.
+fn check(n: int) -> int {
+    if n < 0 { error("negative: " + n) }
+    return n * 2
+}
+fn never() -> int { error("always") }
+
+fn main() {
+    println(check(2))
+    try { println(check(-1)) } catch e { println(e) }
+    try { println(never()) } catch e { println(e) }
+    println(check(-5))
+    println("unreached")
+}

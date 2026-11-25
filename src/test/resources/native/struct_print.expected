@@ -1,0 +1,11 @@
+Point { y: 2, x: 1 }
+Point { x: 1, y: 2 }
+Shape { center: Point { y: 2, x: 1 }, name: tri, corners: [Point { y: 2, x: 1 }, Point { x: 1, y: 2 }, Point { x: 0, y: 0 }], tags: [t, 1, null, true] }
+Shape { center: Point { y: 2, x: 1 }, name: tri, corners: [Point { y: 2, x: 1 }, Point { x: 1, y: 2 }, Point { x: 0, y: 0 }], tags: [t, 1, null, true] }
+shape: Shape { center: Point { y: 2, x: 1 }, name: tri, corners: [Point { y: 2, x: 1 }, Point { x: 1, y: 2 }, Point { x: 0, y: 0 }], tags: [t, 1, null, true] }
+point: Point { y: 2, x: 1 }
+Shape { center: Point { y: 2, x: 1 }, name: tri, corners: [Point { y: 2, x: 1 }, Point { x: 1, y: 2 }, Point { x: 0, y: 0 }], tags: [t, 1, null, true] }
+boxed=Shape { center: Point { y: 2, x: 1 }, name: tri, corners: [Point { y: 2, x: 1 }, Point { x: 1, y: 2 }, Point { x: 0, y: 0 }], tags: [t, 1, null, true] }
+[Point { y: 2, x: 1 }, null, str, Point { x: 1, y: 2 }]
+Shape { name: none }
+Shape { tags: null, name: , corners: [] }

@@ -1,0 +1,26 @@
+[1, x, null, 2, true, [1, 2]]
+6
+2
+xtrue
+2
+null
+class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+Cannot invoke "java.lang.Long.longValue()" because "value" is null
+class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+class codeanalysis.SiyoArray cannot be cast to class java.lang.String (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')
+class codeanalysis.SiyoArray cannot be cast to class java.lang.Integer (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.lang.Integer is in module java.base of loader 'bootstrap')
+class java.lang.Long cannot be cast to class java.util.List (java.lang.Long and java.util.List are in module java.base of loader 'bootstrap')
+class java.lang.Integer cannot be cast to class java.lang.Boolean (java.lang.Integer and java.lang.Boolean are in module java.base of loader 'bootstrap')
+replaced: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')
+[1, 5, null, 2, true, [1, 2]]
+replaced int: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')
+true
+was null
+[1, 2]
+[1, 2]
+true
+false
+false
+true
+false
+x=[1, 2]

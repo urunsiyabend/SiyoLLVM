@@ -1,0 +1,38 @@
+// Memory-bound workload: each iteration builds reference cycles (two
+// structs naming each other; an array holding itself; a struct and an array
+// naming each other) and drops them. Nothing prints a cycle.
+import "std/os"
+
+struct Node { id: int, label: string, next: any, items: any[] }
+
+fn score(n: Node) -> int {
+    return n.id % 1000 + len(n.label) + len(n.items)
+}
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    mut check = 0
+    mut i = 0
+    while i < n {
+        imut a = Node { id: i + 1000, label: "a" + toString(i) }
+        imut b = Node { id: i + 2000, label: "b" + toString(i), next: a }
+        a.next = b
+        mut ring: any[] = []
+        push(ring, i + 300)
+        push(ring, "x" + toString(i))
+        push(ring, ring)
+        mut box: any[] = []
+        push(box, a)
+        push(box, b)
+        a.items = box
+        b.items = ring
+        imut back: Node = a.next
+        imut again: Node = back.next
+        check = (check * 5 + score(back) + score(again)) % 1000003
+        i += 1
+    }
+    println("gc_cycles n=" + toString(n))
+    println("check=" + toString(check))
+}

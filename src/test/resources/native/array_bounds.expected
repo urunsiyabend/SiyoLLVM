@@ -1,0 +1,14 @@
+pop: Index -1 out of bounds for length 0
+removeAt: Index 0 out of bounds for length 0
+get -1: Index -1 out of bounds for length 2
+get len: Index 2 out of bounds for length 2
+deep: Index 2147483647 out of bounds for length 2
+set: Index 2 out of bounds for length 2
+set -5: Index -5 out of bounds for length 2
+removeAt len: Index 2 out of bounds for length 2
+removeAt -1: Index -1 out of bounds for length 2
+[4, 5]
+4
+pop again: Index -1 out of bounds for length 0
+0
+3

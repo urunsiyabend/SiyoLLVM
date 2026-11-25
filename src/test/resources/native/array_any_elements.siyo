@@ -1,0 +1,59 @@
+// any[] elements are read back into a declared type with a checked cast;
+// a wrong type raises ClassCastException, a null NullPointerException.
+fn main() {
+    mut a2: any[] = []
+    push(a2, 1)
+    push(a2, "x")
+    push(a2, null)
+    push(a2, 2L)
+    push(a2, true)
+    push(a2, [1, 2])
+    println(a2)
+    println(len(a2))
+
+    imut n: int = a2[0]
+    imut s: string = a2[1]
+    imut l: long = a2[0]
+    imut b: bool = a2[4]
+    imut inner: int[] = a2[5]
+    println(n + l)
+    println(s + b)
+    println(inner[1])
+    imut nothing: string = a2[2]
+    println(nothing)
+
+    try { imut bad: int = a2[1] println(bad) } catch e { println(e) }
+    try { imut bad: long = a2[2] println(bad) } catch e { println(e) }
+    try { imut bad: long = a2[4] println(bad) } catch e { println(e) }
+    try { imut bad: string = a2[5] println(bad) } catch e { println(e) }
+    try { imut bad: int = a2[5] println(bad) } catch e { println(e) }
+    try { imut bad: int[] = a2[3] println(bad) } catch e { println(e) }
+    try { imut bad: bool = a2[0] println(bad) } catch e { println(e) }
+
+    // The replaced element is read back at the new value's type.
+    try { a2[1] = 5 } catch e { println("replaced: " + e) }
+    println(a2)
+    try { a2[0] = "now a string" } catch e { println("replaced int: " + e) }
+    println(a2[0] == "now a string")
+    a2[2] = "was null"
+    println(a2[2])
+
+    imut popped: any = pop(a2)
+    println(popped)
+    imut back: int[] = popped
+    println(back)
+
+    // == on any values is element-wise, with Java's types.
+    imut x: any = [1, 2]
+    imut y: any = [1, 2]
+    imut z: any = [1L, 2L]
+    println(x == y)
+    println(x == z)
+    println(x != popped)
+    imut nested1: any = [[1], ["s"], [null]]
+    imut nested2: any = [[1], ["s"], [null]]
+    println(nested1 == nested2)
+    imut text: any = "[1, 2]"
+    println(x == text)
+    println("x=" + x)
+}

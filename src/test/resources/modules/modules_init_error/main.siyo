@@ -1,0 +1,4 @@
+// An uncaught error in a module's init() aborts the program before main.
+import "boot"
+
+fn main() { println("main never runs") }

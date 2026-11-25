@@ -1,0 +1,15 @@
+L+: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+sideL 2
+L-: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+L>: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+L%: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+0
+0
+field+: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+side 1
+side+field: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+field%: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+field<: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+fieldL: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+0
+2

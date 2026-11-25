@@ -1,0 +1,46 @@
+// Nested arrays: unannotated literals, rows shared between arrays, printing
+// nested and empty rows, and arrays inside any[].
+fn rows(n: int) -> any[] {
+    mut out: any[] = []
+    mut i = 0
+    while i < n {
+        mut row: int[] = []
+        mut j = 0
+        while j <= i { push(row, j) j += 1 }
+        push(out, row)
+        i += 1
+    }
+    return out
+}
+
+fn main() {
+    mut grid = [[1, 2], [3]]
+    println(grid)
+    imut first: int = grid[0][1]
+    imut second: int = grid[1][0]
+    println(first + second)
+    grid[1][0] = 30
+    grid[0].push(4)
+    push(grid, [])
+    println(grid)
+    println(len(grid[2]))
+    mut deep = [[["a"], ["b", "c"]], [[]]]
+    println(deep)
+    println(deep[0][1][1])
+    imut leaf: string[] = deep[1][0]
+    leaf.push("z")
+    println(deep)
+    try { println(deep[0][1][5]) } catch e { println(e) }
+    imut notRows: any = [1, 2]
+    imut flat: any[] = [notRows]
+    try { println(flat[0][0][0]) } catch e { println(e) }
+    imut t = rows(4)
+    println(t)
+    imut third: int[] = t[2]
+    println(third[2])
+    mut words = [["x", "w"], ["y"]]
+    words[1].push(null)
+    println(words)
+    imut e: any = grid
+    println("grid=" + e)
+}

@@ -1,0 +1,26 @@
+// Raising calls whose result is boxed, and any values passed to typed parameters.
+fn f(x: any) -> any { return x }
+fn number(fail: bool) -> int {
+    if fail { throw "no number" }
+    return 7
+}
+fn takesInt(n: int) -> int { return n + 1 }
+fn takesString(s: string) -> string { return s + "!" }
+fn takesBool(b: bool) -> bool { return !b }
+
+fn main() {
+    try { imut a: any = number(false) println(a) } catch e { println("unreached") }
+    try { imut a: any = number(true) println(a) } catch e { println("caught " + e) }
+    try { println(f(number(true))) } catch e { println("caught " + e) }
+    mut i: any = 41
+    mut s: any = "s"
+    mut b: any = false
+    println(takesInt(i))
+    println(takesString(s))
+    println(takesBool(b))
+    try { println(takesInt(s)) } catch e { println(e) }
+    try { println(takesString(i)) } catch e { println(e) }
+    try { println(takesBool(i)) } catch e { println(e) }
+    try { throw i } catch e: int { println(e + 1) }
+    try { throw s } catch e: string { println(e) }
+}

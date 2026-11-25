@@ -1,0 +1,14 @@
+// A string where a struct was expected, then a field +=: uncaught.
+struct Point { x: int, y: int }
+
+fn bump(a: any) {
+    imut p: Point = a
+    p.x += 1
+    println(p.x)
+}
+
+fn main() {
+    bump(Point { x: 1, y: 2 })
+    bump("s")
+    println("unreached")
+}

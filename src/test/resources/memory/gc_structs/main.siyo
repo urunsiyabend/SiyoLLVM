@@ -1,0 +1,33 @@
+// Memory-bound workload: struct churn. Each iteration makes a few structs
+// (one nested in another, with a string field), updates and reads them, and
+// drops them.
+import "std/os"
+
+struct Point { x: int, y: int }
+struct Shape { name: string, origin: Point, corner: Point, area: int }
+
+fn makeShape(i: int) -> Shape {
+    imut o = Point { x: i % 50 + 200, y: i % 30 + 300 }
+    imut c = Point { x: o.x + i % 7 + 1000, y: o.y + i % 5 + 1000 }
+    return Shape { name: "shape-" + toString(i), origin: o, corner: c, area: 0 }
+}
+
+fn main() {
+    imut args = os.args()
+    imut arg: string = args[0]
+    imut n = parseInt(arg)
+    mut check = 0
+    mut names = 0L
+    mut i = 0
+    while i < n {
+        imut s = makeShape(i)
+        s.area = (s.corner.x - s.origin.x) * (s.corner.y - s.origin.y)
+        s.origin.x += 1
+        imut t = makeShape(i + 1)
+        names += len(s.name) + len(t.name)
+        check = (check * 13 + s.area % 1000 + s.origin.x + t.corner.y) % 1000003
+        i += 1
+    }
+    println("gc_structs n=" + toString(n))
+    println("names=" + toString(names) + " check=" + toString(check))
+}

@@ -1,0 +1,92 @@
+// Maps: literals of each key and value type, map(), index read and write,
+// the accepted methods, len, printing, toString, nested maps, maps of arrays
+// and structs, maps held in any.
+struct P { x: int, y: int }
+
+mut registry: Map<string, int> = {"init": 0}
+
+fn count(words: string[]) -> Map<string, int> {
+    mut m: Map<string, int> = {}
+    for w in words {
+        if m.has(w) {
+            m[w] += 1
+        } else {
+            m[w] = 1
+        }
+    }
+    return m
+}
+
+fn describe(m: Map<string, int>) -> string {
+    return "size " + toString(m.size()) + " " + toString(m)
+}
+
+fn main() {
+    mut m = {"b": 1, "a": 2}
+    m["b"] = 3
+    println(m)
+    println(m["a"])
+    println(m["nope"])
+    println(len(m))
+    println(m.keys())
+
+    imut si: Map<string, int> = {"one": 1, "two": 2}
+    imut is: Map<int, string> = {5: "five", 1: "one"}
+    imut ls: Map<long, bool> = {10000000000L: true, 2L: false}
+    imut bs: Map<bool, long> = {true: 1L, false: 0L}
+    imut aa: Map<any, any> = {"s": 1, 2: "t", true: null}
+    println(si)
+    println(is)
+    println(ls)
+    println(bs)
+    println(aa)
+    println(is[5] + "!")
+    println(ls[2L])
+    println(bs[true] + 1L)
+
+    mut e = map()
+    println(e)
+    println(len(e))
+    e.set("k", "v")
+    e.set(1, 2)
+    println(e.get("k"))
+    println(e.get(1))
+    println(e.has("k"))
+    println(e.has("zz"))
+    e.remove("k")
+    e.remove("absent")
+    println(e)
+    println(e.size())
+
+    imut nested = {"inner": {"x": 1}, "xs": [1, 2]}
+    println(nested)
+    imut lists: Map<string, int[]> = {"xs": [1, 2]}
+    push(lists["xs"], 3)
+    println(lists["xs"])
+    println(lists)
+    imut pm = {"p": P { x: 1, y: 2 }}
+    println(pm)
+    imut mm: Map<string, Map<string, int>> = {"a": {"b": 1}}
+    mm["a"]["c"] = 2
+    println(mm)
+
+    println(count(split("a b a c b a", " ")))
+    println(describe(si))
+    println("text " + toString(is) + " $si")
+    print(m)
+    println("")
+
+    imut held: any = si
+    println(held)
+    imut back: Map<string, int> = held
+    println(back["two"])
+    println(held == si)
+    println(typeName(si))
+
+    registry["main"] = 1
+    println(registry)
+    println(registry.keys())
+    for k in registry {
+        println(k + "=" + toString(registry[k]))
+    }
+}

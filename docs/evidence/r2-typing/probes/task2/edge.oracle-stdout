@@ -1,0 +1,22 @@
+2
+for: class codeanalysis.SiyoObject cannot be cast to class java.util.List (codeanalysis.SiyoObject is in unnamed module of loader 'app'; java.util.List is in module java.base of loader 'bootstrap')
+side 1
+4
+side 2
+false
+8
+4
+2
+for: class codeanalysis.SiyoObject cannot be cast to class java.util.List (codeanalysis.SiyoObject is in unnamed module of loader 'app'; java.util.List is in module java.base of loader 'bootstrap')
+side 1
+order: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+order2: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+2
+bool: class java.lang.Boolean cannot be cast to class java.lang.Integer (java.lang.Boolean and java.lang.Integer are in module java.base of loader 'bootstrap')
+1
+2
+for: class codeanalysis.SiyoObject cannot be cast to class java.util.List (codeanalysis.SiyoObject is in unnamed module of loader 'app'; java.util.List is in module java.base of loader 'bootstrap')
+side 1
+order: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+order2: Cannot invoke "java.lang.Integer.intValue()" because the return value of "java.util.Map.get(Object)" is null
+2

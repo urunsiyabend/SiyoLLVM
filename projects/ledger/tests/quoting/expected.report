@@ -1,0 +1,32 @@
+LEDGER REPORT
+source: q.csv
+rows: 14 accepted, 9 rejected, 23 total
+period: 2025-03-01 to 2025-03-19
+
+ACCOUNTS
+ACCOUNT              COUNT        CREDITS         DEBITS            NET
+ Spaced                  1           0.00          -1.00          -1.00
+Acme, Inc.               1         250.00           0.00         250.00
+Main                    10           4.00         -20.00         -16.00
+Main "Gold" Account      1           0.00         -10.00         -10.00
+Spaced                   1           0.00          -2.00          -2.00
+TOTAL                   14         254.00         -33.00         221.00
+
+CATEGORIES
+CATEGORY   COUNT            NET
+Income         1         250.00
+a,b,c          1           1.00
+Shop"          1          -1.00
+Shop"ping      1          -3.00
+Shopping      10         -26.00
+
+REJECTED
+line 6: empty account
+line 8: unterminated quote
+line 9: malformed quotes
+line 11: invalid amount ' -4.00'
+line 13: expected 5 fields, found 6
+line 16: unterminated quote
+line 20: unterminated quote
+line 23: unterminated quote
+line 24: malformed quotes

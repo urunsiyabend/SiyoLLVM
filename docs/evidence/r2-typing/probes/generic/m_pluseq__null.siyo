@@ -1,0 +1,17 @@
+struct Point { x: int, y: int }
+impl Point {
+    fn sum(self) -> int { self.x + self.y }
+}
+fn takeS(s: string) { println(s + "!") }
+fn takeI(n: int) { println(n + 1) }
+fn takeL(n: long) { println(n + 1L) }
+
+fn probe(a: any) {
+    imut p: Point = a
+    p.x += 1
+    println(p.x)
+}
+
+fn main() {
+    probe(null)
+}

@@ -1,0 +1,25 @@
+BOUNDED evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261107-072236-e7cc89fb998c4ae497ebed108520d303
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.071 s -- in siyollvm.SnapshotManifestTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in siyollvm.frontend.FrontendTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.518 s -- in siyollvm.nativegate.RuntimeArraysNativeTest
+[INFO] Tests run: 79, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.10 s -- in siyollvm.nativegate.NativeCorpusTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.301 s -- in siyollvm.nativegate.RuntimeBuildNativeTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.503 s -- in siyollvm.nativegate.RuntimeStringsNativeTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.517 s -- in siyollvm.nativegate.NativeExamplesTest
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.963 s -- in siyollvm.nativegate.StringBuiltinsNativeTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.787 s -- in siyollvm.nativegate.StackGuardNativeTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.772 s -- in siyollvm.nativegate.CliNativeTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.078 s -- in siyollvm.toolchain.ClangTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.004 s -- in siyollvm.toolchain.RuntimeSourceTest
+[INFO] Tests run: 207, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.165 s -- in siyollvm.check.SubsetValidatorTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.197 s -- in siyollvm.cli.CliProcessTest
+[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.848 s -- in siyollvm.cli.MainTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in siyollvm.ExamplesCompileTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s -- in siyollvm.CompilerTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s -- in siyollvm.ir.RuntimeIrTest
+[INFO] Tests run: 57, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s -- in siyollvm.ir.IrEmitterTest
+[INFO] Tests run: 451, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.171 s -- in siyollvm.cli.LauncherIT
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+BOUNDED accepted=True evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261107-072236-e7cc89fb998c4ae497ebed108520d303

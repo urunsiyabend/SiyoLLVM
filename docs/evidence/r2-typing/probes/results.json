@@ -1,0 +1,2358 @@
+{
+ "b_contains_arg1__null": {
+  "emit": {
+   "err": "b_contains_arg1__null.siyo(10, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"String.contains(java.lang.CharSequence)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_contains_arg1__ok": {
+  "emit": {
+   "err": "b_contains_arg1__ok.siyo(10, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "b_contains_arg1__wrong": {
+  "emit": {
+   "err": "b_contains_arg1__wrong.siyo(10, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_contains_arg2__null": {
+  "emit": {
+   "err": "b_contains_arg2__null.siyo(10, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.CharSequence.toString()\" because \"s\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_contains_arg2__ok": {
+  "emit": {
+   "err": "b_contains_arg2__ok.siyo(10, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "b_contains_arg2__wrong": {
+  "emit": {
+   "err": "b_contains_arg2__wrong.siyo(10, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_indexOf__null": {
+  "emit": {
+   "err": "b_indexOf__null.siyo(10, 13): [llvm] arguments of type any to indexOf() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"String.indexOf(String)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_indexOf__ok": {
+  "emit": {
+   "err": "b_indexOf__ok.siyo(10, 13): [llvm] arguments of type any to indexOf() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "b_indexOf__wrong": {
+  "emit": {
+   "err": "b_indexOf__wrong.siyo(10, 13): [llvm] arguments of type any to indexOf() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_len_str__null": {
+  "emit": {
+   "err": "b_len_str__null.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "0",
+   "rc": 0
+  }
+ },
+ "b_len_str__ok": {
+  "emit": {
+   "err": "b_len_str__ok.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "3",
+   "rc": 0
+  }
+ },
+ "b_len_str__wrong": {
+  "emit": {
+   "err": "b_len_str__wrong.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "codeanalysis.SiyoThrow: len is not defined for Integer",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_parseInt__null": {
+  "emit": {
+   "err": "b_parseInt__null.siyo(10, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "0",
+   "rc": 0
+  }
+ },
+ "b_parseInt__ok": {
+  "emit": {
+   "err": "b_parseInt__ok.siyo(10, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "42",
+   "rc": 0
+  }
+ },
+ "b_parseInt__wrong": {
+  "emit": {
+   "err": "b_parseInt__wrong.siyo(10, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_split__null": {
+  "emit": {
+   "err": "b_split__null.siyo(10, 13): [llvm] arguments of type any to split() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"String.split(String, int)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_split__ok": {
+  "emit": {
+   "err": "b_split__ok.siyo(10, 13): [llvm] arguments of type any to split() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "[a, c]",
+   "rc": 0
+  }
+ },
+ "b_split__wrong": {
+  "emit": {
+   "err": "b_split__wrong.siyo(10, 13): [llvm] arguments of type any to split() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_startsWith__null": {
+  "emit": {
+   "err": "b_startsWith__null.siyo(10, 13): [llvm] arguments of type any to startsWith() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"String.startsWith(String)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_startsWith__ok": {
+  "emit": {
+   "err": "b_startsWith__ok.siyo(10, 13): [llvm] arguments of type any to startsWith() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "b_startsWith__wrong": {
+  "emit": {
+   "err": "b_startsWith__wrong.siyo(10, 13): [llvm] arguments of type any to startsWith() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_substring__null": {
+  "emit": {
+   "err": "b_substring__null.siyo(10, 13): [llvm] arguments of type any to substring() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"String.substring(int, int)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_substring__ok": {
+  "emit": {
+   "err": "b_substring__ok.siyo(10, 13): [llvm] arguments of type any to substring() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "b",
+   "rc": 0
+  }
+ },
+ "b_substring__wrong": {
+  "emit": {
+   "err": "b_substring__wrong.siyo(10, 13): [llvm] arguments of type any to substring() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_toUpper__null": {
+  "emit": {
+   "err": "b_toUpper__null.siyo(10, 13): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"String.toUpperCase()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_toUpper__ok": {
+  "emit": {
+   "err": "b_toUpper__ok.siyo(10, 13): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "ABC",
+   "rc": 0
+  }
+ },
+ "b_toUpper__wrong": {
+  "emit": {
+   "err": "b_toUpper__wrong.siyo(10, 13): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_trim__null": {
+  "emit": {
+   "err": "b_trim__null.siyo(10, 13): [llvm] arguments of type any to trim() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"String.trim()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "b_trim__ok": {
+  "emit": {
+   "err": "b_trim__ok.siyo(10, 13): [llvm] arguments of type any to trim() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "abc",
+   "rc": 0
+  }
+ },
+ "b_trim__wrong": {
+  "emit": {
+   "err": "b_trim__wrong.siyo(10, 13): [llvm] arguments of type any to trim() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "f_int_param__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\"",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "f_int_param__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "f_int_param__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "f_long_param__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "f_long_param__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "f_long_param__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "f_string_param__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "null!",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "null!",
+   "rc": 0
+  }
+ },
+ "f_string_param__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "abc!",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "abc!",
+   "rc": 0
+  }
+ },
+ "f_string_param__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "for_array__null": {
+  "emit": {
+   "err": "for_array__null.siyo(9, 4): [llvm] for \u2026 in over any values is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  }
+ },
+ "for_array__ok": {
+  "emit": {
+   "err": "for_array__ok.siyo(9, 4): [llvm] for \u2026 in over any values is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "1\n2\n3",
+   "rc": 0
+  }
+ },
+ "for_array__wrong": {
+  "emit": {
+   "err": "for_array__wrong.siyo(9, 4): [llvm] for \u2026 in over any values is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "codeanalysis.SiyoThrow: len is not defined for Integer",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "for_map__null": {
+  "emit": {
+   "err": "for_map__null.siyo(9, 4): [llvm] for \u2026 in over any values is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  }
+ },
+ "for_map__ok": {
+  "emit": {
+   "err": "for_map__ok.siyo(9, 4): [llvm] for \u2026 in over any values is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "k\nj",
+   "rc": 0
+  }
+ },
+ "for_map__wrong": {
+  "emit": {
+   "err": "for_map__wrong.siyo(9, 4): [llvm] for \u2026 in over any values is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "1",
+   "rc": 0
+  }
+ },
+ "i_array__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.NullPointerException",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.List.get(int)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_array__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "i_array__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.util.List (java.lang.Integer and java.util.List are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.util.List (java.lang.Integer and java.util.List are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_array_arith__null": {
+  "emit": {
+   "err": "i_array_arith__null.siyo(10, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.List.get(int)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_array_arith__ok": {
+  "emit": {
+   "err": "i_array_arith__ok.siyo(10, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "3",
+   "rc": 0
+  }
+ },
+ "i_array_arith__wrong": {
+  "emit": {
+   "err": "i_array_arith__wrong.siyo(10, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.util.List (java.lang.Integer and java.util.List are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_array_on_map__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.NullPointerException",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.List.get(int)\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_array_on_map__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "7",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "7",
+   "rc": 0
+  }
+ },
+ "i_array_on_map__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.ClassCastException: class codeanalysis.SiyoMap cannot be cast to class java.util.List (codeanalysis.SiyoMap is in unnamed module of loader 'app'; java.util.List is in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.ClassCastException: class codeanalysis.SiyoMap cannot be cast to class java.util.List (codeanalysis.SiyoMap is in unnamed module of loader 'app'; java.util.List is in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_map__null": {
+  "emit": {
+   "err": "i_map__null.siyo(10, 15): Cannot convert type <class java.lang.String> to <class java.lang.Integer>",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "i_map__null.siyo(10, 15): Cannot convert type <class java.lang.String> to <class java.lang.Integer>",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_map__ok": {
+  "emit": {
+   "err": "i_map__ok.siyo(10, 15): Cannot convert type <class java.lang.String> to <class java.lang.Integer>",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "i_map__ok.siyo(10, 15): Cannot convert type <class java.lang.String> to <class java.lang.Integer>",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "i_map__wrong": {
+  "emit": {
+   "err": "i_map__wrong.siyo(10, 15): Cannot convert type <class java.lang.String> to <class java.lang.Integer>",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "i_map__wrong.siyo(10, 15): Cannot convert type <class java.lang.String> to <class java.lang.Integer>",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "len_array__null": {
+  "emit": {
+   "err": "len_array__null.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "0",
+   "rc": 0
+  }
+ },
+ "len_array__ok": {
+  "emit": {
+   "err": "len_array__ok.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "3",
+   "rc": 0
+  }
+ },
+ "len_array__wrong": {
+  "emit": {
+   "err": "len_array__wrong.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "codeanalysis.SiyoThrow: len is not defined for Integer",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "len_map__null": {
+  "emit": {
+   "err": "len_map__null.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "0",
+   "rc": 0
+  }
+ },
+ "len_map__ok": {
+  "emit": {
+   "err": "len_map__ok.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "len_map__wrong": {
+  "emit": {
+   "err": "len_map__wrong.siyo(10, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "1",
+   "rc": 0
+  }
+ },
+ "m_direct_read__null": {
+  "emit": {
+   "err": "m_direct_read__null.siyo(10, 14): Type <class java.lang.Object> does not have members",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "m_direct_read__null.siyo(10, 14): Type <class java.lang.Object> does not have members",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_direct_read__ok": {
+  "emit": {
+   "err": "m_direct_read__ok.siyo(10, 14): Type <class java.lang.Object> does not have members",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "m_direct_read__ok.siyo(10, 14): Type <class java.lang.Object> does not have members",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_direct_read__wrong": {
+  "emit": {
+   "err": "m_direct_read__wrong.siyo(10, 14): Type <class java.lang.Object> does not have members",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "m_direct_read__wrong.siyo(10, 14): Type <class java.lang.Object> does not have members",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_method__null": {
+  "emit": {
+   "err": "m_method__null.siyo(11, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.RuntimeException: Cannot call method 'sum' on null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_method__ok": {
+  "emit": {
+   "err": "m_method__ok.siyo(11, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.RuntimeException: No matching method: codeanalysis.SiyoObject.sum with 0 args",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_method__wrong": {
+  "emit": {
+   "err": "m_method__wrong.siyo(11, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_method_direct__null": {
+  "emit": {
+   "err": "m_method_direct__null.siyo(10, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.RuntimeException: Cannot call method 'sum' on null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_method_direct__ok": {
+  "emit": {
+   "err": "m_method_direct__ok.siyo(10, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.RuntimeException: No matching method: codeanalysis.SiyoObject.sum with 0 args",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_method_direct__wrong": {
+  "emit": {
+   "err": "m_method_direct__wrong.siyo(10, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.RuntimeException: No matching method: java.lang.String.sum with 0 args",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_pluseq__null": {
+  "emit": {
+   "err": "m_pluseq__null.siyo(11, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because \"<local1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_pluseq__ok": {
+  "emit": {
+   "err": "m_pluseq__ok.siyo(11, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "m_pluseq__wrong": {
+  "emit": {
+   "err": "m_pluseq__wrong.siyo(11, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_read__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.NullPointerException",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because \"<local1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_read__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "1",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "1",
+   "rc": 0
+  }
+ },
+ "m_read__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_read_arith__null": {
+  "emit": {
+   "err": "m_read_arith__null.siyo(11, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because \"<local1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_read_arith__ok": {
+  "emit": {
+   "err": "m_read_arith__ok.siyo(11, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "m_read_arith__wrong": {
+  "emit": {
+   "err": "m_read_arith__wrong.siyo(11, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_read_typed__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.NullPointerException",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because \"<local1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_read_typed__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "m_read_typed__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_write__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.NullPointerException",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.put(Object, Object)\" because \"<local1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "m_write__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "Point { x: 7, y: 2 }",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "Point { x: 7, y: 2 }",
+   "rc": 0
+  }
+ },
+ "m_write__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  },
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "mapfield_count_pluseq__null": {
+  "emit": {
+   "err": "main.siyo(15, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because \"<local6>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "mapfield_count_pluseq__ok": {
+  "emit": {
+   "err": "main.siyo(15, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "1",
+   "rc": 0
+  }
+ },
+ "mapfield_method__null": {
+  "emit": {
+   "err": "main.siyo(15, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.RuntimeException: Cannot call method 'show' on null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "mapfield_method__ok": {
+  "emit": {
+   "err": "main.siyo(15, 13): [llvm] method calls on a struct whose type the binder cannot tell are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.RuntimeException: No matching method: codeanalysis.SiyoObject.show with 0 args",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "mapfield_net_add__null": {
+  "emit": {
+   "err": "main.siyo(15, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because \"<local6>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "mapfield_net_add__ok": {
+  "emit": {
+   "err": "main.siyo(15, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "5\n0",
+   "rc": 0
+  }
+ },
+ "mapfield_read_arith__null": {
+  "emit": {
+   "err": "main.siyo(15, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because \"<local6>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "mapfield_read_arith__ok": {
+  "emit": {
+   "err": "main.siyo(15, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "1\n0",
+   "rc": 0
+  }
+ },
+ "op_add_int__null": {
+  "emit": {
+   "err": "op_add_int__null.siyo(10, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_add_int__ok": {
+  "emit": {
+   "err": "op_add_int__ok.siyo(10, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_add_int__wrong": {
+  "emit": {
+   "err": "op_add_int__wrong.siyo(10, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_add_int_left__null": {
+  "emit": {
+   "err": "op_add_int_left__null.siyo(10, 13): [llvm] operator Addition on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_add_int_left__ok": {
+  "emit": {
+   "err": "op_add_int_left__ok.siyo(10, 13): [llvm] operator Addition on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_add_int_left__wrong": {
+  "emit": {
+   "err": "op_add_int_left__wrong.siyo(10, 13): [llvm] operator Addition on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_add_int_on_long__wrong": {
+  "emit": {
+   "err": "op_add_int_on_long__wrong.siyo(11, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.Long cannot be cast to class java.lang.Integer (java.lang.Long and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_add_long__null": {
+  "emit": {
+   "err": "op_add_long__null.siyo(10, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_add_long__ok": {
+  "emit": {
+   "err": "op_add_long__ok.siyo(10, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_add_long__wrong": {
+  "emit": {
+   "err": "op_add_long__wrong.siyo(10, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_add_long_str__ok": {
+  "emit": {
+   "err": "op_add_long_str__ok.siyo(11, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_add_long_str__wrong": {
+  "emit": {
+   "err": "op_add_long_str__wrong.siyo(11, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_add_string__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "nullx",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "nullx",
+   "rc": 0
+  }
+ },
+ "op_add_string__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "abcx",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "abcx",
+   "rc": 0
+  }
+ },
+ "op_add_string__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "5x",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "5x",
+   "rc": 0
+  }
+ },
+ "op_add_string_left__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "xnull",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "xnull",
+   "rc": 0
+  }
+ },
+ "op_add_string_left__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "xabc",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "xabc",
+   "rc": 0
+  }
+ },
+ "op_add_string_left__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "x5",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "x5",
+   "rc": 0
+  }
+ },
+ "op_div_int__null": {
+  "emit": {
+   "err": "op_div_int__null.siyo(10, 13): [llvm] operator Division on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_div_int__ok": {
+  "emit": {
+   "err": "op_div_int__ok.siyo(10, 13): [llvm] operator Division on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "op_div_int__wrong": {
+  "emit": {
+   "err": "op_div_int__wrong.siyo(10, 13): [llvm] operator Division on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_div_long__null": {
+  "emit": {
+   "err": "op_div_long__null.siyo(11, 13): [llvm] operator Division on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_div_long__ok": {
+  "emit": {
+   "err": "op_div_long__ok.siyo(11, 13): [llvm] operator Division on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "2",
+   "rc": 0
+  }
+ },
+ "op_div_long__wrong": {
+  "emit": {
+   "err": "op_div_long__wrong.siyo(11, 13): [llvm] operator Division on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_eq_int__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  }
+ },
+ "op_eq_int__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "op_eq_int__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  }
+ },
+ "op_eq_long__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  }
+ },
+ "op_eq_long__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "op_eq_long__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  }
+ },
+ "op_eq_string__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  }
+ },
+ "op_eq_string__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "op_eq_string__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "false",
+   "rc": 0
+  }
+ },
+ "op_lt_int__null": {
+  "emit": {
+   "err": "op_lt_int__null.siyo(10, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_lt_int__ok": {
+  "emit": {
+   "err": "op_lt_int__ok.siyo(10, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "op_lt_int__wrong": {
+  "emit": {
+   "err": "op_lt_int__wrong.siyo(10, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_lt_int_left__null": {
+  "emit": {
+   "err": "op_lt_int_left__null.siyo(11, 13): [llvm] operator LessThan on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_lt_int_left__ok": {
+  "emit": {
+   "err": "op_lt_int_left__ok.siyo(11, 13): [llvm] operator LessThan on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "op_lt_int_left__wrong": {
+  "emit": {
+   "err": "op_lt_int_left__wrong.siyo(11, 13): [llvm] operator LessThan on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_lt_long__null": {
+  "emit": {
+   "err": "op_lt_long__null.siyo(10, 13): [llvm] operator LessThan on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_lt_long__ok": {
+  "emit": {
+   "err": "op_lt_long__ok.siyo(10, 13): [llvm] operator LessThan on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "op_lt_long__wrong": {
+  "emit": {
+   "err": "op_lt_long__wrong.siyo(10, 13): [llvm] operator LessThan on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "true",
+   "rc": 0
+  }
+ },
+ "op_lt_string__null": {
+  "emit": {
+   "err": "op_lt_string__null.siyo(10, 13): [llvm] operator LessThan on any and string is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "Exception in thread \"main\" java.lang.VerifyError: Bad type on operand stack",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_lt_string__ok": {
+  "emit": {
+   "err": "op_lt_string__ok.siyo(10, 13): [llvm] operator LessThan on any and string is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "Exception in thread \"main\" java.lang.VerifyError: Bad type on operand stack",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_lt_string__wrong": {
+  "emit": {
+   "err": "op_lt_string__wrong.siyo(10, 13): [llvm] operator LessThan on any and string is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "Exception in thread \"main\" java.lang.VerifyError: Bad type on operand stack",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_mul_int__null": {
+  "emit": {
+   "err": "op_mul_int__null.siyo(10, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_mul_int__ok": {
+  "emit": {
+   "err": "op_mul_int__ok.siyo(10, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "10",
+   "rc": 0
+  }
+ },
+ "op_mul_int__wrong": {
+  "emit": {
+   "err": "op_mul_int__wrong.siyo(10, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_mul_long__null": {
+  "emit": {
+   "err": "op_mul_long__null.siyo(11, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_mul_long__ok": {
+  "emit": {
+   "err": "op_mul_long__ok.siyo(11, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "10",
+   "rc": 0
+  }
+ },
+ "op_mul_long__wrong": {
+  "emit": {
+   "err": "op_mul_long__wrong.siyo(11, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_pluseq_any_target__null": {
+  "emit": {
+   "err": "op_pluseq_any_target__null.siyo(11, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "Exception in thread \"main\" java.lang.VerifyError: Bad type on operand stack",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_pluseq_any_target__ok": {
+  "emit": {
+   "err": "op_pluseq_any_target__ok.siyo(11, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "Exception in thread \"main\" java.lang.VerifyError: Bad type on operand stack",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_pluseq_any_target__wrong": {
+  "emit": {
+   "err": "op_pluseq_any_target__wrong.siyo(11, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "Exception in thread \"main\" java.lang.VerifyError: Bad type on operand stack",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_pluseq_int_target__null": {
+  "emit": {
+   "err": "op_pluseq_int_target__null.siyo(11, 5): [llvm] operator Addition on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_pluseq_int_target__ok": {
+  "emit": {
+   "err": "op_pluseq_int_target__ok.siyo(11, 5): [llvm] operator Addition on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_pluseq_int_target__wrong": {
+  "emit": {
+   "err": "op_pluseq_int_target__wrong.siyo(11, 5): [llvm] operator Addition on int and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_pluseq_long_target__null": {
+  "emit": {
+   "err": "op_pluseq_long_target__null.siyo(11, 5): [llvm] operator Addition on long and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_pluseq_long_target__ok": {
+  "emit": {
+   "err": "op_pluseq_long_target__ok.siyo(11, 5): [llvm] operator Addition on long and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_pluseq_long_target__wrong": {
+  "emit": {
+   "err": "op_pluseq_long_target__wrong.siyo(11, 5): [llvm] operator Addition on long and any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "6",
+   "rc": 0
+  }
+ },
+ "op_pluseq_string_target__null": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "xnull",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "xnull",
+   "rc": 0
+  }
+ },
+ "op_pluseq_string_target__ok": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "xabc",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "xabc",
+   "rc": 0
+  }
+ },
+ "op_pluseq_string_target__wrong": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "x5",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "x5",
+   "rc": 0
+  }
+ },
+ "op_sub_int__null": {
+  "emit": {
+   "err": "op_sub_int__null.siyo(10, 13): [llvm] operator Subtraction on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Integer.intValue()\" because \"<parameter1>\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_sub_int__ok": {
+  "emit": {
+   "err": "op_sub_int__ok.siyo(10, 13): [llvm] operator Subtraction on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "4",
+   "rc": 0
+  }
+ },
+ "op_sub_int__wrong": {
+  "emit": {
+   "err": "op_sub_int__wrong.siyo(10, 13): [llvm] operator Subtraction on any and int is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_sub_long__null": {
+  "emit": {
+   "err": "op_sub_long__null.siyo(10, 13): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"value\" is null",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "op_sub_long__ok": {
+  "emit": {
+   "err": "op_sub_long__ok.siyo(10, 13): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "4",
+   "rc": 0
+  }
+ },
+ "op_sub_long__wrong": {
+  "emit": {
+   "err": "op_sub_long__wrong.siyo(10, 13): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "4",
+   "rc": 0
+  }
+ },
+ "xmod_len": {
+  "emit": {
+   "err": "main.siyo(7, 13): [llvm] len() on any is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "5",
+   "rc": 0
+  }
+ },
+ "xmod_lt": {
+  "emit": {
+   "err": "main.siyo(7, 13): [llvm] operator LessThan on any and string is not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "Exception in thread \"main\" java.lang.VerifyError: Bad type on operand stack",
+   "out": "",
+   "rc": 1
+  }
+ },
+ "xmod_parseInt": {
+  "emit": {
+   "err": "main.siyo(7, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM",
+   "out": "",
+   "rc": 1
+  },
+  "nat": null,
+  "ref": {
+   "err": "",
+   "out": "42",
+   "rc": 0
+  }
+ },
+ "xmod_plus": {
+  "emit": {
+   "err": "",
+   "out": "",
+   "rc": 0
+  },
+  "nat": {
+   "err": "",
+   "out": "zx",
+   "rc": 0
+  },
+  "ref": {
+   "err": "",
+   "out": "zx",
+   "rc": 0
+  }
+ }
+}

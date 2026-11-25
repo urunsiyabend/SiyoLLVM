@@ -1,0 +1,47 @@
+date,account,category,amount,memo
+2025-02-01,Checking,Salary,1000.00,ok
+2025-02-01,Checking,Salary,"1000.00,unterminated
+2025-02-02,Checking,"Bad"x,1.00,malformed
+2025-02-03,Checking,Food,-5.00
+2025-02-03,Checking,Food,-5.00,memo,extra
+2025-13-01,Checking,Food,-5.00,month 13
+2025-00-10,Checking,Food,-5.00,month 00
+2025-02-32,Checking,Food,-5.00,day 32
+2025-02-00,Checking,Food,-5.00,day 00
+2025-02-31,Checking,Food,-5.00,no calendar check
+2025/02/03,Checking,Food,-5.00,slashes
+25-02-03,Checking,Food,-5.00,short
+2025-2-3,Checking,Food,-5.00,unpadded
+2025-02-0a,Checking,Food,-5.00,letter
+20250-02-03,Checking,Food,-5.00,long
+,Checking,Food,-5.00,empty date
+ 2025-02-04 ,Checking,Food,-1.00,unquoted date is trimmed
+"2025-02-04 ",Checking,Food,-1.00,quoted date keeps its space
+2025-02-05,,Food,-5.00,empty account
+2025-02-05,   ,Food,-5.00,blank account
+2025-02-05,Checking,,-5.00,empty category
+2025-02-06,Checking,Food,1.5,one decimal
+2025-02-06,Checking,Food,12345678901,eleven digits
+2025-02-06,Big,Food,9999999999.99,largest
+2025-02-06,Big,Food,-9999999999.99,smallest
+2025-02-06,Big,Food,1234567.89,seven digits
+2025-02-06,Checking,Food,+5,plus sign
+2025-02-06,Checking,Food,-,lone minus
+2025-02-06,Checking,Food,,empty amount
+2025-02-06,Checking,Food,1.234,three decimals
+2025-02-06,Checking,Food,.50,no integer part
+2025-02-06,Checking,Food,5.,trailing dot
+2025-02-06,Checking,Food,1 000,inner space
+2025-02-06,Checking,Food,abc,letters
+2025-02-06,Checking,Food,--5,double minus
+2025-02-06,Checking,Food,1e3,exponent
+2025-02-06,Zero,Food,-0,minus zero
+2025-02-06,Zero,Food,-0.00,minus zero cents
+2025-02-06,Zero,Food,0.05,five cents
+2025-02-06,Checking,Food,007.10,leading zeros
+2025-02-06,Checking,Food,٣٤,arabic-indic digits
+2025-02-07,,,bad,first failing check wins
+x,,,,
+just one field
+a,b,c,d,e,f,g,h
+,

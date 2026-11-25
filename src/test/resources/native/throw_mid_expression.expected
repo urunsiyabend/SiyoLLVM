@@ -1,0 +1,22 @@
+eval a
+boom b
+caught b
+false
+yes l
+fails r
+caught r
+true
+fails or
+caught or
+eval p
+boom concat
+caught concat
+eval left
+caught / by zero
+eval cond
+boom cond
+caught cond
+boom assign
+kept 1
+eval s
+caught Range [1, 5) out of bounds for length 3

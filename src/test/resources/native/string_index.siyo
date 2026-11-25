@@ -1,0 +1,60 @@
+// s[i] is charAt: one UTF-16 unit as a string. Half of a surrogate pair is
+// a lone surrogate (printed as ?). Out of range raises the JVM's
+// StringIndexOutOfBoundsException; for … in over a string walks its units.
+fn at(s: string, i: int) -> string { return s[i] }
+
+fn main() {
+    imut ascii = "hello"
+    println(ascii[0])
+    println(ascii[4])
+    println(ascii[1] + ascii[2] + ascii[3])
+    println(ascii[0] == "h")
+
+    imut accented = "héllo"
+    println(accented[1])
+    println(len(accented[1]))
+    println(ord(accented[1]))
+
+    imut emoji = "a😀b"
+    println(len(emoji))
+    println(emoji[0])
+    println(emoji[1])
+    println(emoji[2])
+    println(emoji[3])
+    println(len(emoji[1]))
+    println(ord(emoji[1]))
+    println(ord(emoji[2]))
+    // The halves joined again are the pair.
+    println(emoji[1] + emoji[2])
+    println(emoji[1] + emoji[2] == "😀")
+
+    imut nul = "x\0y"
+    println(len(nul[1]))
+    println(ord(nul[1]))
+
+    mut reversed = ""
+    mut i = len(ascii) - 1
+    while i >= 0 {
+        reversed = reversed + ascii[i]
+        i = i - 1
+    }
+    println(reversed)
+
+    for c in "héy" {
+        println(c)
+    }
+    mut units = 0
+    for u in "a😀" {
+        units = units + 1
+        println(u + "!")
+    }
+    println(units)
+    for c in "" { println("never " + c) }
+
+    try { println(ascii[5]) } catch e { println(e) }
+    try { println(ascii[-1]) } catch e { println(e) }
+    try { println(at("", 0)) } catch e { println(e) }
+    try { println(at(emoji, 4)) } catch e { println(e) }
+    try { println(at("hé", 2)) } catch e: string { println("typed: " + e) }
+    println(at(emoji, 3))
+}

@@ -1,0 +1,5 @@
+// throw null is a SiyoThrow whose payload prints as null.
+fn main() {
+    println("before")
+    throw null
+}

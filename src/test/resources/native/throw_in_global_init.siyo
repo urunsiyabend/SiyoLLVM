@@ -1,0 +1,15 @@
+// A raise while initialising globals: one caught inside its function, then an
+// uncaught one, after which no other global, init() or main() runs.
+fn safe() -> int {
+    try { return 10 / zero() } catch e { println("safe: " + e) }
+    return 1
+}
+fn zero() -> int { return 0 }
+fn boom() -> string { throw "global" }
+
+imut a = safe()
+imut b: string = boom()
+imut c = safe()
+
+fn init() { println("init") }
+fn main() { println("main " + a + b + c) }

@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("unchecked")
 class IrEmitterTest {
 
     static String emit(String source) {
@@ -43,33 +44,120 @@ class IrEmitterTest {
         String ir = emit("fn printf() -> int { return 1 }\nfn exit() { }\nfn main() { exit() println(printf()) }");
         assertTrue(ir.contains("define internal i32 @siyo.fn.0()"), ir);
         assertTrue(ir.contains("define internal void @siyo.fn.1()"), ir);
-        assertEquals(1, count(ir, "define i32 @main()"));
+        assertEquals(1, count(ir, "define void @siyo_program()"));
+        assertFalse(ir.contains("@main"), ir);
     }
 
     @Test
     void stringsCarryTheirLengthSoEmbeddedNulSurvives() {
         String ir = emit("fn main() { println(\"a\\0b\") }");
-        assertTrue(ir.contains("constant { i64, [3 x i8] } { i64 3, [3 x i8] c\"a\\00b\" }"), ir);
+        assertTrue(ir.contains("@siyo.str.0.bytes = private unnamed_addr constant [3 x i8] c\"a\\00b\"\n"), ir);
+        assertTrue(ir.contains("@siyo.str.0 = private unnamed_addr constant { i32, i32, i64, ptr, ptr } "
+                + "{ i32 1, i32 3, i64 3, ptr @siyo.str.0.bytes, ptr null }, align 8"), ir);
     }
 
+    // Tag 1 (string), UTF-16 length, UTF-8 byte length, data pointer, no buffer:
+    // the SiyoStr layout of siyo_rt.h. The bytes are a constant of their own.
     @Test
-    void nonAsciiStringIsEncodedAsUtf8Bytes() {
+    void literalLayout() {
         String ir = emit("fn main() { println(\"é\") }");
-        assertTrue(ir.contains("{ i64 2, [2 x i8] c\"\\C3\\A9\" }"), ir);
+        assertTrue(ir.contains("@siyo.str.0.bytes = private unnamed_addr constant [2 x i8] c\"\\C3\\A9\"\n"), ir);
+        assertTrue(ir.contains("{ i32 1, i32 1, i64 2, ptr @siyo.str.0.bytes, ptr null }"), ir);
+    }
+
+    // The runtime is C compiled beside the module; the IR only declares it.
+    @Test
+    void noRuntimeBodiesInIr() {
+        String ir = emit("mut g = \"a\"\nfn f(a: int, b: int) -> int { return a / b }\n"
+                + "fn main() { println(g == \"a\") print(f(4, 2)) println(true) }");
+        Matcher define = Pattern.compile("(?m)^define [^@]*(@[A-Za-z0-9_.]+)\\(").matcher(ir);
+        int defines = 0;
+        while (define.find()) {
+            defines++;
+            String name = define.group(1);
+            assertTrue(name.matches("@siyo\\.fn\\.\\d+") || name.equals("@siyo.init_globals")
+                    || name.equals("@siyo_program"), name + " defined in\n" + ir);
+        }
+        assertEquals(4, defines, ir);
+        assertTrue(ir.contains("@siyo_rt_stack_limit = external global i64"), ir);
+        assertTrue(ir.contains("declare void @siyo_rt_print_int(i32)"), ir);
     }
 
     @Test
     void stringGlobalStartsNull() {
         String ir = emit("mut a = r()\nmut b = \"later\"\nfn r() -> string { return b }\nfn main() { println(a == b) }");
         assertTrue(ir.contains("internal global ptr null"), ir);
-        assertTrue(ir.contains("call i1 @siyo.str_eq("), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_str_eq("), ir);
+    }
+
+    @Test
+    void concatenationConvertsThenConcatenates() {
+        String ir = emit("fn main() { println(\"a\" + 1) }");
+        int convert = ir.indexOf("call ptr @siyo_rt_str_from_int(i32 1)");
+        int concat = ir.indexOf("call ptr @siyo_rt_str_concat(ptr @siyo.str.0, ptr ");
+        assertTrue(convert > 0 && concat > convert, ir);
+        assertTrue(ir.contains("declare ptr @siyo_rt_str_concat(ptr, ptr)"), ir);
+    }
+
+    @Test
+    void toStringPicksTheConverterByType() {
+        String ir = emit("fn main() { println(toString(2L)) println(toString(false)) println(toString(\"s\")) }");
+        assertTrue(ir.contains("call ptr @siyo_rt_str_from_long(i64 2)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_from_bool(i1 zeroext false)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_of_string(ptr @siyo.str."), ir);
+    }
+
+    @Test
+    void stringOrderingComparesWithCompareTo() {
+        String ir = emit("fn main() { mut a = \"a\" println(a < \"b\") println(a >= \"b\") }");
+        assertEquals(2, count(ir, "call i32 @siyo_rt_str_compare(ptr "), ir);
+        assertTrue(ir.contains(", 0\n") && ir.contains("icmp slt i32 ") && ir.contains("icmp sge i32 "), ir);
+        assertTrue(ir.contains("declare i32 @siyo_rt_str_compare(ptr, ptr)"), ir);
+    }
+
+    @Test
+    void numericConversionsAreInline() {
+        String ir = emit("fn main() { mut i = 7 mut l = 8L println(toLong(i)) println(toInt(l)) }");
+        assertTrue(ir.contains("sext i32 "), ir);
+        assertTrue(ir.contains("trunc i64 "), ir);
+    }
+
+    @Test
+    void stringBuiltinsCallTheRuntime() {
+        String ir = emit("""
+                fn main() {
+                  mut s = "abc"
+                  println(len(s))
+                  println(substring(s, 0, 1))
+                  println(contains(s, "b"))
+                  println(startsWith(s, "a"))
+                  println(chr(65))
+                  println(toInt("1") + parseInt("2"))
+                  println(parseLong("3"))
+                }
+                """);
+        assertTrue(ir.contains("call i32 @siyo_rt_str_len(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_substring(ptr %t"), ir);
+        assertTrue(ir.contains(", i32 0, i32 1)"), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_str_contains(ptr "), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_str_starts_with(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_chr(i32 65)"), ir);
+        assertEquals(2, count(ir, "call i32 @siyo_rt_parse_int(ptr "), ir);
+        assertTrue(ir.contains("call i64 @siyo_rt_parse_long(ptr "), ir);
+    }
+
+    @Test
+    void userFunctionNamedLikeABuiltinIsNotTheBuiltin() {
+        String ir = emit("fn trim(s: string) -> string { return s }\nfn main() { println(trim(\" a \")) }");
+        assertFalse(ir.contains("call ptr @siyo_rt_str_trim("), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn.0(ptr "), ir);
     }
 
     @Test
     void divisionIsGuardedAgainstZeroAndOverflow() {
         String ir = emit("fn d(a: int, b: int) -> int { return a / b }\nfn main() { println(d(1, 1)) }");
         assertTrue(ir.contains("icmp eq i32"), ir);
-        assertTrue(ir.contains("call void @siyo.div_by_zero()"), ir);
+        assertTrue(ir.contains("call void @siyo_rt_div_by_zero()"), ir);
         assertTrue(ir.contains("select i1"), ir);
         assertTrue(Pattern.compile("sdiv i32 %t\\d+, %t\\d+").matcher(ir).find(), ir);
     }
@@ -85,16 +173,17 @@ class IrEmitterTest {
     void mainRunsGlobalsThenInitThenMain() {
         String ir = emit("mut g = 1\nfn init() { g = 2 }\nfn main() { println(g) }");
         int globals = ir.indexOf("call void @siyo.init_globals()");
-        int init = ir.indexOf("call void @siyo.fn.0()", ir.indexOf("define internal ptr @siyo.program("));
-        int main = ir.indexOf("call void @siyo.fn.1()", ir.indexOf("define internal ptr @siyo.program("));
-        assertTrue(globals > 0 && init > globals && main > init, ir);
-        assertTrue(ir.contains("call void @siyo.run_program_thread()"), ir);
+        int program = ir.indexOf("define void @siyo_program() {");
+        int init = ir.indexOf("call void @siyo.fn.0()", program);
+        int main = ir.indexOf("call void @siyo.fn.1()", program);
+        assertTrue(program > 0 && globals > program && init > globals && main > init, ir);
     }
 
     @Test
     void everyUserFunctionChecksTheStack() {
         String ir = emit("fn a() { }\nfn b() { a() }\nfn main() { b() }");
-        assertEquals(3, count(ir, "call void @siyo.stack_overflow()"), ir);
+        assertEquals(3, count(ir, "call void @siyo_rt_stack_overflow()"), ir);
+        assertEquals(3, count(ir, "load i64, ptr @siyo_rt_stack_limit"), ir);
     }
 
     @Test
@@ -135,10 +224,456 @@ class IrEmitterTest {
         emit("fn f(a: int) -> int { return 2 mut b = a / 0 b = b % a return b } fn main() { println(f(1)) }");
     }
 
+    // An any value is a pointer to a tagged heap object (a string is one already) or null.
+    @Test
+    void anyIsAPointerAndPrimitivesAreBoxedIntoIt() {
+        String ir = emit("mut g: any = 1\nfn f(x: any) -> any { return x }\n"
+                + "fn main() { println(f(2L)) print(f(true)) println(f(\"s\")) println(f(null)) println(g) }");
+        assertTrue(ir.contains("@siyo.g.0 = internal global ptr null"), ir);
+        assertTrue(ir.contains("define internal ptr @siyo.fn.0(ptr %p0)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_int(i32 1)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_long(i64 2)"), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_bool(i1 zeroext true)"), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn.0(ptr @siyo.str.0)"), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn.0(ptr null)"), ir);
+        assertEquals(5, count(ir, "call void @siyo_rt_print_any(ptr "), ir);
+    }
+
+    @Test
+    void anyIsUnboxedOrCastWithACheck() {
+        String ir = emit("fn f(x: any) -> any { return x }\nfn r(x: any) -> bool { return x }\n"
+                + "fn main() { imut n: int = f(1) imut l: long = f(2L) imut s: string = f(\"s\") println(r(true))"
+                + " mut m = 0 m = f(3) println(n + l + m + s) }");
+        assertTrue(ir.contains("call i32 @siyo_rt_unbox_int(ptr "), ir);
+        assertTrue(ir.contains("call i64 @siyo_rt_unbox_long(ptr "), ir);
+        assertTrue(ir.contains("call zeroext i1 @siyo_rt_unbox_bool(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_cast_str(ptr "), ir);
+        assertEquals(2, count(ir, "call i32 @siyo_rt_unbox_int(ptr "), ir);
+    }
+
+    @Test
+    void equalityWithAnAnyOperandIsObjectsEquals() {
+        String ir = emit("fn f(x: any) -> any { return x }\n"
+                + "fn main() { println(f(5L) == 5) println(f(\"a\") != \"a\") println(f(1) == f(1)) }");
+        assertEquals(3, count(ir, "call zeroext i1 @siyo_rt_any_equals(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_box_int(i32 5)"), ir);
+        assertFalse(ir.contains("call zeroext i1 @siyo_rt_str_eq("), ir);
+    }
+
+    @Test
+    void anyInTextIsStringValueOf() {
+        String ir = emit("fn f(x: any) -> any { return x }\nfn main() { println(\"a\" + f(1)) println(toString(f(2))) }");
+        assertEquals(2, count(ir, "call ptr @siyo_rt_any_to_string(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_str_concat(ptr @siyo.str.0, ptr "), ir);
+    }
+
+    // A raise sets the runtime's pending flag and returns; each call that can
+    // raise is followed by a check that branches to the innermost catch block.
+    @Test
+    void callInsideTryBranchesToTheCatchBlock() {
+        String ir = emit("fn g() -> int { return 1 }\n"
+                + "fn main() { try { println(g()) } catch e { println(e) } }");
+        String main = function(ir, "@siyo.fn.1");
+        Matcher check = Pattern.compile("notail call i32 @siyo\\.fn\\.0\\(\\)\n"
+                + "  (%t\\d+) = load i8, ptr @siyo_rt_pending_flag\n"
+                + "  (%t\\d+) = icmp ne i8 \\1, 0\n"
+                + "  br i1 \\2, label %(catch\\.\\d+), label %").matcher(main);
+        assertTrue(check.find(), main);
+        assertTrue(main.contains("\n" + check.group(3) + ":\n  %t"), main);
+        assertTrue(Pattern.compile("\n" + Pattern.quote(check.group(3)) + ":\n  %t\\d+ = call ptr @siyo_rt_catch\\(\\)")
+                .matcher(main).find(), main);
+        assertFalse(main.contains("label %unwind"), main);
+    }
+
+    @Test
+    void callOutsideTryReturnsTheDefaultToTheCaller() {
+        String ir = emit("fn g() -> int { return 1 }\nfn f() -> long { return g() }\nfn main() { println(f()) }");
+        String f = function(ir, "@siyo.fn.1");
+        assertTrue(f.contains(", label %unwind, label %"), f);
+        assertTrue(f.contains("\nunwind:\n  ret i64 0\n"), f);
+        // A function with no raising call has no unwind block.
+        assertFalse(function(ir, "@siyo.fn.0").contains("unwind"), ir);
+    }
+
+    @Test
+    void theProgramReportsAnExceptionLeftPendingByAnEntryPoint() {
+        String ir = emit("mut g = 1\nfn init() { g = 2 }\nfn main() { println(g) }");
+        String program = function(ir, "@siyo_program");
+        assertEquals(3, count(program, "load i8, ptr @siyo_rt_pending_flag"), program);
+        assertTrue(program.contains("call void @siyo_rt_uncaught()\n  unreachable"), program);
+        assertTrue(ir.contains("declare void @siyo_rt_uncaught() noreturn cold"), ir);
+        assertTrue(ir.contains("@siyo_rt_pending_flag = external thread_local global i8"), ir);
+    }
+
+    @Test
+    void throwBoxesThePayloadAndBranchesToTheHandler() {
+        String ir = emit("fn f() { throw 5 }\nfn main() { try { f() } catch e { println(e) } }");
+        String f = function(ir, "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_box_int\\(i32 5\\)\n"
+                + "  call void @siyo_rt_throw\\(ptr \\1\\)\n  br label %unwind\n").matcher(f).find(), f);
+    }
+
+    @Test
+    void errorThrowsItsArgument() {
+        String ir = emit("fn main() { error(\"E1\") }");
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(main.contains("call void @siyo_rt_throw(ptr @siyo.str.0)\n  br label %unwind\n"), main);
+    }
+
+    // An array is a pointer to the runtime's SiyoArray; its items are any
+    // values, so elements are boxed going in and narrowed with a check coming out.
+    @Test
+    void arrayLiteralAllocatesThenPushesBoxedElements() {
+        String ir = emit("mut g = [1]\nfn main() { mut xs = [7, 8] println(xs) println(g) }");
+        assertTrue(ir.contains("@siyo.g.0 = internal global ptr null"), ir);
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_array_new\\(i32 2\\)\n"
+                + "  (%t\\d+) = call ptr @siyo_rt_box_int\\(i32 7\\)\n"
+                + "  call void @siyo_rt_array_append\\(ptr \\1, ptr \\2\\)\n").matcher(main).find(), main);
+        assertEquals(2, count(main, "call void @siyo_rt_print_any(ptr "), main);
+        // Appending to the array just made cannot raise: no pending checks.
+        assertEquals(0, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+        assertFalse(main.contains("@siyo_rt_array_push"), main);
+    }
+
+    @Test
+    void stringIndexIsCharAtWithACheck() {
+        String main = function(emit("fn main() { imut s = \"ab\" println(s[1]) }"), "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_str_char_at\\(ptr %t\\d+, i32 1\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n").matcher(main).find(), main);
+        assertFalse(main.contains("@siyo_rt_array_get"), main);
+    }
+
+    @Test
+    void rangeAndSplitCallTheRuntime() {
+        String main = function(emit("fn main() { println(range(1, 4)) println(split(\"a,b\", \",\")) }"),
+                "@siyo.fn.0");
+        assertTrue(main.contains("call ptr @siyo_rt_range(i32 1, i32 4)"), main);
+        assertTrue(main.contains("call ptr @siyo_rt_str_split(ptr @siyo.str.0, ptr @siyo.str.1)"), main);
+        // split raises on a null string or delimiter; range never raises.
+        assertEquals(1, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void forInEmitsOneLengthReadAndOneElementRead() {
+        String main = function(emit("fn main() { mut xs = [1] for x in xs { push(xs, x) } }"), "@siyo.fn.0");
+        // One len call, in the loop's condition block, which every iteration re-enters.
+        assertEquals(1, count(main, "call i32 @siyo_rt_array_len(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_array_get(ptr "), main);
+    }
+
+    @Test
+    void indexReadIsBoundsCheckedThenNarrowed() {
+        String main = function(emit("fn main() { mut xs = [1] println(xs[0] + 1) }"), "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_array_get\\(ptr %t\\d+, i32 0\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n").matcher(main).find(), main);
+        assertTrue(main.contains("call i32 @siyo_rt_unbox_int(ptr "), main);
+    }
+
+    @Test
+    void indexAssignmentBoxesAndNarrowsTheReplacedElement() {
+        String main = function(emit("fn main() { mut xs = [\"a\"] xs[0] = \"b\" }"), "@siyo.fn.0");
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_array_set\\(ptr %t\\d+, i32 0, ptr @siyo.str.1\\)\n"
+                + "(?:.*\n){4}  %t\\d+ = call ptr @siyo_rt_cast_str\\(ptr \\1\\)").matcher(main).find(), main);
+    }
+
+    @Test
+    void arrayBuiltinsCallTheRuntime() {
+        String ir = emit("fn main() { mut xs: long[] = [] push(xs, 1) println(len(xs)) println(pop(xs)) removeAt(xs, 0) }");
+        String main = function(ir, "@siyo.fn.0");
+        // push widens the int to the long element type before boxing it.
+        assertTrue(Pattern.compile("(%t\\d+) = sext i32 1 to i64\n  %t\\d+ = call ptr @siyo_rt_box_long\\(i64 \\1\\)")
+                .matcher(main).find(), main);
+        assertTrue(main.contains("call void @siyo_rt_array_push(ptr "), main);
+        assertTrue(main.contains("call i32 @siyo_rt_array_len(ptr "), main);
+        assertTrue(main.contains("call ptr @siyo_rt_array_pop(ptr "), main);
+        assertTrue(main.contains("call i64 @siyo_rt_unbox_long(ptr "), main);
+        assertTrue(main.contains("call void @siyo_rt_array_remove_at(ptr "), main);
+        // Every one of them can raise (a null array, an index out of range).
+        assertEquals(5, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void arrayBecomesAnAnyAsItIsAndComesBackThroughACheckedCast() {
+        String ir = emit("fn f(x: any) -> any { return x }\n"
+                + "fn main() { imut xs: int[] = f([1]) println(\"v\" + f(xs)) println(toString(xs)) }");
+        String main = function(ir, "@siyo.fn.1");
+        assertTrue(main.contains("call ptr @siyo_rt_cast_array(ptr "), main);
+        assertEquals(2, count(main, "call ptr @siyo_rt_any_to_string(ptr "), main);
+        // Only the element 1 is boxed; the array itself is the any.
+        assertEquals(1, count(main, "@siyo_rt_box_"), main);
+    }
+
+    @Test
+    void structLiteralIsMadeWithItsFieldNamesInLiteralOrder() {
+        String ir = emit("struct P { x: int, name: string }\n"
+                + "fn main() { imut p = P { name: \"n\", x: 7 } println(p) }");
+        // The field names, as interned strings, in the order the literal wrote them.
+        Matcher names = Pattern.compile("(@siyo\\.fields\\.0) = private unnamed_addr constant \\[2 x ptr\\] "
+                + "\\[ptr (@siyo\\.str\\.\\d+), ptr (@siyo\\.str\\.\\d+)\\]").matcher(ir);
+        assertTrue(names.find(), ir);
+        assertTrue(ir.contains(names.group(2) + ".bytes = private unnamed_addr constant [4 x i8] c\"name\""), ir);
+        assertTrue(ir.contains(names.group(3) + ".bytes = private unnamed_addr constant [1 x i8] c\"x\""), ir);
+        String main = function(ir, "@siyo.fn.0");
+        Matcher made = Pattern.compile("(%t\\d+) = call ptr @siyo_rt_struct_new\\(ptr @siyo\\.str\\.\\d+, i32 2, "
+                + "ptr @siyo\\.fields\\.0\\)\n").matcher(main);
+        assertTrue(made.find(), main);
+        String s = made.group(1);
+        assertTrue(main.contains("call void @siyo_rt_struct_init(ptr " + s + ", i32 0, ptr @siyo.str."), main);
+        assertTrue(Pattern.compile("(%t\\d+) = call ptr @siyo_rt_box_int\\(i32 7\\)\n"
+                + "  call void @siyo_rt_struct_init\\(ptr " + s + ", i32 1, ptr \\1\\)\n").matcher(main).find(), main);
+        // A new struct is not null: nothing here can raise.
+        assertEquals(0, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+        assertTrue(main.contains("call void @siyo_rt_print_any(ptr "), main);
+    }
+
+    @Test
+    void fieldReadsAndWritesLookUpTheInternedNameAndCheck() {
+        String ir = emit("struct P { x: int }\n"
+                + "fn main() { mut p = P { x: 1 } p.x += 2 println(p.x) }");
+        String main = function(ir, "@siyo.fn.0");
+        // p.x += 2 reads the field (then narrows it), then writes it; println reads it again.
+        assertEquals(2, count(main, "call ptr @siyo_rt_struct_get(ptr "), main);
+        assertEquals(1, count(main, "call void @siyo_rt_struct_set(ptr "), main);
+        assertEquals(2, count(main, "call i32 @siyo_rt_unbox_int_field(ptr "), main);
+        assertFalse(main.contains("@siyo_rt_unbox_int(ptr"), main);
+        // get, unbox, unbox and set each raise.
+        assertEquals(5, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void structArgumentFromAnyIsCastAsTheReferenceCastsArguments() {
+        String ir = emit("struct P { x: int }\nfn f(p: P) -> int { return 1 }\nfn g(a: any) -> P { return a }\n"
+                + "fn main() { imut a: any = P { x: 1 } println(f(a)) imut q: P = a println(g(q)) }");
+        String main = function(ir, "@siyo.fn.2");
+        assertEquals(1, count(main, "call ptr @siyo_rt_cast_struct_arg(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_cast_struct(ptr "), main);
+        assertEquals(1, count(function(ir, "@siyo.fn.1"), "call ptr @siyo_rt_cast_struct(ptr "));
+    }
+
+    @Test
+    void structDeclarationEmitsNothing() {
+        String ir = emit("struct P { x: int }\nfn main() { println(1) }");
+        assertFalse(ir.contains("call ptr @siyo_rt_struct_new("), ir);
+        assertFalse(ir.contains("@siyo.fields."), ir);
+    }
+
+    @Test
+    void implMethodIsAFunctionTakingSelfFirst() {
+        String ir = emit("struct P { x: int }\n"
+                + "impl P { fn add(self, d: int) -> int { return self.x + d } fn new(x: int) -> P { return P { x: x } } }\n"
+                + "fn main() { imut p = P.new(4) println(p.add(3)) }");
+        assertTrue(ir.contains("define internal i32 @siyo.fn.0(ptr %p0, i32 %p1)"), ir);
+        String main = function(ir, "@siyo.fn.2");
+        assertTrue(main.contains("call ptr @siyo.fn.1(i32 4)"), main);
+        assertTrue(Pattern.compile("call i32 @siyo\\.fn\\.0\\(ptr %[^,]+, i32 3\\)").matcher(main).find(), main);
+    }
+
+    @Test
+    void enumMemberIsAnIntConstant() {
+        String ir = emit("enum C { A = 10, B, D = -3 }\nfn main() { println(C.B) println(C.D) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(main.contains("@siyo_rt_print_int(i32 11)"), main);
+        assertTrue(main.contains("@siyo_rt_print_int(i32 -3)"), main);
+    }
+
+    @Test
+    void onlyRaisingRuntimeCallsAreChecked() {
+        String ir = emit("fn main() { mut s = \"abc\" println(s + substring(s, 0, 1)) println(parseInt(s)) }");
+        String main = function(ir, "@siyo.fn.0");
+        // substring raises; concatenation, parseInt and printing do not.
+        assertEquals(1, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+    }
+
+    @Test
+    void divisionByZeroRaisesAndBranchesToTheHandler() {
+        String ir = emit("fn d(a: int, b: int) -> int { try { return a / b } catch e { return -1 } }\n"
+                + "fn main() { println(d(1, 0)) }");
+        String d = function(ir, "@siyo.fn.0");
+        assertTrue(Pattern.compile("call void @siyo_rt_div_by_zero\\(\\)\n  br label %catch\\.\\d+\n").matcher(d).find(), d);
+        assertTrue(ir.contains("declare void @siyo_rt_div_by_zero() cold\n"), ir);
+    }
+
+    @Test
+    void catchVariableIsCastToItsDeclaredTypeWithACheck() {
+        String ir = emit("fn main() { try { throw 1 } catch e: int { println(e) } }");
+        String main = function(ir, "@siyo.fn.0");
+        Matcher cast = Pattern.compile("(%t\\d+) = call ptr @siyo_rt_catch\\(\\)\n"
+                + "  %t\\d+ = call i32 @siyo_rt_unbox_int\\(ptr \\1\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n").matcher(main);
+        assertTrue(cast.find(), main);
+    }
+
+    @Test
+    void nullLiteralUnboxedToIntOrBoolRaisesTheJvmMessage() {
+        String ir = emit("fn g(b: bool) { println(b) }\nfn main() { imut n: int = null println(n) g(null) }");
+        String main = function(ir, "@siyo.fn.1");
+        assertTrue(main.contains("call void @siyo_rt_unbox_null_literal(i32 2)\n  br label %unwind\n"), main);
+        assertTrue(main.contains("call void @siyo_rt_unbox_null_literal(i32 4)\n  br label %unwind\n"), main);
+    }
+
+    @Test
+    void jumpsOutOfTryAndCatchAreWellFormed() {
+        emit("""
+                fn f(n: int) -> int {
+                  mut total = 0
+                  for mut i = 0 i < n i = i + 1 {
+                    try {
+                      if i == 1 { continue }
+                      if i == 5 { break }
+                      if i == 3 { throw i }
+                      if i == 4 { return total }
+                      total += i
+                    } catch e: int {
+                      if e == 3 { continue }
+                      return -1
+                    }
+                  }
+                  return total
+                }
+                fn main() { println(f(9)) }
+                """);
+    }
+
+    // A try expression's bodies each store their tail value into one slot of
+    // the expression's type, which the join block loads.
+    @Test
+    void tryExpressionJoinsBothBodiesThroughASlot() {
+        String ir = emit("fn main() { imut v = try { parseLong(\"z\") } catch e { 0L - 1L } println(v) }");
+        String main = function(ir, "@siyo.fn.0");
+        Matcher slot = Pattern.compile("(%t\\d+) = alloca i64\n").matcher(main);
+        assertTrue(slot.find(), main);
+        String s = Pattern.quote(slot.group(1));
+        Matcher parse = Pattern.compile("(%t\\d+) = call i64 @siyo_rt_parse_long\\(ptr @siyo\\.str\\.0\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n"
+                + "  %t\\d+ = icmp ne i8 %t\\d+, 0\n"
+                + "  br i1 %t\\d+, label %(catch\\.\\d+), label %(ok\\.\\d+)\n"
+                + "\\3:\n"
+                + "  store i64 \\1, ptr " + s + "\n"
+                + "  br label %(try\\.value\\.\\d+)\n").matcher(main);
+        assertTrue(parse.find(), main);
+        assertTrue(Pattern.compile("\n" + Pattern.quote(parse.group(2)) + ":\n  %t\\d+ = call ptr @siyo_rt_catch\\(\\)\n")
+                .matcher(main).find(), main);
+        assertTrue(Pattern.compile("  (%t\\d+) = sub i64 0, 1\n  store i64 \\1, ptr " + s + "\n  br label %"
+                + Pattern.quote(parse.group(4)) + "\n").matcher(main).find(), main);
+        assertTrue(Pattern.compile("\n" + Pattern.quote(parse.group(4)) + ":\n  %t\\d+ = load i64, ptr " + s + "\n")
+                .matcher(main).find(), main);
+    }
+
+    // As on the JVM, the value is narrowed after the join: a failing cast
+    // raises to the enclosing handler, not to the expression's own catch.
+    @Test
+    void tryExpressionNarrowsItsValueOutsideItsOwnHandler() {
+        String ir = emit("fn main() { try { imut v = try { parseLong(\"x\") } catch e { \"s\" } println(v) }"
+                + " catch outer { println(outer) } }");
+        String main = function(ir, "@siyo.fn.0");
+        // The try statement's catch block is catch.0; the expression's is a later one.
+        assertTrue(Pattern.compile("call i64 @siyo_rt_unbox_long\\(ptr @siyo\\.str\\.\\d+\\)\n"
+                + "  %t\\d+ = load i8, ptr @siyo_rt_pending_flag\n"
+                + "  %t\\d+ = icmp ne i8 %t\\d+, 0\n"
+                + "  br i1 %t\\d+, label %catch\\.0, ").matcher(main).find(), main);
+        assertTrue(Pattern.compile("@siyo_rt_parse_long[^\\n]*\n[^\\n]*\n[^\\n]*\n  br i1 %t\\d+, label %catch\\.[1-9]")
+                .matcher(main).find(), main);
+    }
+
+    // A body ending in a statement gives null, which the JVM unboxes after the
+    // join: the runtime's message, not the null literal's.
+    @Test
+    void tryExpressionBodyWithoutAValueGivesNull() {
+        String ir = emit("fn main() { imut n = try { mut z = 1 } catch e { 5 } println(n) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertTrue(main.contains("call i32 @siyo_rt_unbox_int(ptr null)\n"), main);
+        assertFalse(main.contains("unbox_null_literal"), main);
+    }
+
+    @Test
+    void tryExpressionInAGlobalInitialiserKeepsItsLocalsInSlots() {
+        String ir = emit("mut g = try { mut t = \"a\" t + \"b\" } catch e { \"c\" }\nfn main() { println(g) }");
+        String init = function(ir, "@siyo.init_globals");
+        assertFalse(init.contains("ptr null\n"), init);
+        assertTrue(Pattern.compile("store ptr %t\\d+, ptr @siyo\\.g\\.0\n").matcher(init).find(), init);
+    }
+
+    @Test
+    void mapLiteralIsMadeWithBoxedKeysAndValuesInOrder() {
+        String ir = emit("fn main() { imut m = {\"a\": 1, \"b\": 2} println(m) imut e = map() println(e) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertEquals(2, count(main, "call ptr @siyo_rt_map_new()"), main);
+        assertEquals(2, count(main, "call void @siyo_rt_map_insert(ptr "), main);
+        assertEquals(2, count(main, "call ptr @siyo_rt_box_int(i32 "), main);
+        // A new map is not null: nothing here can raise.
+        assertEquals(0, count(main, "load i8, ptr @siyo_rt_pending_flag"), main);
+        assertEquals(2, count(main, "call void @siyo_rt_print_any(ptr "), main);
+    }
+
+    @Test
+    void mapIndexingReadsAndWritesThroughTheRuntime() {
+        String ir = emit("fn main() { mut m: Map<string, int> = {} m[\"a\"] = 1 m[\"a\"] += 2 println(m[\"a\"]) "
+                + "imut b: Map<string, bool> = {} println(b[\"x\"]) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertEquals(2, count(main, "call void @siyo_rt_map_put(ptr "), main);
+        assertEquals(3, count(main, "call ptr @siyo_rt_map_get(ptr "), main);
+        // A missing key unboxed names SiyoMap.get(Object), as the JVM's message does.
+        assertEquals(2, count(main, "call i32 @siyo_rt_unbox_int_map_get(ptr "), main);
+        assertEquals(1, count(main, "call zeroext i1 @siyo_rt_unbox_bool_map_get(ptr "), main);
+        assertFalse(main.contains("@siyo_rt_unbox_int(ptr"), main);
+        assertFalse(main.contains("@siyo_rt_array_"), main);
+    }
+
+    @Test
+    void mapMethodsAndLenAndForInCallTheRuntime() {
+        String ir = emit("fn main() { mut m: Map<string, int> = {} m.set(\"k\", 1) imut v: int = m.get(\"k\") "
+                + "println(m.has(1)) m.remove(\"k\") println(m.size() + len(m) + v) println(m.keys()) "
+                + "for k in m { println(k) } imut a: any = m imut back: Map<string, int> = a println(back) }");
+        String main = function(ir, "@siyo.fn.0");
+        assertEquals(1, count(main, "call void @siyo_rt_map_put(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_map_get(ptr "), main);
+        // get(String) was the overload the binder chose, so its message names it.
+        assertEquals(1, count(main, "call i32 @siyo_rt_unbox_int_map_get_str(ptr "), main);
+        assertEquals(1, count(main, "call zeroext i1 @siyo_rt_map_has(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_map_remove(ptr "), main);
+        assertEquals(1, count(main, "call i32 @siyo_rt_map_size(ptr "), main);
+        assertEquals(1, count(main, "call i32 @siyo_rt_map_len(ptr "), main);
+        assertEquals(2, count(main, "call ptr @siyo_rt_map_keys(ptr "), main);
+        assertEquals(1, count(main, "call ptr @siyo_rt_cast_map(ptr "), main);
+    }
+
     @Test
     void refusesNodesItDoesNotKnow() {
-        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut a = [1] }");
+        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { mut m = #{1} }");
         assertThrows(IllegalStateException.class, () -> IrEmitter.emit(result.program()));
+    }
+
+    /**
+     * No valid source reaches text() with a reference type outside the subset
+     * (the binder rejects {@code "a" + {"k": 1}} and the validator rejects the
+     * map literal first), so this calls the private method by reflection with a
+     * value of an unsupported type to pin its contract: refuse, naming the type.
+     */
+    @Test
+    void refusesToConvertNonStringReferenceTypesToText() throws Exception {
+        FrontendResult result = Frontend.analyze("e.siyo", "fn main() { }");
+        java.lang.reflect.Constructor<IrEmitter> ctor = IrEmitter.class.getDeclaredConstructors().length == 1
+                ? (java.lang.reflect.Constructor<IrEmitter>) IrEmitter.class.getDeclaredConstructors()[0] : null;
+        ctor.setAccessible(true);
+        IrEmitter emitter = ctor.newInstance(result.program());
+        Class<?> valueClass = Class.forName("siyollvm.ir.IrEmitter$Value");
+        java.lang.reflect.Constructor<?> valueCtor = valueClass.getDeclaredConstructor(String.class, Class.class);
+        valueCtor.setAccessible(true);
+        Object value = valueCtor.newInstance("%v", Object[].class);
+        java.lang.reflect.Method text = IrEmitter.class.getDeclaredMethod("text", valueClass);
+        text.setAccessible(true);
+        java.lang.reflect.InvocationTargetException e =
+                assertThrows(java.lang.reflect.InvocationTargetException.class, () -> text.invoke(emitter, value));
+        assertTrue(e.getCause() instanceof IllegalStateException, String.valueOf(e.getCause()));
+        assertTrue(e.getCause().getMessage().contains("conversion of " + Object[].class), e.getCause().getMessage());
+    }
+
+    /** The definition of {@code name}, from {@code define} to its closing brace. */
+    private static String function(String ir, String name) {
+        Matcher define = Pattern.compile("(?m)^define [^\\n]* " + Pattern.quote(name) + "\\(").matcher(ir);
+        assertTrue(define.find(), name + " not defined in\n" + ir);
+        return ir.substring(define.start(), ir.indexOf("\n}\n", define.start()) + 2);
     }
 
     private static int count(String haystack, String needle) {
@@ -146,5 +681,88 @@ class IrEmitterTest {
         int n = 0;
         while (m.find()) n++;
         return n;
+    }
+
+    @Test
+    void sameNamedFunctionsOfTwoModulesAreTwoIrFunctions(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir)
+            throws Exception {
+        java.nio.file.Files.writeString(dir.resolve("a.siyo"), "mut n = 1\nfn helper() -> int { n }\n");
+        java.nio.file.Files.writeString(dir.resolve("b.siyo"), "mut n = 2\nfn helper() -> int { n }\n");
+        java.nio.file.Path main = dir.resolve("main.siyo");
+        java.nio.file.Files.writeString(main, "import \"a\"\nimport \"b\"\nfn helper() -> int { 3 }\n"
+                + "fn main() { println(a.helper() + b.helper() + helper() + a.n + b.n) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, java.nio.file.Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        assertEquals(java.util.List.of(), SubsetValidator.validate(result.program()));
+        String ir = IrEmitter.emit(result.program());
+        IrStructure.assertWellFormed(ir);
+        // a.helper, b.helper, main's helper and main: four functions, three of them called.
+        assertEquals(4, Pattern.compile("(?m)^define internal (i32|void) @siyo\\.fn\\.\\d+\\(").matcher(ir).results().count());
+        assertTrue(ir.contains("call i32 @siyo.fn.0()"), ir);
+        assertTrue(ir.contains("call i32 @siyo.fn.1()"), ir);
+        assertTrue(ir.contains("call i32 @siyo.fn.2()"), ir);
+        // Two module globals, each with its own initialiser, run before the main file's.
+        assertTrue(ir.contains("@siyo.g.0 = internal global i32 0"), ir);
+        assertTrue(ir.contains("@siyo.g.1 = internal global i32 0"), ir);
+        int a = ir.indexOf("call void @siyo.init_globals.0()");
+        int b = ir.indexOf("call void @siyo.init_globals.1()");
+        int m = ir.indexOf("call void @siyo.init_globals()");
+        assertTrue(a > 0 && a < b && b < m, ir);
+    }
+
+    @Test
+    void stdIoAndOsCallsAreRuntimeIntrinsics() {
+        String ir = emit("""
+                import "std/io"
+                import "std/os"
+                fn main() {
+                  io.writeFile("f", "x")
+                  println(io.readFile("f"))
+                  println(os.args())
+                  os.exit(2)
+                }
+                """);
+        assertTrue(ir.contains("call void @siyo_rt_io_write_file(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_io_read_file(ptr "), ir);
+        assertTrue(ir.contains("call ptr @siyo_rt_os_args()"), ir);
+        assertTrue(ir.contains("call void @siyo_rt_os_exit(i32 2)"), ir);
+        assertFalse(ir.contains("SiyoLLVM intrinsic"), "stub bodies are not emitted: " + ir);
+    }
+
+    @Test
+    void aUsersOwnStdIoIsCompiledAsOrdinaryCode(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir)
+            throws Exception {
+        java.nio.file.Files.createDirectories(dir.resolve("std"));
+        java.nio.file.Files.writeString(dir.resolve("std/io.siyo"),
+                "fn readFile(p: string) -> string { \"mine \" + p }\n");
+        java.nio.file.Path main = dir.resolve("main.siyo");
+        java.nio.file.Files.writeString(main, "import \"std/io\"\nfn main() { println(io.readFile(\"x\")) }\n");
+        FrontendResult result = Frontend.analyze("main.siyo", main, java.nio.file.Files.readString(main));
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        assertEquals(java.util.List.of(), SubsetValidator.validate(result.program()));
+        String ir = IrEmitter.emit(result.program());
+        assertFalse(ir.contains("call ptr @siyo_rt_io_read_file("), ir);
+        assertTrue(ir.contains("notail call ptr @siyo.fn."), ir);
+    }
+
+    @Test
+    void everyShippedIoAndOsFunctionIsAStubAndStringsIsCompiled() {
+        FrontendResult result = Frontend.analyze("e.siyo",
+                "import \"std/io\"\nimport \"std/os\"\nimport \"std/strings\"\nfn main() { }\n");
+        assertTrue(result.diagnostics().isEmpty(), result.diagnostics().toString());
+        siyollvm.frontend.LoweredProgram program = result.program();
+        int io = 0;
+        for (siyollvm.frontend.LoweredProgram.Unit unit : program.units()) {
+            for (codeanalysis.FunctionSymbol function : unit.functions().keySet()) {
+                boolean stub = Intrinsics.isStub(program, function);
+                if (unit.identity().equals("classpath:std/strings.siyo")) {
+                    assertEquals(function.getName().equals("builder"), stub, function.getName());
+                } else if (unit.identity().startsWith("classpath:std/")) {
+                    assertTrue(stub, unit.identity() + " " + function.getName());
+                    io++;
+                }
+            }
+        }
+        assertEquals(19, io);
     }
 }

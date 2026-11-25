@@ -1,0 +1,7 @@
+// chr takes a code point; outside 0..0x10FFFF it is an uncaught
+// IllegalArgumentException.
+fn main() {
+    println(chr(1114111) == chr(56319) + chr(57343))
+    println("before")
+    println(chr(-1))
+}

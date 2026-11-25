@@ -1,0 +1,126 @@
+// Every string builtin on ASCII text, embedded NULs and empty strings.
+fn show(label: string, value: string) {
+    println(label + "=[" + value + "]")
+}
+
+fn main() {
+    // len
+    println(len("hello"))
+    println(len(""))
+    println(len("a\0b"))
+    println(len("\0"))
+
+    // substring
+    show("sub", substring("hello", 1, 4))
+    show("sub", substring("hello", 0, 5))
+    show("sub", substring("hello", 5, 5))
+    show("sub", substring("hello", 0, 0))
+    show("sub", substring("", 0, 0))
+    show("sub", substring("a\0b", 1, 2))
+    println(substring("a\0b", 1, 3) == "\0b")
+
+    // contains, indexOf, startsWith, endsWith
+    println(contains("hello", "ell"))
+    println(contains("hello", "elk"))
+    println(contains("hello", ""))
+    println(contains("", ""))
+    println(contains("", "a"))
+    println(contains("a\0b", "\0"))
+    println(contains("a\0b", "\0c"))
+    println(indexOf("hello", "l"))
+    println(indexOf("hello", "lo"))
+    println(indexOf("hello", "x"))
+    println(indexOf("hello", ""))
+    println(indexOf("", ""))
+    println(indexOf("", "a"))
+    println(indexOf("a\0b\0", "\0"))
+    println(indexOf("a\0b\0", "b\0"))
+    println(startsWith("hello", "he"))
+    println(startsWith("hello", "hello!"))
+    println(startsWith("hello", ""))
+    println(startsWith("", ""))
+    println(startsWith("\0a", "\0"))
+    println(startsWith("a", "\0"))
+    println(endsWith("hello", "llo"))
+    println(endsWith("hello", "hel"))
+    println(endsWith("hello", ""))
+    println(endsWith("", ""))
+    println(endsWith("", "a"))
+    println(endsWith("a\0", "\0"))
+
+    // replace: literal, every occurrence, empty target between every unit
+    show("rep", replace("a.b.c", ".", "--"))
+    show("rep", replace("aaa", "aa", "b"))
+    show("rep", replace("abc", "x", "y"))
+    show("rep", replace("abc", "", "-"))
+    show("rep", replace("", "", "-"))
+    show("rep", replace("", "a", "b"))
+    show("rep", replace("abc", "abc", ""))
+    show("rep", replace("a\0b\0", "\0", "<nul>"))
+    show("rep", replace("x", "x", "\0"))
+    println(replace("a\0b", "b", "") == "a\0")
+    show("rep", replace("[.*+?]", ".*", "regex?"))
+    show("rep", replace("$1 \\n", "$1", "\\"))
+
+    // trim: units up to U+0020, both ends, NULs and tabs included
+    show("trim", trim("  hi  "))
+    show("trim", trim("\t\n\r hi there \t"))
+    show("trim", trim("\0\0hi\0"))
+    show("trim", trim("\0 \t"))
+    show("trim", trim(""))
+    show("trim", trim("x"))
+    show("trim", trim(" a\0b "))
+    println(trim("\0a\0") == "a")
+
+    // toUpper, toLower on ASCII
+    show("up", toUpper("Hello, World! 123"))
+    show("low", toLower("Hello, World! 123"))
+    show("up", toUpper(""))
+    show("low", toLower("a\0B"))
+    println(toUpper("a\0b") == "A\0B")
+
+    // chr, ord
+    show("chr", chr(65))
+    show("chr", chr(48) + chr(122))
+    println(chr(0) == "\0")
+    println(len(chr(0)))
+    println(ord("A"))
+    println(ord("abc"))
+    println(ord("\0x"))
+    println(ord(" "))
+    println(ord(chr(127)))
+
+    // toLong, toInt(long), toInt(string)
+    println(toLong(2147483647) + 1L)
+    println(toLong(-5) * 3000000000L)
+    println(toInt(4294967297L))
+    println(toInt(2147483648L))
+    println(toInt(0L - 1L))
+    println(toInt("42"))
+    println(toInt("4x"))
+    println(parseInt("-17") + 1)
+    println(parseLong("-17") + 1L)
+
+    // One long string built by appends.
+    mut s = ""
+    mut i = 0
+    while i < 20000 {
+        s += "ab"
+        if i % 1000 == 999 {
+            s += "\0"
+        }
+        i += 1
+    }
+    s += "END"
+    println(len(s))
+    show("tail", substring(s, len(s) - 6, len(s)))
+    println(endsWith(s, "ab\0END"))
+    println(startsWith(s, "abab"))
+    println(indexOf(s, "END"))
+    println(indexOf(s, "\0"))
+    println(contains(s, "b\0a"))
+    println(len(replace(s, "\0", "")))
+    println(len(trim(s)))
+    println(substring(s, 1998, 2004) == "ab\0aba")
+    println(ord(substring(s, 2000, 2001)))
+}

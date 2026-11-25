@@ -1,0 +1,19 @@
+// Non-ASCII text, an embedded NUL and a lone surrogate in exception payloads,
+// with earlier output (a print without newline, a global, init) before an uncaught error().
+mut g = 1
+fn init() {
+    println("init " + g)
+    try { throw "x" } catch e { println("caught " + e) }
+    g = g + 1
+}
+fn main() {
+    try { throw "çağ😀" } catch e: string {
+        println(len(e))
+        println("[" + substring(e, 3, 4) + "]")
+        println(e)
+    }
+    println(g)
+    print("partial")
+    imut x: any = 5L
+    error("çağ\0z" + x)
+}

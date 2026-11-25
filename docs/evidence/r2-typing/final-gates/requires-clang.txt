@@ -1,0 +1,1 @@
+OK: native gate fails without clang, reporting: SIYOLLVM_CLANG=/nonexistent/siyollvm-test/clang does not name an executable clang

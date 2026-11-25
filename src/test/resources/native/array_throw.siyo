@@ -1,0 +1,19 @@
+// Arrays as thrown values, typed catch variables and try expression values;
+// an uncaught array payload prints as String.valueOf writes it.
+fn pick(flag: bool) -> int[] {
+    imut v = try { if flag { throw "no" } [1, 2] } catch e { [0] }
+    return v
+}
+
+fn main() {
+    try { throw [1, 2] } catch e: int[] { println(e[1]) }
+    try { throw ["a"] } catch e { println("caught " + e) }
+    try {
+        try { throw "s" } catch e: int[] { println(e) }
+    } catch outer { println(outer) }
+    println(pick(false))
+    println(pick(true))
+    imut rows = try { [[1], [2]] } catch e { [] }
+    println(rows)
+    throw [[1, 2], [3]]
+}

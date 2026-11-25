@@ -1,0 +1,40 @@
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:19:58.2439135Z [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.183 s -- in siyollvm.ExamplesCompileTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:20:09.0357533Z [INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.80 s -- in siyollvm.nativegate.MapNullNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:20:19.2780972Z [INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.24 s -- in siyollvm.nativegate.ModulesNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:20:32.8555152Z [INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.58 s -- in siyollvm.nativegate.StringBuiltinsNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:20:33.6057888Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.751 s -- in siyollvm.nativegate.RuntimeBuildNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:20:34.5299530Z [INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.923 s -- in siyollvm.nativegate.LedgerOracleNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:20:35.8474035Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.316 s -- in siyollvm.nativegate.RuntimeArraysNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:20:38.6447177Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.795 s -- in siyollvm.nativegate.CliNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:35.8304763Z [INFO] Tests run: 86, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 57.18 s -- in siyollvm.nativegate.NativeCorpusTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:37.0149465Z [INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.184 s -- in siyollvm.nativegate.LedgerAppNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:39.0313588Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.016 s -- in siyollvm.nativegate.StackGuardNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:43.0105947Z [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.978 s -- in siyollvm.nativegate.NativeExamplesTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:44.3261192Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.314 s -- in siyollvm.nativegate.RuntimeStringsNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:44.6698935Z [INFO] Tests run: 230, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.334 s -- in siyollvm.check.SubsetValidatorTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:45.7312897Z [INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.068 s -- in siyollvm.toolchain.ClangTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:45.7414638Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in siyollvm.toolchain.RuntimeSourceTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:45.9069133Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.164 s -- in siyollvm.ir.RuntimeIrTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:46.0178840Z [INFO] Tests run: 64, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.101 s -- in siyollvm.ir.IrEmitterTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:46.0568917Z [INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in siyollvm.frontend.FrontendTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:46.1099002Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.056 s -- in siyollvm.SnapshotManifestTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:46.1138359Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in siyollvm.CompilerTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:46.6799674Z [INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.564 s -- in siyollvm.cli.MainTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:47.1178212Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.440 s -- in siyollvm.cli.CliProcessTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:47.1489835Z [INFO] Tests run: 583, Failures: 0, Errors: 0, Skipped: 0
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:48.5074061Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.337 s -- in siyollvm.cli.LauncherIT
+Native gate (clang 19)	mvn verify -Pnative	2026-11-07T06:21:48.5171249Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:43.1017668Z [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.156 s -- in siyollvm.ExamplesCompileTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:43.7329016Z [INFO] Tests run: 230, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.630 s -- in siyollvm.check.SubsetValidatorTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:44.8010530Z [INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.100 s -- in siyollvm.toolchain.ClangTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:44.8175570Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s -- in siyollvm.toolchain.RuntimeSourceTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:45.0122477Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.191 s -- in siyollvm.ir.RuntimeIrTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:45.1797815Z [INFO] Tests run: 64, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.169 s -- in siyollvm.ir.IrEmitterTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:45.2427788Z [INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.066 s -- in siyollvm.frontend.FrontendTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:45.3147585Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.070 s -- in siyollvm.SnapshotManifestTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:45.3168769Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in siyollvm.CompilerTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:45.8876144Z [INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.569 s -- in siyollvm.cli.MainTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:46.3206899Z [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.433 s -- in siyollvm.cli.CliProcessTest
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:46.3352525Z [INFO] Tests run: 379, Failures: 0, Errors: 0, Skipped: 0
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:47.7448616Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.330 s -- in siyollvm.cli.LauncherIT
+Java tests (no LLVM)	mvn verify	2026-11-07T06:19:47.7556607Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0

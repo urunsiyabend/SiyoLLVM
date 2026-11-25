@@ -1,0 +1,241 @@
+BOUNDED evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-093716-4db946bffb384db4b703228a37f1f9a7
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< com.siyo:siyollvm >--------------------------
+[INFO] Building SiyoLLVM 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- build-helper:3.6.0:add-source (add-upstream-frontend) @ siyollvm ---
+[INFO] Source directory: /home/urunsiyabend/development/SiyoLLVM-native/upstream/siyocompiler/src/main/java added.
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ siyollvm ---
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] The encoding used to copy filtered properties files has not been set. This means that the same encoding will be used to copy filtered properties files as when copying other filtered resources. This might not be what you want! Run your build with --debug to see which files might be affected. Read more at https://maven.apache.org/plugins/maven-resources-plugin/examples/filtering-properties-files.html
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ siyollvm ---
+[INFO] Copying 343 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- antrun:3.1.0:run (create-test-tmpdir) @ siyollvm ---
+[INFO] Executing tasks
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ siyollvm ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running siyollvm.nativegate.RuntimeGcNativeTest
+[ERROR] Tests run: 7, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 5.891 s <<< FAILURE! -- in siyollvm.nativegate.RuntimeGcNativeTest
+[ERROR] siyollvm.nativegate.RuntimeGcNativeTest.collectorHooks -- Time elapsed: 0.516 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+ok interior: start of a small block
+ok interior: middle of a small block
+ok interior: last requested byte
+ok interior: stack address is not heap
+ok interior: static address is not heap
+ok interior: malloc memory is not heap
+ok interior: NULL is not heap
+ok interior: a constant is not heap
+ok interior: start of a large block
+ok interior: third 64 KiB of a large block
+ok interior: last byte of a large block
+ok interior: string data resolves to its buffer
+ok interior: string bytes resolve to their buffer
+ok interior: item pointer resolves to items block
+ok interior: string survives collection via locals
+ok interior: array survives collection
+ok interior: blocks held by locals survive
+ok zeroing: blocks reused after collection come back zeroed
+ok reclaim: 5000 blocks allocated
+ok reclaim: a collection is counted
+ok reclaim: unreachable blocks are freed
+ok scan: a SCAN block's words keep their target
+ok noscan: a NOSCAN block's words keep nothing
+ok noscan: the NOSCAN block itself is kept by its root
+ok scan: the target goes once its holder is unreachable
+ok cycles: kept while an alias (a global) lives
+ok cycles: reclaimed once unreachable
+ok large: counted in heap bytes
+ok large: kept, with what it points to
+ok large: reclaimed once unreachable
+ok large: heap bytes drop back
+ok deep: a million-node list survives intact (explicit mark stack)
+ok deep: and is reclaimed when dropped
+ok registers: a block held only in a callee-saved register survives
+ok registers: control (only the hidden value in the register) is reclaimed
+ok tls: the pending exception's payload survives a collection
+ok tls: still pending
+ok tls: catch returns it intact
+ok tls: a raised exception's message survives a collection
+ok boxes: the small-int cache is static, not heap
+ok boxes: other ints are heap boxes
+ok boxes: survive collection
+ok end: block_of(p + 8) == block_of(p)
+ok end: block_of(p + 16) == block_of(p)
+ok end: block_of(p + 17) == block_of(p)
+ok end: block_of(p + 23) == block_of(p)
+ok end: block_of(p + 24) == block_of(p)
+ok end: block_of(p + 32) == block_of(p)
+ok end: block_of(p + 48) == block_of(p)
+ok end: block_of(p + 64) == block_of(p)
+ok end: block_of(p + 96) == block_of(p)
+ok end: block_of(p + 128) == block_of(p)
+ok end: block_of(p + 192) == block_of(p)
+ok end: block_of(p + 256) == block_of(p)
+ok end: block_of(p + 384) == block_of(p)
+ok end: block_of(p + 512) == block_of(p)
+ok end: block_of(p + 768) == block_of(p)
+ok end: block_of(p + 1024) == block_of(p)
+ok end: block_of(p + 1536) == block_of(p)
+ok end: block_of(p + 2047) == block_of(p)
+ok end: block_of(p + 2048) == block_of(p)
+ok end: block_of(p + 2049) == block_of(p)
+ok end: block_of(p + 4096) == block_of(p)
+ok end: block_of(p + 8192) == block_of(p)
+ok end: block_of(p + 65528) == block_of(p)
+ok end: block_of(p + 65536) == block_of(p)
+ok end: block_of(p + 196608) == block_of(p)
+ok end: a 16-byte block held only by its end pointer survives
+ok end: the 16-byte block goes once its end pointer does
+ok end: a 23-byte block held only by its end pointer survives
+ok end: the 23-byte block goes once its end pointer does
+ok end: a 32-byte block held only by its end pointer survives
+ok end: the 32-byte block goes once its end pointer does
+ok end: a 2048-byte block held only by its end pointer survives
+ok end: the 2048-byte block goes once its end pointer does
+ok end: a 4096-byte block held only by its end pointer survives
+ok end: the 4096-byte block goes once its end pointer does
+ok end: a 65536-byte block held only by its end pointer survives
+ok end: the 65536-byte block goes once its end pointer does
+FAIL class 24: a 16-byte block spans [p, p + 24)
+FAIL class 24: a 23-byte block spans [p, p + 24)
+FAIL class 24: an int box takes a 24-byte block
+done 3
+ ==> expected: <false> but was: <true>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertFalse.failNotFalse(AssertFalse.java:63)
+	at org.junit.jupiter.api.AssertFalse.assertFalse(AssertFalse.java:36)
+	at org.junit.jupiter.api.Assertions.assertFalse(Assertions.java:239)
+	at siyollvm.nativegate.RuntimeGcNativeTest.collectorHooks(RuntimeGcNativeTest.java:67)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   RuntimeGcNativeTest.collectorHooks:67 ok interior: start of a small block
+ok interior: middle of a small block
+ok interior: last requested byte
+ok interior: stack address is not heap
+ok interior: static address is not heap
+ok interior: malloc memory is not heap
+ok interior: NULL is not heap
+ok interior: a constant is not heap
+ok interior: start of a large block
+ok interior: third 64 KiB of a large block
+ok interior: last byte of a large block
+ok interior: string data resolves to its buffer
+ok interior: string bytes resolve to their buffer
+ok interior: item pointer resolves to items block
+ok interior: string survives collection via locals
+ok interior: array survives collection
+ok interior: blocks held by locals survive
+ok zeroing: blocks reused after collection come back zeroed
+ok reclaim: 5000 blocks allocated
+ok reclaim: a collection is counted
+ok reclaim: unreachable blocks are freed
+ok scan: a SCAN block's words keep their target
+ok noscan: a NOSCAN block's words keep nothing
+ok noscan: the NOSCAN block itself is kept by its root
+ok scan: the target goes once its holder is unreachable
+ok cycles: kept while an alias (a global) lives
+ok cycles: reclaimed once unreachable
+ok large: counted in heap bytes
+ok large: kept, with what it points to
+ok large: reclaimed once unreachable
+ok large: heap bytes drop back
+ok deep: a million-node list survives intact (explicit mark stack)
+ok deep: and is reclaimed when dropped
+ok registers: a block held only in a callee-saved register survives
+ok registers: control (only the hidden value in the register) is reclaimed
+ok tls: the pending exception's payload survives a collection
+ok tls: still pending
+ok tls: catch returns it intact
+ok tls: a raised exception's message survives a collection
+ok boxes: the small-int cache is static, not heap
+ok boxes: other ints are heap boxes
+ok boxes: survive collection
+ok end: block_of(p + 8) == block_of(p)
+ok end: block_of(p + 16) == block_of(p)
+ok end: block_of(p + 17) == block_of(p)
+ok end: block_of(p + 23) == block_of(p)
+ok end: block_of(p + 24) == block_of(p)
+ok end: block_of(p + 32) == block_of(p)
+ok end: block_of(p + 48) == block_of(p)
+ok end: block_of(p + 64) == block_of(p)
+ok end: block_of(p + 96) == block_of(p)
+ok end: block_of(p + 128) == block_of(p)
+ok end: block_of(p + 192) == block_of(p)
+ok end: block_of(p + 256) == block_of(p)
+ok end: block_of(p + 384) == block_of(p)
+ok end: block_of(p + 512) == block_of(p)
+ok end: block_of(p + 768) == block_of(p)
+ok end: block_of(p + 1024) == block_of(p)
+ok end: block_of(p + 1536) == block_of(p)
+ok end: block_of(p + 2047) == block_of(p)
+ok end: block_of(p + 2048) == block_of(p)
+ok end: block_of(p + 2049) == block_of(p)
+ok end: block_of(p + 4096) == block_of(p)
+ok end: block_of(p + 8192) == block_of(p)
+ok end: block_of(p + 65528) == block_of(p)
+ok end: block_of(p + 65536) == block_of(p)
+ok end: block_of(p + 196608) == block_of(p)
+ok end: a 16-byte block held only by its end pointer survives
+ok end: the 16-byte block goes once its end pointer does
+ok end: a 23-byte block held only by its end pointer survives
+ok end: the 23-byte block goes once its end pointer does
+ok end: a 32-byte block held only by its end pointer survives
+ok end: the 32-byte block goes once its end pointer does
+ok end: a 2048-byte block held only by its end pointer survives
+ok end: the 2048-byte block goes once its end pointer does
+ok end: a 4096-byte block held only by its end pointer survives
+ok end: the 4096-byte block goes once its end pointer does
+ok end: a 65536-byte block held only by its end pointer survives
+ok end: the 65536-byte block goes once its end pointer does
+FAIL class 24: a 16-byte block spans [p, p + 24)
+FAIL class 24: a 23-byte block spans [p, p + 24)
+FAIL class 24: an int box takes a 24-byte block
+done 3
+ ==> expected: <false> but was: <true>
+[INFO] 
+[ERROR] Tests run: 7, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.777 s
+[INFO] Finished at: 2026-11-25T09:37:23+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project siyollvm: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /home/urunsiyabend/development/SiyoLLVM-native/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+BOUNDED accepted=False evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-093716-4db946bffb384db4b703228a37f1f9a7

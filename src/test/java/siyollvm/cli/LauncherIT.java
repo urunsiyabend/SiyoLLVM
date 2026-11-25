@@ -33,7 +33,7 @@ class LauncherIT {
         Process process = builder.redirectOutput(out.toFile()).redirectError(err.toFile()).start();
         assertTrue(process.waitFor(60, TimeUnit.SECONDS));
         assertEquals(0, process.exitValue(), Files.readString(err));
-        assertTrue(Files.readString(out).contains("define i32 @main()"));
+        assertTrue(Files.readString(out).contains("define void @siyo_program()"));
     }
 
     @Test

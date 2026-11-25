@@ -1,0 +1,17 @@
+// A runtime error raised in a module function is caught by the importer.
+import "lib/util"
+
+fn main() {
+    try {
+        util.check(5)
+        util.check(-1)
+        println("not reached")
+    } catch e {
+        println("caught " + e)
+    }
+    imut v = try { util.divide(10, 0) } catch e { -1 }
+    println(v)
+    println(util.divide(10, 2))
+    util.check(-2)
+    println("not reached either")
+}

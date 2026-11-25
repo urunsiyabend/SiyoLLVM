@@ -1,0 +1,15 @@
+// A user module in the same directory: its functions, its globals read as
+// module.name, and its top level run before the importer's.
+import "mathx"
+
+mut total = mathx.square(4)
+
+fn main() {
+    println(total)
+    println(mathx.add(2, 3))
+    println(mathx.version)
+    mathx.record(7)
+    mathx.record(8)
+    println(mathx.calls)
+    println(mathx.describe())
+}

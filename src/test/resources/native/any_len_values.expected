@@ -1,0 +1,9 @@
+4
+3
+2
+0
+3
+3
+int: len is not defined for Integer
+long: len is not defined for Long
+bool: len is not defined for Boolean

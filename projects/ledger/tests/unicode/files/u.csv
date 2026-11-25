@@ -1,0 +1,18 @@
+date,account,category,amount,memo
+2025-05-01,Şirket Hesabı,Kira,-4500.00,Mayıs kirası
+2025-05-02,İş Bankası,Maaş,32000.00,Çalışan maaşı ğüşıöç
+2025-05-03,Ziraat,Market/Pazar,-312.40,Haftalık alışveriş
+2025-05-03,zebra,Market/Pazar,-12.00,lower-case z
+2025-05-04,ağaç,食品,-88.88,寿司と味噌汁
+2025-05-05,銀行口座,食品,-1200.00,东京 — 北京
+2025-05-06,😀😀😀😀 Emoji Wallet Account,🎉🎉🎉 Celebration,-250.00,party 🎂🎈
+2025-05-07,🏦 Bank,☕ Kahve,-4.50,☕☕
+2025-05-08,Ａ Fullwidth,ｶﾌｪ,-6.00,halfwidth katakana
+2025-05-09,Ünal,☕ Kahve,-3.20,é combining accent
+2025-05-10,🏦 Bank,Kira,4500.00,iade
+2025-05-11,Ａ Fullwidth,ｶﾌｪ,6.00,refund cancels
+2025-05-12,ｱ,ﬀ ligature,1.00,both sort after the surrogates
+２０２５-05-13,Ziraat,Market/Pazar,-1.00,fullwidth digits
+2025-05-14,Ziraat,Market/Pazar,１２.００,fullwidth amount
+2025-05-15,"😀 quoted, emoji","Ç, Ö",-7.77,"virgül, içeride"
+2025-05-16,İş Bankası,,-1.00,boş kategori

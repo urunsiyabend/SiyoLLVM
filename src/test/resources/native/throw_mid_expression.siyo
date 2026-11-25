@@ -1,0 +1,40 @@
+// A raise in the middle of an expression stops it there: later arguments and
+// operands are not evaluated and the call is not made.
+fn trace(s: string) -> int {
+    println("eval " + s)
+    return 1
+}
+fn boom(s: string) -> int {
+    println("boom " + s)
+    throw s
+}
+fn yes(s: string) -> bool {
+    println("yes " + s)
+    return true
+}
+fn fails(s: string) -> bool {
+    println("fails " + s)
+    throw s
+}
+fn sum3(a: int, b: int, c: int) -> int {
+    println("sum3 called")
+    return a + b + c
+}
+
+fn main() {
+    try { println(sum3(trace("a"), boom("b"), trace("c"))) } catch e { println("caught " + e) }
+    try { println(false && fails("skipped")) println(yes("l") && fails("r")) } catch e { println("caught " + e) }
+    try { println(true || fails("skipped")) println(false || fails("or")) } catch e { println("caught " + e) }
+    try { println("x" + trace("p") + boom("concat") + trace("q")) } catch e { println("caught " + e) }
+    mut zero = 0
+    try { println(trace("left") + 10 / zero + trace("right")) } catch e { println("caught " + e) }
+    try {
+        mut n = 0
+        while n < trace("cond") + boom("cond") { n += 1 }
+    } catch e {
+        println("caught " + e)
+    }
+    mut kept = 1
+    try { kept = boom("assign") } catch e { println("kept " + kept) }
+    try { println(len(substring("abc", trace("s"), 5))) } catch e { println("caught " + e) }
+}

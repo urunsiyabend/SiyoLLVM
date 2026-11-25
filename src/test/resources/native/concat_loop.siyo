@@ -1,0 +1,59 @@
+// 100 000 appends to one string must stay linear: s += c reuses the buffer
+// s ends in, while every older string keeps its own value.
+fn main() {
+    mut s = ""
+    mut i = 0
+    mut wide = 0
+    while i < 100000 {
+        if i % 10 == 9 {
+            s += "é"
+            wide += 1
+        } else {
+            s += "a"
+        }
+        i += 1
+    }
+    println("appended $i characters, $wide of them two bytes wide")
+
+    // The same text built from 10-character blocks.
+    mut block = ""
+    mut j = 0
+    while j < 9 {
+        block = block + "a"
+        j += 1
+    }
+    block += "é"
+    mut t = ""
+    mut k = 0
+    while k < 10000 {
+        t = t + block
+        k += 1
+    }
+    println(s == t)
+    println(s == t + "")
+    println(s == t + "a")
+
+    // Appending to an older string must not change a newer one, or the reverse.
+    mut before = s
+    s += "Z"
+    mut other = before + "Y"
+    mut again = before + "Z"
+    println(s == again)
+    println(other == again)
+    println(other == before + "Y")
+    println(before == t)
+    println(block)
+    println(block + block + 3)
+
+    // Many short strings sharing one start.
+    mut base = "x"
+    mut n = 0
+    mut parts = ""
+    while n < 5 {
+        mut part = base + n
+        parts += "[$part]"
+        n += 1
+    }
+    println(parts)
+    println(base)
+}

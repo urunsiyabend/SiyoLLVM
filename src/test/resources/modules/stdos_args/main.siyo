@@ -1,0 +1,24 @@
+import "std/io"
+import "std/os"
+
+fn main() {
+    imut args = os.args()
+    println(args)
+    println(len(args))
+    for a in args {
+        println("[" + a + "] " + toString(len(a)))
+    }
+    println(os.env("PATH") != "")
+    println(os.env("SIYOLLVM_SURELY_UNSET_VARIABLE") == "")
+    imut cwd = os.cwd()
+    println(startsWith(cwd, "/") + " " + endsWith(cwd, "/"))
+    println(io.exists(cwd + "/data.txt"))
+    print("partial line, ")
+    try {
+        print("then exit")
+        os.exit(3)
+    } catch e {
+        println("caught " + e)
+    }
+    println("not reached")
+}

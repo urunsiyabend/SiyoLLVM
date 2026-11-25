@@ -1,0 +1,9 @@
+Native gate (clang 19)	mvn verify -Pnative	2026-11-25T07:01:44.1461314Z [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.11 s -- in siyollvm.nativegate.MemoryBoundsNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-25T07:01:55.2986171Z [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.18 s -- in siyollvm.nativegate.RuntimeGcNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-25T07:01:57.4580495Z [INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.319 s -- in siyollvm.nativegate.LedgerAppNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-25T07:05:35.4111688Z [INFO] Tests run: 128, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 106.0 s -- in siyollvm.nativegate.GcStressNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-25T07:05:40.9150098Z [INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.906 s -- in siyollvm.nativegate.LedgerOracleNativeTest
+Native gate (clang 19)	mvn verify -Pnative	2026-11-25T07:05:43.8049783Z [INFO] Tests run: 734, Failures: 0, Errors: 0, Skipped: 0
+Native gate (clang 19)	mvn verify -Pnative	2026-11-25T07:05:45.3336372Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+Java tests (no LLVM)	mvn verify	2026-11-25T07:01:28.8575378Z [INFO] Tests run: 381, Failures: 0, Errors: 0, Skipped: 0
+Java tests (no LLVM)	mvn verify	2026-11-25T07:01:29.9732177Z [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0

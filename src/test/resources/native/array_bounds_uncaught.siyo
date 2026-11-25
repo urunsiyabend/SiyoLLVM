@@ -1,0 +1,7 @@
+// An uncaught index error ends the program with the JVM's exception line.
+fn main() {
+    mut xs = [1]
+    println(xs[0])
+    xs[5] = 3
+    println("unreached")
+}

@@ -1,0 +1,8 @@
+import "csv"
+
+fn main() {
+    imut line = "abc,42,z,hello"
+    imut s = "b"
+    imut f = csv.cols(line)
+    println(f[2] + "x")
+}

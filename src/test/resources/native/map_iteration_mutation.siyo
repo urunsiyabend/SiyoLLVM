@@ -1,0 +1,34 @@
+// for k in m iterates over a snapshot of the keys ($mapKeys): inserts and
+// removes in the body do not change which keys the loop visits.
+fn main() {
+    mut m = {"a": 1, "b": 2, "c": 3}
+    for k in m {
+        m[toString(k) + toString(k)] = 0
+        println(k)
+    }
+    println(m)
+    for k in m {
+        m.remove("b")
+        m.remove("cc")
+        println(toString(k) + " " + toString(m[k]))
+    }
+    println(m)
+    imut ks = m.keys()
+    m["z"] = 9
+    println(ks)
+    println(m.keys())
+    mut count = 0
+    for k in m {
+        if k == "a" {
+            continue
+        }
+        if k == "z" {
+            break
+        }
+        count = count + 1
+    }
+    println(count)
+    for k in map() {
+        println("never")
+    }
+}

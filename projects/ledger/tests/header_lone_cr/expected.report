@@ -1,0 +1,14 @@
+LEDGER REPORT
+source: in.csv
+rows: 0 accepted, 0 rejected, 0 total
+period: none
+
+ACCOUNTS
+ACCOUNT  COUNT        CREDITS         DEBITS            NET
+TOTAL        0           0.00           0.00           0.00
+
+CATEGORIES
+CATEGORY  COUNT            NET
+
+REJECTED
+none

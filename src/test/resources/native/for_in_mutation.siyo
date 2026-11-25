@@ -1,0 +1,61 @@
+// The loop re-reads len every iteration: pushes during iteration are
+// visited, pops end it early, and removing the current element skips the
+// next one, as on the JVM.
+fn main() {
+    mut xs = [1, 2, 3]
+    for x in xs {
+        if x < 3 { push(xs, x + 10) }
+        println(x)
+    }
+    println(xs)
+
+    mut ys = [1, 2, 3, 4, 5]
+    for y in ys {
+        println(y)
+        imut last = pop(ys)
+        println("popped " + toString(last))
+    }
+    println(ys)
+
+    mut zs = [1, 2, 3, 4]
+    mut i = 0
+    for z in zs {
+        println("z " + toString(z))
+        if z == 2 { removeAt(zs, i) }
+        i = i + 1
+    }
+    println(zs)
+
+    // Rebinding the variable does not change what is walked.
+    mut ws = [1, 2]
+    for w in ws {
+        ws = [100, 200, 300]
+        println(w)
+    }
+    println(ws)
+
+    // Writing the element ahead is seen when the loop reaches it.
+    mut vs = [1, 2, 3]
+    mut k = 0
+    for v in vs {
+        if k + 1 < len(vs) { vs[k + 1] = vs[k + 1] * 10 }
+        println(v)
+        k = k + 1
+    }
+
+    // Growing through an alias.
+    mut a = [0]
+    imut alias = a
+    for n in a {
+        if n < 4 { push(alias, n + 1) }
+    }
+    println(a)
+
+    // Clearing the array mid-loop ends it.
+    mut cs = [5, 6, 7]
+    for c in cs {
+        println(c)
+        while len(cs) > 0 { pop(cs) }
+    }
+    println(len(cs))
+}

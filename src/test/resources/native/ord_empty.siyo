@@ -1,0 +1,5 @@
+// ord of an empty string reads past the end, as charAt(0) does.
+fn main() {
+    println(ord("a"))
+    println(ord(""))
+}
