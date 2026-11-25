@@ -46,9 +46,15 @@ requires that realistic long-running data-processing loops reclaim memory, witho
 
 ### Heap
 
-- **Small blocks** (≤ 2 KiB) come from 64 KiB pages aligned to 64 KiB, one size class per page:
-  16, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536 and 2048 bytes.
-- **Large blocks** are allocated individually, aligned to 64 KiB.
+- **Small blocks** (size + 1 ≤ 32 KiB, the slack byte included) come from 64 KiB pages aligned to
+  64 KiB, one size class per page: 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536,
+  2048, then 2560, 3072, 4096, 5456, 6544, 8192, 10912, 13104, 16384, 21840 and 32768 bytes (the
+  classes above 2 KiB fill a page with at most a small tail, which is in no block). Fresh pages are
+  mapped 16 at a time (1 MiB, one kernel mapping); empty pages are pooled for any class or unmapped.
+  (Final-review fix: with classes only up to 2 KiB, every live block ≥ 2 KiB was its own kernel mapping,
+  and 20 000 live 2.1 KB strings took 20 463 mappings, near the default `vm.max_map_count` of 65 530.)
+- **Large blocks** (size + 1 > 32 KiB) are allocated individually, each its own mapping, aligned to
+  64 KiB.
 - **Page table.** A page table (an open-addressing hash from 64 KiB page base to page descriptor) maps
   any address to its page. Every 64 KiB page a large block spans maps to that block's descriptor. Any
   pointer, including an interior one, therefore resolves to its block, or to nothing for stack, static

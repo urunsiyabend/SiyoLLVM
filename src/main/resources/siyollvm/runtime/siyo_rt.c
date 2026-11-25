@@ -1438,13 +1438,23 @@ _Noreturn void siyo_rt_stack_overflow(void) {
  * never recursion. Sweeping puts unmarked small blocks on their page's free
  * list, unmaps unmarked large blocks, and keeps up to a few empty pages for
  * reuse by any size class, unmapping the rest.
+ *
+ * Size classes run from 16 bytes to 32 KiB, every one carved from shared
+ * 64 KiB pages, which are mapped 16 at a time; so the kernel mappings a
+ * program holds grow with its heap divided by 1 MiB (at most 64 KiB, once
+ * freed pages leave holes), not with its block count (vm.max_map_count is
+ * 65 530 by default). The classes above 2 KiB are chosen so that their blocks fill a
+ * page with little tail: 65536 / size blocks, at most 64 KiB in all; an
+ * address in the tail past the last block is in no block. Only a request
+ * whose size + 1 exceeds 32 KiB gets a mapping of its own (a large block).
  */
 #define SIYO_GC_PAGE_SHIFT 16
 #define SIYO_GC_PAGE_SIZE ((size_t)1 << SIYO_GC_PAGE_SHIFT)
-#define SIYO_GC_SMALL_MAX 2048
-#define SIYO_GC_CLASSES 15
+#define SIYO_GC_SMALL_MAX 32768 /* the largest class: requests below it (size + 1 <= it) share pages */
+#define SIYO_GC_CLASSES 26
 #define SIYO_GC_MAX_BLOCKS (SIYO_GC_PAGE_SIZE / 16)
 #define SIYO_GC_RESERVE_PAGES 16
+#define SIYO_GC_CHUNK_PAGES 16 /* fresh pages mapped together; at most SIYO_GC_RESERVE_PAGES */
 #define SIYO_GC_MIN_TRIGGER ((uint64_t)4 * 1024 * 1024)
 #define SIYO_GC_LARGE (-1)
 #define SIYO_GC_POOLED (-2)
@@ -1452,7 +1462,9 @@ _Noreturn void siyo_rt_stack_overflow(void) {
 enum { SIYO_GC_ALLOCATED = 1, SIYO_GC_MARKED = 2, SIYO_GC_SCAN = 4 };
 
 static const uint32_t siyo_gc_class_sizes[SIYO_GC_CLASSES] = {
-    16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048
+    16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048,
+    /* 25, 21, 16, 12, 10, 8, 6, 5, 4, 3 and 2 blocks a page, multiples of 16 */
+    2560, 3072, 4096, 5456, 6544, 8192, 10912, 13104, 16384, 21840, 32768
 };
 
 /* A small page (one size class) or a large block. */
@@ -1610,19 +1622,34 @@ static void siyo_gc_release(size_t index) {
     siyo_gc_pages[index] = siyo_gc_pages[--siyo_gc_page_count];
 }
 
-/* A page for size class c, from the pool of empty pages or newly mapped. */
+/* A page for size class c, from the pool of empty pages or newly mapped.
+   New pages are mapped SIYO_GC_CHUNK_PAGES at a time, as one mapping: this
+   one and the rest pooled (the pool is empty here, so it stays within
+   SIYO_GC_RESERVE_PAGES). Pooled pages are untouched until used, so they
+   cost address space, not memory. */
 static SiyoGcPage *siyo_gc_new_page(int32_t c) {
-    SiyoGcPage *page = siyo_gc_pool;
-    if (page != NULL) {
-        siyo_gc_pool = page->next;
-        siyo_gc_pool_count--;
-    } else {
-        page = malloc(sizeof(SiyoGcPage) + SIYO_GC_MAX_BLOCKS);
-        if (page == NULL) siyo_gc_out_of_memory();
-        page->base = siyo_gc_map(SIYO_GC_PAGE_SIZE);
-        page->span = SIYO_GC_PAGE_SIZE;
-        siyo_gc_register(page);
+    if (siyo_gc_pool == NULL) {
+        uintptr_t base = siyo_gc_map(SIYO_GC_CHUNK_PAGES * SIYO_GC_PAGE_SIZE);
+        for (size_t k = SIYO_GC_CHUNK_PAGES; k-- > 0;) {
+            SiyoGcPage *fresh = malloc(sizeof(SiyoGcPage) + SIYO_GC_MAX_BLOCKS);
+            if (fresh == NULL) siyo_gc_out_of_memory();
+            fresh->base = base + k * SIYO_GC_PAGE_SIZE;
+            fresh->span = SIYO_GC_PAGE_SIZE;
+            fresh->block_size = 0;
+            fresh->size_class = SIYO_GC_POOLED;
+            fresh->block_count = 0;
+            fresh->bump = 0;
+            fresh->live = 0;
+            fresh->free_list = NULL;
+            siyo_gc_register(fresh);
+            fresh->next = siyo_gc_pool;
+            siyo_gc_pool = fresh;
+            siyo_gc_pool_count++;
+        }
     }
+    SiyoGcPage *page = siyo_gc_pool;
+    siyo_gc_pool = page->next;
+    siyo_gc_pool_count--;
     page->size_class = c;
     page->block_size = siyo_gc_class_sizes[c];
     page->block_count = (uint32_t)(SIYO_GC_PAGE_SIZE / page->block_size);
@@ -1835,7 +1862,7 @@ static void *siyo_gc_alloc(size_t size, uint8_t kind) {
     uint64_t bytes;
     if (size < SIYO_GC_SMALL_MAX) {
         /* size + 1: the slack byte that keeps start + size inside the block. */
-        int32_t c = 0;
+        int32_t c = size + 1 > 2048 ? 15 : 0;
         while (siyo_gc_class_sizes[c] < size + 1) c++;
         block = siyo_gc_alloc_small(c, kind);
         bytes = siyo_gc_class_sizes[c];

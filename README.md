@@ -154,6 +154,11 @@ Limits:
 - The conservative scan can keep some garbage alive: any word that happens to
   look like a heap address counts as a reference.
 - Collections stop the single program thread while they run.
+- Blocks up to 32 KiB share 64 KiB pages, mapped 1 MiB at a time. Each live
+  block of 32 KiB or more is its own kernel mapping, so tens of thousands of
+  them can hit Linux's `vm.max_map_count` (65 530 by default) and end in
+  `OutOfMemoryError` before memory runs out. `heap_peak_kb` counts whole
+  blocks and pages, so it exceeds the bytes the program asked for.
 
 See [docs/SUBSET.md](docs/SUBSET.md) for details.
 

@@ -136,8 +136,16 @@ returning one from a function returning `any` (the reference fails with
   the one program thread). Everything still reachable stays in memory: for
   example, a file read with `readLines` or `readFile` stays live while its
   lines or text are referenced, so peak memory grows with the input that a
-  program keeps. Heap blocks come in size classes from 16 bytes to 2 KiB, or
-  as separate mappings for larger blocks. Each block carries at least one
+  program keeps. Heap blocks come in size classes from 16 bytes to 32 KiB,
+  carved from shared 64 KiB pages that are mapped 1 MiB at a time; only a
+  block of 32 KiB or more (request + 1 slack byte over 32 KiB) gets a kernel
+  mapping of its own. A program therefore holds about one mapping per MiB of
+  small-block heap (at most one per 64 KiB page in use, once freed pages
+  leave holes) plus one per live large block; Linux limits a process to
+  `vm.max_map_count` mappings (65 530 by default), so tens of thousands of
+  live blocks of 32 KiB or more can end in `OutOfMemoryError` with memory to
+  spare. `heap_peak_kb` counts whole blocks (a 2.1 KB string takes a
+  2560-byte block) and whole 4 KiB pages of large blocks. Each block carries at least one
   spare byte past the requested size, so a pointer just past an object's end
   still keeps that object alive. Programs cannot observe block sizes; they
   show only in `heap_peak_kb`. `s += x` and `a + b`

@@ -23,7 +23,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 
 | # | Feature | Depends on | Status | Commit | Evidence |
 |---|---|---|---|---|---|
-| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress (publishing) | a984cbc..HEAD (local, not yet pushed) | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
+| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress (publishing) | a984cbc..<final> (set at publication) | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
 | R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | planned | | |
 | R3 | Scalability: cached UTF-16 offsets for non-ASCII indexing; a native sort for distinct keys if a lambda-free API fits the reference | R1 | planned | | |
 
@@ -118,9 +118,9 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Status (2026-11-25): R1 Tasks 1–2 done locally (RED suite 8f0b8f5; collector 77f5281..39235b1, reviewed),
-  not pushed. Next: R1 Task 3 (ledger re-measure, docs), whole-feature review, final gates, fresh clone,
-  publish. Ledger: `.superpowers/sdd/2026-11-25-r1-gc/progress.md`.
+- Status (2026-11-25): R1 Tasks 1–3 done locally (RED suite 8f0b8f5; collector 77f5281..39235b1, reviewed;
+  ledger and docs), not pushed. R1 final review fix wave done (medium size classes up to 32 KiB, pages
+  mapped 1 MiB at a time); next: final gates, fresh clone, publish. Ledger: `.superpowers/sdd/2026-11-25-r1-gc/progress.md`.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).

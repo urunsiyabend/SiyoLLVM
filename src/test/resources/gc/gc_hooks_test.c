@@ -464,10 +464,14 @@ static void medium_blocks(void) {
     /* Thousands of live 2.1 KB, 8 KB and 30 KB blocks share pages: a few hundred mappings, not one each. */
     collect();
     long before = mapping_count();
+    /* Each set is rooted before the next is made: any allocation may collect. */
+    void *volatile roots[3] = {NULL, NULL, NULL};
     uintptr_t small = make_held(3000, 2100, FILL);
+    roots[0] = reveal(small);
     uintptr_t mid = make_held(200, 8000, FILL + 5000);
+    roots[1] = reveal(mid);
     uintptr_t big = make_held(50, 30000, FILL + 9000);
-    void *volatile roots[3] = {reveal(small), reveal(mid), reveal(big)};
+    roots[2] = reveal(big);
     collect();
     long after = mapping_count();
     snprintf(name, sizeof name, "medium: 3250 live 2.1/8/30 KB blocks add %ld mappings (< 300)", after - before);
