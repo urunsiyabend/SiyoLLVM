@@ -26,3 +26,4 @@ NEXT: whole-feature review → fix wave → final gates → fresh clone → publ
 Final review: Important mapping-per-large-block regression + stale ROADMAP lines; ONE fix wave 363d950 (RED) + 6a889ec (medium classes 2560..32768, 1 MiB page batches; maps 20463→92)
 Ledger re-measured at final runtime 6a889ec → e231e8e (x10 rss 20 376 KiB, oracle match all)
 Final gates at e231e8e263f4587fa86288f70fe0061bd9e8a87a: java 381+2, native 734+2 (GcStress 128, MemoryBounds 8, RuntimeGc 8, ledger 27+27; 0 skipped), requires-clang OK, receipts rc 0 / oom 0
+Published: f61099c (remote verified), CI run 45564871470 success (Java + Native; R1 suites ran, 0 skipped); fresh remote clone gates green (381+2 / 734+2)

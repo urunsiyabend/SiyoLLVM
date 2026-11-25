@@ -23,8 +23,8 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 
 | # | Feature | Depends on | Status | Commit | Evidence |
 |---|---|---|---|---|---|
-| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress (publishing) | a984cbc..e231e8e (publishing) | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
-| R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | planned | | |
+| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | done | a984cbc..e231e8e, pushed at f61099c; CI run 45564871470 green; fresh clone green | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
+| R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | in progress | | |
 | R3 | Scalability: cached UTF-16 offsets for non-ASCII indexing; a native sort for distinct keys if a lambda-free API fits the reference | R1 | planned | | |
 
 Historical baseline (supervisor acceptance, 2026-11-25, automation evidence `acceptance-20261125/`; not re-measured here):
@@ -120,9 +120,9 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Status (2026-11-25): R1 Tasks 1–3 done locally (RED suite 8f0b8f5; collector 77f5281..39235b1, reviewed;
-  ledger and docs), not pushed. R1 final review fix wave done (medium size classes up to 32 KiB, pages
-  mapped 1 MiB at a time); next: final gates, fresh clone, publish. Ledger: `.superpowers/sdd/2026-11-25-r1-gc/progress.md`.
+- Status (2026-11-25): R1 published at f61099c (CI 45564871470 green, fresh remote clone green;
+  `docs/evidence/r1-gc/`). Next: R2 typing gaps (cross-module array element types; struct values via
+  map-field locals) — plan to be written.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
