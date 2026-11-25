@@ -29,6 +29,8 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 
 Historical baseline (supervisor acceptance, 2026-11-25, automation evidence `acceptance-20261125/`; not re-measured here):
 the ledger at 313 141 / 939 355 / 3 131 104 input bytes peaked at 28 404 / 81 620 / 268 416 KiB RSS (never-free).
+Final R1 runtime (measured at 6a889ec, `docs/evidence/r1-gc/ledger/final-6a889ec/`): the same inputs peak at
+7 580 / 9 440 / 20 376 KiB RSS (heap 4 927 / 6 634 / 16 188 KiB, 6 / 19 / 34 collections, 0.02 / 0.07 / 0.26 s), byte-identical to the Python oracle.
 
 ## Acceptance criteria
 

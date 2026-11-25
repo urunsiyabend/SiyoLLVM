@@ -1,7 +1,10 @@
 # R1 Task 3: ledger application evidence (2026-11-25)
 
-Measured on 2026-11-25 at HEAD c66bc5b (the collector of 77f5281 and 39235b1 plus the 24-byte size
-class). The host clang was `$SIYOLLVM_CLANG` (siyo-llvm-19, clang 19.1.7) on Linux 7.0.0-38, x86_64.
+The FINAL measurement below was taken at HEAD 6a889ec (the final R1 runtime, with medium size classes up
+to 32 KiB and 1 MiB page batches); its artefacts are in `final-6a889ec/` (x1, x3, x10,
+`executables.sha256`; inputs are regenerated and match `inputs.sha256`). The earlier measurement was taken at
+HEAD c66bc5b (the collector of 77f5281 and 39235b1 plus the 24-byte size class); its artefacts in `x1`,
+`x3`, `x10` are untouched. The host clang was `$SIYOLLVM_CLANG` (siyo-llvm-19, clang 19.1.7) on Linux 7.0.0-38, x86_64.
 Every run (build, generator, native executable, Python oracle, comparison) ran under its own bounded
 768 MiB scope through `bounded.py`. Each run directory holds its receipt. Every receipt here shows
 oom_kill_delta 0. The ledger exits 3 when it rejects rows, so the child return code is 3 and bounded.py
@@ -28,7 +31,23 @@ into `exit`.
 
 Order: ×1, then ×3, then ×10 (each after the previous was seen to be small).
 
-## NEW measurements (2026-11-25, HEAD c66bc5b, collector runtime)
+## FINAL runtime measurements (HEAD 6a889ec)
+
+Measured 2026-11-25 at HEAD 6a889ec, same host, scripts, inputs (hashes verified against `inputs.sha256`)
+and bounded 768 MiB scopes as below. Artefacts: `final-6a889ec/`. Every receipt shows oom_kill_delta 0 and
+child return code 3 (rows rejected, as expected; bounded.py marks these runs `accepted=False`).
+
+| Scale | input bytes | peak RSS, time -v (KiB) | rss_peak_kb (VmHWM) | heap_peak_kb | collections | wall (s) | user+sys (s) | oracle match | oracle RSS (KiB) / wall (s) |
+|---|---|---|---|---|---|---|---|---|---|
+| x1 | 313 141 | 7 580 | 7 580 | 4 927 | 6 | 0.02 | 0.02 | yes (exit 3/3, stdout, stderr, report) | 17 832 / 0.04 |
+| x3 | 939 355 | 9 440 | 9 640 | 6 634 | 19 | 0.07 | 0.07 | yes | 26 436 / 0.11 |
+| x10 | 3 131 104 | 20 376 | 20 556 | 16 188 | 34 | 0.26 | 0.26 | yes | 56 288 / 0.33 |
+
+Against the never-free baseline below, peak RSS falls about 3.7x, 8.6x and 13.2x. Against the c66bc5b
+table, RSS is 236 / 68 / 428 KiB higher (time -v), heap_peak_kb is within 3 KiB, and collections and wall
+times are unchanged; the 1 MiB page batches cost a little resident memory at these sizes.
+
+## EARLIER measurement (2026-11-25, HEAD c66bc5b, before medium size classes)
 
 | Scale | input bytes | peak RSS, time -v (KiB) | rss_peak_kb (VmHWM) | heap_peak_kb | collections | wall (s) | user+sys (s) | oracle match | oracle RSS (KiB) / wall (s) |
 |---|---|---|---|---|---|---|---|---|---|

@@ -74,22 +74,25 @@ writes the report, `expected.report`.
 
 ## Resource use
 
-### With the collector (R1, measured 2026-11-25 at c66bc5b)
+### With the collector (R1 final runtime, measured 2026-11-25 at 6a889ec)
 
 Each run was bounded (768 MiB, no swap) under `LC_ALL=C` and `/usr/bin/time -v`, with `SIYO_RT_STATS=1`.
 The inputs were built as in the supervisor acceptance: the header of `large.csv`, then its data lines repeated
 N times. The independent Python oracle ran on the same input. For every size, exit code, stdout, stderr (the
 native `siyo-rt:` line excluded) and report were byte-identical. Raw outputs, receipts and scripts are in
-[docs/evidence/r1-gc/ledger/](../../docs/evidence/r1-gc/ledger/README.md).
+[docs/evidence/r1-gc/ledger/](../../docs/evidence/r1-gc/ledger/README.md) (`final-6a889ec/`).
 
 | Input | bytes | native peak RSS | heap_peak_kb | collections | native wall | Python oracle RSS / wall | Exit |
 |---|---|---|---|---|---|---|---|
-| large ×1 | 313 141 | 7 344 KB | 4 927 | 6 | 0.02 s | 17 728 KB / 0.04 s | 3 |
-| large ×3 | 939 355 | 9 372 KB | 6 637 | 19 | 0.07 s | 26 236 KB / 0.11 s | 3 |
-| large ×10 | 3 131 104 | 19 948 KB | 16 186 | 34 | 0.26 s | 56 244 KB / 0.33 s | 3 |
+| large ×1 | 313 141 | 7 580 KB | 4 927 | 6 | 0.02 s | 17 832 KB / 0.04 s | 3 |
+| large ×3 | 939 355 | 9 440 KB | 6 634 | 19 | 0.07 s | 26 436 KB / 0.11 s | 3 |
+| large ×10 | 3 131 104 | 20 376 KB | 16 188 | 34 | 0.26 s | 56 288 KB / 0.33 s | 3 |
+
+Earlier measurement, HEAD c66bc5b, before medium size classes (7 344 / 9 372 / 19 948 KB, heap_peak_kb
+4 927 / 6 637 / 16 186, same collections and wall times): see the evidence README.
 
 The remaining growth is the input itself: `readLines` keeps every line reachable for the whole run. At ×1,
-the same program linked with the pre-collector runtime ran in 0.04 s at 28 MB, and with the collector in
+the same program linked with the pre-collector runtime ran in 0.04 s at 28 MB, and with the collector (measured at c66bc5b) in
 0.02 to 0.03 s at 7 MB (5 runs each, 10 ms resolution).
 
 The historical figures below come from the never-free runtime. They are kept for comparison and were not

@@ -143,8 +143,9 @@ environment variables help with testing:
   stderr line at exit.
 - `SIYO_GC_STRESS=<n>` adds a collection every n allocations.
 
-On the ledger, 3 MB of input now peaks at about 20 MB of RSS. With the
-earlier never-free runtime it peaked at 268 MB. The measurements are in
+On the ledger, 3 MB of input now peaks at about 20 MB of RSS (20 376 KiB, measured
+at the final R1 runtime, 6a889ec). With the earlier never-free runtime it peaked
+at 268 MB. The measurements are in
 [docs/evidence/r1-gc/ledger/](docs/evidence/r1-gc/ledger/README.md).
 
 Limits:
