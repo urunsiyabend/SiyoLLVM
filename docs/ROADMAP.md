@@ -105,6 +105,14 @@ after it; F5's status is in the table above.
   deviations (e.g. `toUpper`/`toLower` Unicode tables).
 - **Stack overflow cannot be caught:** it ends the program as an uncaught error, on a fixed 16 MiB program
   stack.
+- **Sorting over distinct keys:** there is no `sort` builtin without lambdas, so programs hand-write their
+  sorts. The ledger's insertion sort is quadratic in the number of distinct accounts and categories (not in
+  input rows). That is fine for the dozens to hundreds of keys in its fixtures and slow for tens of
+  thousands of distinct keys. No native sort is provided (R3, optional).
+- **`strings.repeat` allocation:** while R1's RED suite was being written, 200 calls of
+  `strings.repeat("x", 10000)` allocated about 69 MB under the never-free runtime. That was a single
+  observation and was not analysed. With the collector this garbage is reclaimed, but the allocation volume
+  is not yet characterised (R3, optional).
 - **Quadratic non-ASCII index scans:** on strings with non-ASCII characters, `substring`, `indexOf` and
   other index operations scan from the start of the string, so a per-character loop over long non-ASCII text
   is quadratic (see the F1 follow-up above; not needed by the ledger's input sizes).
