@@ -91,12 +91,10 @@ fn checkRow(line: string) -> Checked {
     if len(parts) != 5 {
         return rejected("expected 5 fields, found " + len(parts))
     }
-    // Array elements read through another module's struct are bound to typed
-    // variables first (SUBSET.md: cross-module arrays have `any` elements).
-    imut date: string = parts[0]
-    imut account: string = parts[1]
-    imut category: string = parts[2]
-    imut amount: string = parts[3]
+    imut date = parts[0]
+    imut account = parts[1]
+    imut category = parts[2]
+    imut amount = parts[3]
     if !validDate(date) {
         return rejected("invalid date '" + date + "'")
     }

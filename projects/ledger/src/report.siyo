@@ -45,37 +45,10 @@ fn sortNames(names: string[]) {
     }
 }
 
-// These helpers take the struct read from a map as a struct parameter, which
-// keeps its field reads typed (SUBSET.md, maps).
-fn accountRow(account: Account, width: int) -> string {
-    return accountLine(account.name, width, toString(account.count), money(account.credits), money(account.debits),
-        money(account.credits + account.debits))
-}
-
-fn countOf(account: Account) -> int {
-    return account.count
-}
-
-fn creditsOf(account: Account) -> long {
-    return account.credits
-}
-
-fn debitsOf(account: Account) -> long {
-    return account.debits
-}
-
-fn categoryRow(category: Category, width: int) -> string {
-    return categoryLine(category.name, width, toString(category.count), money(category.net))
-}
-
-fn netOf(category: Category) -> long {
-    return category.net
-}
-
 // Whether category `a` comes before `b`: net descending, then name ascending.
 fn categoryBefore(categories: Map<string, Category>, a: string, b: string) -> bool {
-    imut netA = netOf(categories[a])
-    imut netB = netOf(categories[b])
+    imut netA = categories[a].net
+    imut netB = categories[b].net
     if netA != netB {
         return netA > netB
     }
@@ -95,13 +68,11 @@ fn sortCategories(categories: Map<string, Category>, names: string[]) {
     }
 }
 
-// The keys of a map as a string[] (`keys()` gives `any` elements, so each is
-// bound to a typed variable).
+// The keys of a map as a string[].
 fn accountNames(accounts: Map<string, Account>) -> string[] {
     mut names: string[] = []
     for k in accounts.keys() {
-        imut name: string = k
-        push(names, name)
+        push(names, k)
     }
     return names
 }
@@ -109,8 +80,7 @@ fn accountNames(accounts: Map<string, Account>) -> string[] {
 fn categoryNames(categories: Map<string, Category>) -> string[] {
     mut names: string[] = []
     for k in categories.keys() {
-        imut name: string = k
-        push(names, name)
+        push(names, k)
     }
     return names
 }
@@ -127,9 +97,9 @@ fn categoryLine(name: string, width: int, count: string, net: string) -> string 
 // The net total of every accepted row.
 fn totalNet(book: Book) -> long {
     mut net = 0L
-    for k in book.accounts.keys() {
-        imut name: string = k
-        net += creditsOf(book.accounts[name]) + debitsOf(book.accounts[name])
+    for name in book.accounts.keys() {
+        imut account = book.accounts[name]
+        net += account.credits + account.debits
     }
     return net
 }
@@ -145,12 +115,10 @@ fn render(book: Book, source: string) -> string {
         out += "period: " + book.minDate + " to " + book.maxDate + "\n"
     }
 
-    imut accounts = book.accounts
-    imut names = accountNames(accounts)
+    imut names = accountNames(book.accounts)
     sortNames(names)
     mut width = 7
-    for n in names {
-        imut name: string = n
+    for name in names {
         if len(name) > width {
             width = len(name)
         }
@@ -160,12 +128,17 @@ fn render(book: Book, source: string) -> string {
     mut count = 0
     mut credits = 0L
     mut debits = 0L
-    for n in names {
-        imut name: string = n
-        out += accountRow(accounts[name], width)
-        count += countOf(accounts[name])
-        credits += creditsOf(accounts[name])
-        debits += debitsOf(accounts[name])
+    for name in names {
+        // Read through `book.accounts`, not a local inferred from the field: the
+        // values of such a local are `any` and so are their fields (SUBSET.md,
+        // maps), and `credits + debits` on two `any`s is a bind error on the
+        // reference.
+        imut account = book.accounts[name]
+        out += accountLine(name, width, toString(account.count), money(account.credits), money(account.debits),
+            money(account.credits + account.debits))
+        count += account.count
+        credits += account.credits
+        debits += account.debits
     }
     out += accountLine("TOTAL", width, toString(count), money(credits), money(debits), money(credits + debits))
 
@@ -173,25 +146,25 @@ fn render(book: Book, source: string) -> string {
     imut catNames = categoryNames(categories)
     sortCategories(categories, catNames)
     mut catWidth = 8
-    for n in catNames {
-        imut name: string = n
+    for name in catNames {
         if len(name) > catWidth {
             catWidth = len(name)
         }
     }
     out += "\nCATEGORIES\n"
     out += categoryLine("CATEGORY", catWidth, "COUNT", "NET")
-    for n in catNames {
-        imut name: string = n
-        out += categoryRow(categories[name], catWidth)
+    for name in catNames {
+        // `categories` is inferred from a field: the declared type allows the
+        // member reads, whose values stay `any` (see ledger.accept).
+        imut category: Category = categories[name]
+        out += categoryLine(name, catWidth, toString(category.count), money(category.net))
     }
 
     out += "\nREJECTED\n"
     if book.rejected == 0 {
         out += "none\n"
     } else {
-        for r in book.rejections {
-            imut text: string = r
+        for text in book.rejections {
             out += text + "\n"
         }
     }
