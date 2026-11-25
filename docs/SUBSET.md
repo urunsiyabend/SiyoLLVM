@@ -122,24 +122,35 @@ returning one from a function returning `any` (the reference fails with
 - Strings are UTF-8 bytes with an explicit length: embedded `\0` is printed
   and compared like any other byte. Output is always UTF-8 bytes, whatever
   the locale (the JVM reference also writes UTF-8 under `LC_ALL=C`).
-- Memory is never reclaimed during a run: strings live until the process
-  exits, so no string can be used after it is freed. `s += x` and `a + b`
+- Memory is reclaimed by a non-moving mark-sweep collector in the runtime
+  (conservative roots: the program thread's stack and registers, the
+  executable's data and bss, the pending exception): a string, array,
+  struct or map is freed once nothing reachable refers to it, cycles
+  included, and objects never move, so no value can be used after it is
+  freed. A collection runs when the bytes allocated since the last one reach
+  4 MiB or the bytes live after it, whichever is more; `SIYO_GC_STRESS=<n>`
+  (a positive decimal) also collects every n allocations, a test and debug
+  mode. A word that merely looks like a heap address keeps its block alive
+  (conservative scanning), which can retain extra memory but is never
+  unsafe. `s += x` and `a + b`
   append in place into a growing buffer when `a` is the newest string built
   on it, so building a string by repeated appends costs memory linear in its
   final size (100 000 appends: about 8 MB peak RSS). Other operations each
-  allocate their result; a long-running program that creates many temporary
-  strings grows accordingly. `substring` and the other index-based builtins
+  allocate their result, which the collector frees once it is dropped.
+  `substring` and the other index-based builtins
   scan non-ASCII strings from the start on every call (ASCII strings are
   indexed directly), so a per-character loop over a long non-ASCII string is
   quadratic. With `SIYO_RT_STATS=1` in the environment, the program writes
   `siyo-rt: collections=<c> heap_peak_kb=<h> rss_peak_kb=<r>` to stderr at
-  exit, whichever way it exits, as the last stderr line (`collections` is 0
-  and `heap_peak_kb` is every byte the runtime allocated, as nothing is
-  freed; `rss_peak_kb` is the process's peak resident set, `VmHWM` from
+  exit, whichever way it exits, as the last stderr line (`collections` is the
+  number of collections run, `heap_peak_kb` the peak of the bytes in
+  allocated heap blocks, garbage not yet swept included, array and map
+  backing stores included; `rss_peak_kb` is the process's peak resident set, `VmHWM` from
   `/proc/self/status`, else `getrusage`'s `ru_maxrss`, which Linux carries
   over from the parent across `fork` and `execve`).
-- Arrays are never freed either. An array's items are one block that
-  doubles when full (at least 4), so `push` is amortised constant time; an
+- An array's items are one block that
+  doubles when full (at least 4; into a new block, the old one left to the
+  collector), so `push` is amortised constant time; an
   array literal starts with room for exactly its elements. Boxing an int in
   -128..127 returns a shared static box, as `Integer.valueOf` does, so
   storing small ints in arrays allocates nothing per element; other ints,
@@ -233,8 +244,9 @@ returning one from a function returning `any` (the reference fails with
   `ClassCastException`. `for k in m` iterates over a fresh array of the keys
   taken when the loop starts, so keys set or removed in the body do not
   change which keys it visits. `len(m)` of a null map is 0; every other use
-  of a null map raises `NullPointerException` (see Deviations). The table is
-  never freed; it doubles when full, and removed entries are dropped then.
+  of a null map raises `NullPointerException` (see Deviations). The table
+  doubles when full (into new blocks, the old ones left to the collector),
+  and removed entries are dropped then.
 - `for x in xs` is the binder's index loop: it walks the array the
   expression named when the loop began (assigning the variable another
   array does not change that), and reads `len` before every iteration, so

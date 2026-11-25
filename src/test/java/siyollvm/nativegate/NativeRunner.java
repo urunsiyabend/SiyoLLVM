@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -66,6 +68,16 @@ final class NativeRunner {
      * the directory. Imports resolve beside the source.
      */
     static void buildRunAndCompare(Clang clang, Path source, String name) throws Exception {
+        buildRunAndCompare(clang, source, name, "native", Map.of());
+    }
+
+    /**
+     * As above, building in {@code TestPaths.tempRoot()/<group>/<name>} and running with
+     * {@code extraEnv} added. With {@code SIYO_RT_STATS=1} in it, the stats line must end stderr; it is
+     * split off before stderr is compared, and returned. Otherwise the result is null.
+     */
+    static Stats buildRunAndCompare(Clang clang, Path source, String name, String group, Map<String, String> extraEnv)
+            throws Exception {
         Path expectedOut = sibling(source, ".expected");
         assertTrue(Files.isRegularFile(expectedOut), "missing " + expectedOut);
         byte[] expectedStdout = Files.readAllBytes(expectedOut);
@@ -80,7 +92,7 @@ final class NativeRunner {
         assertNotNull(ir.ir());
         IrStructure.assertWellFormed(ir.ir());
 
-        Path work = Files.createDirectories(TestPaths.tempRoot().resolve("native").resolve(name));
+        Path work = Files.createDirectories(TestPaths.tempRoot().resolve(group).resolve(name));
         Path ll = work.resolve(name + ".ll");
         Path exe = work.resolve(name);
         Files.writeString(ll, ir.ir(), StandardCharsets.UTF_8);
@@ -96,11 +108,38 @@ final class NativeRunner {
                 : List.of(exe.toString());
         Path localeFile = sibling(source, ".locale");
         String locale = Files.isRegularFile(localeFile) ? Files.readString(localeFile).strip() : "C";
-        Run run = run(command, runDir, work, Map.of("LC_ALL", locale));
+        Map<String, String> env = new java.util.HashMap<>(extraEnv);
+        env.put("LC_ALL", locale);
+        Run run = run(command, runDir, work, env);
+        Stats stats = null;
+        String stderr = run.stderr();
+        if ("1".equals(extraEnv.get("SIYO_RT_STATS"))) {
+            stats = Stats.split(run.stderrBytes(), name);
+            stderr = new String(stats.stderrBefore(), StandardCharsets.UTF_8);
+        }
         assertArrayEquals(expectedStdout, run.stdout(),
                 name + " stdout:\n" + new String(run.stdout(), StandardCharsets.UTF_8));
-        assertEquals(expectedStderr, run.stderr(), name + " stderr");
+        assertEquals(expectedStderr, stderr, name + " stderr");
         assertEquals(expectedExit, run.exitCode(), name + " exit code; stderr: " + run.stderr());
+        return stats;
+    }
+
+    /**
+     * The {@code SIYO_RT_STATS=1} line split off the end of a program's stderr: its values, and the
+     * stderr bytes the program wrote before it.
+     */
+    record Stats(long collections, long heapPeakKb, long rssPeakKb, byte[] stderrBefore) {
+        private static final Pattern LINE = Pattern.compile(
+                "siyo-rt: collections=(\\d+) heap_peak_kb=(\\d+) rss_peak_kb=(\\d+)\n\\z");
+
+        static Stats split(byte[] stderr, String name) {
+            // ISO-8859-1 maps bytes to chars one to one, so the split keeps the bytes exactly.
+            String text = new String(stderr, StandardCharsets.ISO_8859_1);
+            Matcher m = LINE.matcher(text);
+            assertTrue(m.find(), name + ": no stats line at the end of stderr: " + text);
+            return new Stats(Long.parseLong(m.group(1)), Long.parseLong(m.group(2)), Long.parseLong(m.group(3)),
+                    text.substring(0, m.start()).getBytes(StandardCharsets.ISO_8859_1));
+        }
     }
 
     /** {@code stderr} is the captured stderr decoded as UTF-8; {@code stderrBytes} is the same output as bytes. */
@@ -126,7 +165,8 @@ final class NativeRunner {
     }
 
     /**
-     * Runs a command with a clean locale ({@code LANG}/{@code LC_*} and {@code SIYO_RT_STATS} removed, then
+     * Runs a command with a clean locale ({@code LANG}/{@code LC_*}, {@code SIYO_RT_STATS} and
+     * {@code SIYO_GC_STRESS} removed, then
      * {@code extraEnv} added).
      */
     static Run run(List<String> command, Path directory, Map<String, String> extraEnv) throws Exception {
@@ -139,7 +179,7 @@ final class NativeRunner {
         ProcessBuilder builder = new ProcessBuilder(command).directory(directory.toFile());
         // SIYO_RT_STATS adds a line to stderr: only a test that asks for it gets it.
         builder.environment().keySet().removeIf(k -> k.equals("LANG") || k.startsWith("LC_")
-                || k.equals("SIYO_RT_STATS"));
+                || k.equals("SIYO_RT_STATS") || k.equals("SIYO_GC_STRESS"));
         builder.environment().putAll(extraEnv);
         Path out = Files.createTempFile(outputDirectory, "stdout", ".bin");
         Path err = Files.createTempFile(outputDirectory, "stderr", ".txt");

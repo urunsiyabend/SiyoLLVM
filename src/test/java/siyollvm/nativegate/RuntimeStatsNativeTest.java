@@ -72,14 +72,19 @@ class RuntimeStatsNativeTest {
         assertTrue(last.endsWith("\n"), last);
         Matcher matcher = STATS.matcher(last.substring(0, last.length() - 1));
         assertTrue(matcher.matches(), "stats line: " + last);
-        assertEquals("0", matcher.group(1), "no collector yet");
         assertTrue(Long.parseLong(matcher.group(3)) > 0, last);
         return matcher;
     }
 
+    /** A program that allocates far below the first trigger (4 MiB) never collects. */
+    private static void assertNoCollection(Matcher stats) {
+        assertEquals("0", stats.group(1), "collections of a tiny program");
+    }
+
     @Test
     void endOfMainCountsAllocatedBytes() throws Exception {
-        // 200 strings of about 10 000 bytes, all kept: at least 2000 KiB through siyo_rt_alloc.
+        // 200 strings of about 10 000 bytes, all kept live: a heap peak of at least 2000 KiB. Building
+        // them allocates tens of MB in all (strings.repeat), so the collector runs, and frees the rest.
         Path exe = build("stats_main", """
                 import "std/strings"
                 fn main() {
@@ -93,6 +98,7 @@ class RuntimeStatsNativeTest {
         Matcher stats = statsRun(exe, "200\n", "", 0);
         long heapKb = Long.parseLong(stats.group(2));
         assertTrue(heapKb >= 2000, "heap_peak_kb " + heapKb);
+        assertTrue(Long.parseLong(stats.group(1)) >= 1, "collections " + stats.group(1));
     }
 
     @Test
@@ -105,6 +111,7 @@ class RuntimeStatsNativeTest {
                 }
                 """);
         Matcher stats = statsRun(exe, "out\n", "err\n", 0);
+        assertNoCollection(stats);
         // The program's own peak, not the JVM's: Linux carries ru_maxrss across fork and execve.
         long rssKb = Long.parseLong(stats.group(3));
         assertTrue(rssKb < 16 * 1024, "rss_peak_kb " + rssKb + " of a tiny program");
@@ -120,7 +127,7 @@ class RuntimeStatsNativeTest {
                     println("unreachable")
                 }
                 """);
-        statsRun(exe, "before", "", 3);
+        assertNoCollection(statsRun(exe, "before", "", 3));
     }
 
     @Test
@@ -131,12 +138,12 @@ class RuntimeStatsNativeTest {
                     throw "boom"
                 }
                 """);
-        statsRun(exe, "a\n", "codeanalysis.SiyoThrow: boom\n", 1);
+        assertNoCollection(statsRun(exe, "a\n", "codeanalysis.SiyoThrow: boom\n", 1));
     }
 
     @Test
     void stackOverflow() throws Exception {
         Path exe = build("stats_overflow", "fn f(n: int) { f(n + 1) }\nfn main() { print(\"x\")\n f(0) }\n");
-        statsRun(exe, "x", "java.lang.StackOverflowError\n", 1);
+        assertNoCollection(statsRun(exe, "x", "java.lang.StackOverflowError\n", 1));
     }
 }

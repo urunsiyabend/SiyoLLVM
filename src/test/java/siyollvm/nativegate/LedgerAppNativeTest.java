@@ -48,6 +48,13 @@ class LedgerAppNativeTest {
 
     @BeforeAll
     static void build() throws Exception {
+        // A directory of its own per run, so concurrent or repeated runs never share files.
+        work = Files.createTempDirectory(Files.createDirectories(TestPaths.tempRoot().resolve("native")), "ledger-app-");
+        executable = buildLedger(work);
+    }
+
+    /** Builds the ledger into {@code work/ledger}, the path {@code bin/siyollvm build} takes. */
+    static Path buildLedger(Path work) throws Exception {
         Clang clang = NativeRunner.clang();
         Path source = PROJECT.resolve("src/main.siyo");
         Compiler.IrResult ir = Compiler.toIr(source.getFileName().toString(), source.toAbsolutePath(),
@@ -55,26 +62,36 @@ class LedgerAppNativeTest {
         assertTrue(ir.diagnostics().isEmpty(), "ledger: " + ir.diagnostics());
         assertNotNull(ir.ir());
         IrStructure.assertWellFormed(ir.ir());
-        // A directory of its own per run, so concurrent or repeated runs never share files.
-        work = Files.createTempDirectory(Files.createDirectories(TestPaths.tempRoot().resolve("native")), "ledger-app-");
         Path ll = work.resolve("ledger.ll");
         Files.writeString(ll, ir.ir(), StandardCharsets.UTF_8);
-        executable = work.resolve("ledger");
-        clang.compile(ll, executable);
+        Path exe = work.resolve("ledger");
+        clang.compile(ll, exe);
+        return exe;
     }
 
-    @TestFactory
-    Stream<DynamicTest> cases() throws Exception {
+    /** The case directories under {@code tests/}, sorted. */
+    static List<Path> caseDirectories() throws Exception {
         Path tests = PROJECT.resolve("tests");
         List<Path> cases;
         try (Stream<Path> dirs = Files.list(tests)) {
             cases = dirs.filter(Files::isDirectory).sorted().toList();
         }
         assertFalse(cases.isEmpty(), "no cases in " + tests);
-        return cases.stream().map(dir -> DynamicTest.dynamicTest(dir.getFileName().toString(), () -> runCase(dir)));
+        return cases;
     }
 
-    private static void runCase(Path dir) throws Exception {
+    @TestFactory
+    Stream<DynamicTest> cases() throws Exception {
+        return caseDirectories().stream().map(dir -> DynamicTest.dynamicTest(dir.getFileName().toString(),
+                () -> runCase(executable, work, dir, Map.of())));
+    }
+
+    /**
+     * Runs one case with {@code extraEnv} added to {@code LC_ALL=C} and compares everything. With
+     * {@code SIYO_RT_STATS=1} the stats line is split off stderr first and returned; otherwise null.
+     */
+    static NativeRunner.Stats runCase(Path executable, Path work, Path dir, Map<String, String> extraEnv)
+            throws Exception {
         String name = dir.getFileName().toString();
         Path argsFile = dir.resolve("args");
         List<String> args = Files.readAllLines(argsFile, StandardCharsets.UTF_8);
@@ -93,11 +110,19 @@ class LedgerAppNativeTest {
         List<String> command = List.of("/bin/sh", "-c", "f=$1; exe=$2; set --; "
                 + "while IFS= read -r l || [ -n \"$l\" ]; do set -- \"$@\" \"$l\"; done < \"$f\"; "
                 + "exec \"$exe\" \"$@\"", "sh", argsFile.toAbsolutePath().toString(), executable.toString());
-        NativeRunner.Run run = NativeRunner.run(command, runDir, caseWork, Map.of("LC_ALL", "C"));
+        Map<String, String> env = new java.util.HashMap<>(extraEnv);
+        env.put("LC_ALL", "C");
+        NativeRunner.Run run = NativeRunner.run(command, runDir, caseWork, env);
+        NativeRunner.Stats stats = null;
+        byte[] stderr = run.stderrBytes();
+        if ("1".equals(extraEnv.get("SIYO_RT_STATS"))) {
+            stats = NativeRunner.Stats.split(stderr, name);
+            stderr = stats.stderrBefore();
+        }
 
         assertArrayEquals(expectedStdout, run.stdout(),
                 name + " stdout:\n" + new String(run.stdout(), StandardCharsets.UTF_8));
-        assertArrayEquals(expectedStderr, run.stderrBytes(), name + " stderr:\n" + run.stderr());
+        assertArrayEquals(expectedStderr, stderr, name + " stderr:\n" + run.stderr());
         assertEquals(expectedExit, run.exitCode(), name + " exit code; stderr: " + run.stderr());
         if (args.size() >= 2) {
             Path report = runDir.resolve(args.get(1));
@@ -114,6 +139,7 @@ class LedgerAppNativeTest {
         } else {
             assertFalse(Files.exists(expectedReport), name + ": expected.report without a report argument");
         }
+        return stats;
     }
 
     /** An empty run directory holding a copy of the case's {@code files/}, if any. */

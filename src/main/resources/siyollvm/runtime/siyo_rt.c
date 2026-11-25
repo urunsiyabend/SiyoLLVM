@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <setjmp.h>
+#include <sys/mman.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -102,7 +104,7 @@ static SiyoStr *siyo_rt_str_header(const char *data, int64_t len, int64_t utf16_
 /* An empty buffer with room for cap bytes. */
 static SiyoBuf *siyo_rt_buf_new(int64_t cap) {
     if (cap < 0 || (uint64_t)cap > SIZE_MAX - sizeof(SiyoBuf)) siyo_rt_fail("java.lang.OutOfMemoryError\n");
-    SiyoBuf *buf = siyo_rt_alloc(sizeof(SiyoBuf) + (size_t)cap);
+    SiyoBuf *buf = siyo_rt_alloc_noscan(sizeof(SiyoBuf) + (size_t)cap);
     buf->cap = cap;
     buf->used = 0;
     return buf;
@@ -308,7 +310,8 @@ static int32_t siyo_rt_next_unit(SiyoUnits *it) {
     return (int32_t)siyo_rt_high_of(cp);
 }
 
-/* Scratch memory the caller releases with free(); unlike siyo_rt_alloc's. */
+/* Scratch memory the caller releases with free(), unlike the collector's. It
+   must never hold a heap pointer: the collector does not scan it. */
 static void *siyo_rt_scratch(size_t size) {
     void *p = malloc(size == 0 ? 1 : size);
     if (p == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
@@ -863,7 +866,7 @@ int64_t siyo_rt_parse_long(const SiyoStr *s) {
 /* --- any values ------------------------------------------------------------ */
 
 static void *siyo_rt_box(uint32_t tag, int64_t value) {
-    SiyoBox *box = siyo_rt_alloc(sizeof(SiyoBox));
+    SiyoBox *box = siyo_rt_alloc_noscan(sizeof(SiyoBox));
     box->tag = tag;
     box->value = value;
     return box;
@@ -1228,12 +1231,13 @@ void siyo_rt_array_push(SiyoArray *array, void *value) {
 
 void siyo_rt_array_append(SiyoArray *array, void *value) {
     if (array->len == array->cap) {
-        /* Only this array points at its items, so the block may move. */
+        /* Only this array points at its items, so they may move to a new
+           block; the old one is left to the collector. */
         if (array->cap == INT32_MAX) siyo_rt_fail("java.lang.OutOfMemoryError\n");
         int64_t cap = array->cap < 4 ? 4 : (int64_t)array->cap * 2;
         if (cap > INT32_MAX) cap = INT32_MAX;
-        void **items = realloc(array->items, (size_t)cap * sizeof(void *));
-        if (items == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+        void **items = siyo_rt_alloc((size_t)cap * sizeof(void *));
+        if (array->len > 0) memcpy(items, array->items, (size_t)array->len * sizeof(void *));
         array->items = items;
         array->cap = (int32_t)cap;
     }
@@ -1284,6 +1288,7 @@ static void *siyo_rt_array_remove(SiyoArray *array, int32_t index) {
     void *old = array->items[index];
     memmove(array->items + index, array->items + index + 1, (size_t)(array->len - index - 1) * sizeof(void *));
     array->len--;
+    array->items[array->len] = NULL; /* so the vacated slot keeps nothing alive */
     return old;
 }
 
@@ -1383,15 +1388,503 @@ _Noreturn void siyo_rt_stack_overflow(void) {
     siyo_rt_fail("java.lang.StackOverflowError\n");
 }
 
-/* Bytes requested from siyo_rt_alloc so far. Nothing is freed yet, so this
-   is also the heap's peak. Only the program thread allocates. */
-static uint64_t siyo_rt_allocated;
+/* --- memory: a non-moving mark-sweep collector ----------------------------- */
+
+/*
+ * Every runtime object lives in collector memory (siyo_rt_alloc for blocks
+ * that may hold pointers, siyo_rt_alloc_noscan for raw bytes), which is never
+ * freed explicitly: a collection frees what is no longer reachable. Objects
+ * never move, so every pointer the IR and the runtime hold stays valid.
+ *
+ * Heap. Small blocks (up to 2 KiB) come from 64 KiB pages aligned to 64 KiB,
+ * one size class per page; a larger block is a mapping of its own, aligned to
+ * 64 KiB. A page table (open addressing, keyed by address >> 16) maps every
+ * 64 KiB a page or large block spans to its descriptor, so any address,
+ * interior ones included, resolves to its block or to nothing. Descriptors,
+ * the page table and the mark stack are malloc'd and never scanned; blocks
+ * are zeroed when handed out.
+ *
+ * Roots, scanned conservatively (any aligned word that resolves to an
+ * allocated block keeps it): the program thread's stack from the collector's
+ * own frame to the top pthread_getattr_np reports, with the callee-saved
+ * registers spilled into the collector's frame first (__builtin_unwind_init
+ * and setjmp); the executable's .data and .bss (__data_start to _end), which
+ * hold the IR's module globals and the runtime's statics; and the pending
+ * exception's thread-local payload and message, registered explicitly. Only
+ * the program thread allocates or holds heap pointers; the main thread only
+ * starts and joins it.
+ *
+ * Scratch memory (siyo_rt_scratch, SiyoBytes) stays on malloc/free. It holds
+ * only raw bytes, UTF-16 units or C strings, never a heap pointer, so the
+ * collector need not see it. The sites: siyo_rt_to_units (units),
+ * siyo_rt_str_replace's output units, SiyoBytes in decode_utf8, from_os,
+ * to_os, path (normal and os bytes, os copied to a NOSCAN block), read_text,
+ * read_file, write, os_env and os_cwd, and io_list_dir's names (C strings).
+ *
+ * A collection runs on allocation once the bytes allocated since the last one
+ * reach max(4 MiB, the bytes live after it), and, with SIYO_GC_STRESS=<n>,
+ * every n allocations as well. Marking uses an explicit, growable mark stack,
+ * never recursion. Sweeping puts unmarked small blocks on their page's free
+ * list, unmaps unmarked large blocks, and keeps up to a few empty pages for
+ * reuse by any size class, unmapping the rest.
+ */
+#define SIYO_GC_PAGE_SHIFT 16
+#define SIYO_GC_PAGE_SIZE ((size_t)1 << SIYO_GC_PAGE_SHIFT)
+#define SIYO_GC_SMALL_MAX 2048
+#define SIYO_GC_CLASSES 14
+#define SIYO_GC_MAX_BLOCKS (SIYO_GC_PAGE_SIZE / 16)
+#define SIYO_GC_RESERVE_PAGES 16
+#define SIYO_GC_MIN_TRIGGER ((uint64_t)4 * 1024 * 1024)
+#define SIYO_GC_LARGE (-1)
+#define SIYO_GC_POOLED (-2)
+
+enum { SIYO_GC_ALLOCATED = 1, SIYO_GC_MARKED = 2, SIYO_GC_SCAN = 4 };
+
+static const uint32_t siyo_gc_class_sizes[SIYO_GC_CLASSES] = {
+    16, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048
+};
+
+/* A small page (one size class) or a large block. */
+typedef struct SiyoGcPage {
+    uintptr_t base;          /* 64 KiB aligned */
+    size_t span;             /* bytes mapped at base */
+    size_t block_size;       /* a small page's class size; a large block's size, rounded to a word */
+    int32_t size_class;      /* index into siyo_gc_class_sizes, SIYO_GC_LARGE or SIYO_GC_POOLED */
+    uint32_t block_count;    /* blocks in the page (1 for a large block) */
+    uint32_t bump;           /* blocks below this index have been handed out at least once */
+    uint32_t live;           /* allocated blocks */
+    void *free_list;         /* free blocks below bump, linked through their first word */
+    struct SiyoGcPage *next; /* in siyo_gc_avail[size_class] or the pool */
+    uint8_t state[];         /* SIYO_GC_* bits, one byte per block */
+} SiyoGcPage;
+
+typedef struct SiyoGcSlot {
+    uintptr_t key;           /* address >> SIYO_GC_PAGE_SHIFT; 0 empty, UINTPTR_MAX deleted */
+    SiyoGcPage *page;
+} SiyoGcSlot;
+
+#define SIYO_GC_DELETED UINTPTR_MAX
+
+/* None of these statics holds a heap address (keys are shifted), so scanning
+   .bss finds nothing of the collector's own. */
+static SiyoGcPage **siyo_gc_pages;
+static size_t siyo_gc_page_count;
+static size_t siyo_gc_page_cap;
+static SiyoGcPage *siyo_gc_avail[SIYO_GC_CLASSES];
+static SiyoGcPage *siyo_gc_pool;
+static size_t siyo_gc_pool_count;
+static SiyoGcSlot *siyo_gc_table;
+static size_t siyo_gc_table_cap;
+static size_t siyo_gc_table_used;
+static uintptr_t siyo_gc_lo_key = UINTPTR_MAX;
+static uintptr_t siyo_gc_hi_key;
+static uintptr_t *siyo_gc_mark_stack;
+static size_t siyo_gc_mark_count;
+static size_t siyo_gc_mark_cap;
+static uintptr_t siyo_gc_stack_top;
+static uint64_t siyo_gc_heap_bytes;
+static uint64_t siyo_gc_heap_peak;
+static uint64_t siyo_gc_since;
+static uint64_t siyo_gc_live_after;
+static uint64_t siyo_gc_collection_count;
+static uint64_t siyo_gc_stress;
+static uint64_t siyo_gc_stress_count;
+
+/* The executable's data and bss, as glibc's crt1 and the linker define them. */
+extern char __data_start[];
+extern char _end[];
+
+static void siyo_gc_out_of_memory(void) {
+    siyo_rt_fail("java.lang.OutOfMemoryError\n");
+}
+
+static size_t siyo_gc_hash(uintptr_t key) {
+    return (size_t)((key * UINT64_C(0x9E3779B97F4A7C15)) >> 17);
+}
+
+/* The page or large block spanning addr, or NULL. */
+static SiyoGcPage *siyo_gc_page_of(uintptr_t addr) {
+    uintptr_t key = addr >> SIYO_GC_PAGE_SHIFT;
+    if (key < siyo_gc_lo_key || key > siyo_gc_hi_key) return NULL;
+    size_t mask = siyo_gc_table_cap - 1;
+    for (size_t i = siyo_gc_hash(key) & mask;; i = (i + 1) & mask) {
+        uintptr_t k = siyo_gc_table[i].key;
+        if (k == key) return siyo_gc_table[i].page;
+        if (k == 0) return NULL;
+    }
+}
+
+static void siyo_gc_table_put(uintptr_t key, SiyoGcPage *page) {
+    size_t mask = siyo_gc_table_cap - 1;
+    size_t i = siyo_gc_hash(key) & mask;
+    while (siyo_gc_table[i].key != 0 && siyo_gc_table[i].key != SIYO_GC_DELETED) i = (i + 1) & mask;
+    if (siyo_gc_table[i].key == 0) siyo_gc_table_used++;
+    siyo_gc_table[i].key = key;
+    siyo_gc_table[i].page = page;
+}
+
+/* Rebuilds the table with room for extra more keys, dropping deleted slots. */
+static void siyo_gc_table_reserve(size_t extra) {
+    if ((siyo_gc_table_used + extra) * 2 < siyo_gc_table_cap) return;
+    size_t live = 0;
+    for (size_t i = 0; i < siyo_gc_table_cap; i++) {
+        if (siyo_gc_table[i].key != 0 && siyo_gc_table[i].key != SIYO_GC_DELETED) live++;
+    }
+    size_t cap = siyo_gc_table_cap < 1024 ? 1024 : siyo_gc_table_cap;
+    while ((live + extra) * 4 >= cap) cap *= 2;
+    SiyoGcSlot *old = siyo_gc_table;
+    size_t old_cap = siyo_gc_table_cap;
+    siyo_gc_table = calloc(cap, sizeof(SiyoGcSlot));
+    if (siyo_gc_table == NULL) siyo_gc_out_of_memory();
+    siyo_gc_table_cap = cap;
+    siyo_gc_table_used = 0;
+    for (size_t i = 0; i < old_cap; i++) {
+        if (old[i].key != 0 && old[i].key != SIYO_GC_DELETED) siyo_gc_table_put(old[i].key, old[i].page);
+    }
+    free(old);
+}
+
+static void siyo_gc_table_remove(uintptr_t key) {
+    size_t mask = siyo_gc_table_cap - 1;
+    for (size_t i = siyo_gc_hash(key) & mask;; i = (i + 1) & mask) {
+        if (siyo_gc_table[i].key == key) {
+            siyo_gc_table[i].key = SIYO_GC_DELETED;
+            siyo_gc_table[i].page = NULL;
+            return;
+        }
+        if (siyo_gc_table[i].key == 0) return;
+    }
+}
+
+/* span bytes (a multiple of 4 KiB) of zeroed memory at a 64 KiB boundary. */
+static uintptr_t siyo_gc_map(size_t span) {
+    if (span > SIZE_MAX - SIYO_GC_PAGE_SIZE) siyo_gc_out_of_memory();
+    size_t length = span + SIYO_GC_PAGE_SIZE;
+    void *raw = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (raw == MAP_FAILED) siyo_gc_out_of_memory();
+    uintptr_t start = ((uintptr_t)raw + SIYO_GC_PAGE_SIZE - 1) & ~(uintptr_t)(SIYO_GC_PAGE_SIZE - 1);
+    size_t head = start - (uintptr_t)raw;
+    if (head > 0) munmap(raw, head);
+    size_t tail = length - head - span;
+    if (tail > 0) munmap((void *)(start + span), tail);
+    return start;
+}
+
+/* Adds a mapped page or large block to the page list and the page table. */
+static void siyo_gc_register(SiyoGcPage *page) {
+    if (siyo_gc_page_count == siyo_gc_page_cap) {
+        size_t cap = siyo_gc_page_cap < 64 ? 64 : siyo_gc_page_cap * 2;
+        SiyoGcPage **pages = realloc(siyo_gc_pages, cap * sizeof(SiyoGcPage *));
+        if (pages == NULL) siyo_gc_out_of_memory();
+        siyo_gc_pages = pages;
+        siyo_gc_page_cap = cap;
+    }
+    siyo_gc_pages[siyo_gc_page_count++] = page;
+    uintptr_t first = page->base >> SIYO_GC_PAGE_SHIFT;
+    uintptr_t last = (page->base + page->span - 1) >> SIYO_GC_PAGE_SHIFT;
+    siyo_gc_table_reserve((size_t)(last - first + 1));
+    for (uintptr_t key = first; key <= last; key++) siyo_gc_table_put(key, page);
+    if (first < siyo_gc_lo_key) siyo_gc_lo_key = first;
+    if (last > siyo_gc_hi_key) siyo_gc_hi_key = last;
+}
+
+/* Unmaps the page at siyo_gc_pages[index], which the last page replaces. */
+static void siyo_gc_release(size_t index) {
+    SiyoGcPage *page = siyo_gc_pages[index];
+    uintptr_t first = page->base >> SIYO_GC_PAGE_SHIFT;
+    uintptr_t last = (page->base + page->span - 1) >> SIYO_GC_PAGE_SHIFT;
+    for (uintptr_t key = first; key <= last; key++) siyo_gc_table_remove(key);
+    munmap((void *)page->base, page->span);
+    free(page);
+    siyo_gc_pages[index] = siyo_gc_pages[--siyo_gc_page_count];
+}
+
+/* A page for size class c, from the pool of empty pages or newly mapped. */
+static SiyoGcPage *siyo_gc_new_page(int32_t c) {
+    SiyoGcPage *page = siyo_gc_pool;
+    if (page != NULL) {
+        siyo_gc_pool = page->next;
+        siyo_gc_pool_count--;
+    } else {
+        page = malloc(sizeof(SiyoGcPage) + SIYO_GC_MAX_BLOCKS);
+        if (page == NULL) siyo_gc_out_of_memory();
+        page->base = siyo_gc_map(SIYO_GC_PAGE_SIZE);
+        page->span = SIYO_GC_PAGE_SIZE;
+        siyo_gc_register(page);
+    }
+    page->size_class = c;
+    page->block_size = siyo_gc_class_sizes[c];
+    page->block_count = (uint32_t)(SIYO_GC_PAGE_SIZE / page->block_size);
+    page->bump = 0;
+    page->live = 0;
+    page->free_list = NULL;
+    memset(page->state, 0, page->block_count);
+    page->next = siyo_gc_avail[c];
+    siyo_gc_avail[c] = page;
+    return page;
+}
+
+static void *siyo_gc_alloc_small(int32_t c, uint8_t kind) {
+    SiyoGcPage *page = siyo_gc_avail[c];
+    while (page != NULL && page->free_list == NULL && page->bump == page->block_count) page = page->next;
+    siyo_gc_avail[c] = page;
+    if (page == NULL) page = siyo_gc_new_page(c);
+    void *block;
+    uint32_t index;
+    if (page->free_list != NULL) {
+        block = page->free_list;
+        page->free_list = *(void **)block;
+        index = (uint32_t)(((uintptr_t)block - page->base) / page->block_size);
+    } else {
+        index = page->bump++;
+        block = (void *)(page->base + (uintptr_t)index * page->block_size);
+    }
+    page->state[index] = (uint8_t)(SIYO_GC_ALLOCATED | kind);
+    page->live++;
+    memset(block, 0, page->block_size);
+    return block;
+}
+
+static void *siyo_gc_alloc_large(size_t size, uint8_t kind) {
+    size_t bytes = (size + 7) & ~(size_t)7;
+    size_t span = (bytes + 4095) & ~(size_t)4095;
+    SiyoGcPage *page = malloc(sizeof(SiyoGcPage) + 1);
+    if (page == NULL) siyo_gc_out_of_memory();
+    page->base = siyo_gc_map(span);
+    page->span = span;
+    page->block_size = bytes;
+    page->size_class = SIYO_GC_LARGE;
+    page->block_count = 1;
+    page->bump = 1;
+    page->live = 1;
+    page->free_list = NULL;
+    page->next = NULL;
+    page->state[0] = (uint8_t)(SIYO_GC_ALLOCATED | kind);
+    siyo_gc_register(page);
+    return (void *)page->base;
+}
+
+/* The block addr points into: its page, index and bounds; NULL when addr is not in a block handed out. */
+static SiyoGcPage *siyo_gc_find(uintptr_t addr, uint32_t *index, uintptr_t *start, uintptr_t *end) {
+    SiyoGcPage *page = siyo_gc_page_of(addr);
+    if (page == NULL || page->size_class == SIYO_GC_POOLED) return NULL;
+    if (page->size_class == SIYO_GC_LARGE) {
+        if (addr >= page->base + page->block_size) return NULL;
+        *index = 0;
+        *start = page->base;
+    } else {
+        uint32_t i = (uint32_t)((addr - page->base) / page->block_size);
+        if (i >= page->bump) return NULL;
+        *index = i;
+        *start = page->base + (uintptr_t)i * page->block_size;
+    }
+    *end = *start + page->block_size;
+    return page;
+}
+
+static void siyo_gc_push(uintptr_t start, uintptr_t end) {
+    if (siyo_gc_mark_count + 2 > siyo_gc_mark_cap) {
+        size_t cap = siyo_gc_mark_cap < 4096 ? 4096 : siyo_gc_mark_cap * 2;
+        uintptr_t *stack = realloc(siyo_gc_mark_stack, cap * sizeof(uintptr_t));
+        if (stack == NULL) siyo_gc_out_of_memory();
+        siyo_gc_mark_stack = stack;
+        siyo_gc_mark_cap = cap;
+    }
+    siyo_gc_mark_stack[siyo_gc_mark_count++] = start;
+    siyo_gc_mark_stack[siyo_gc_mark_count++] = end;
+}
+
+/* Marks the block word points into, if any, queueing a SCAN block for scanning. */
+static void siyo_gc_mark_word(uintptr_t word) {
+    uint32_t index;
+    uintptr_t start, end;
+    SiyoGcPage *page = siyo_gc_find(word, &index, &start, &end);
+    if (page == NULL) return;
+    uint8_t state = page->state[index];
+    if ((state & SIYO_GC_ALLOCATED) == 0 || (state & SIYO_GC_MARKED) != 0) return;
+    page->state[index] = (uint8_t)(state | SIYO_GC_MARKED);
+    if ((state & SIYO_GC_SCAN) != 0) siyo_gc_push(start, end);
+}
+
+/* Every aligned word in [from, to). */
+static void siyo_gc_mark_range(uintptr_t from, uintptr_t to) {
+    for (uintptr_t p = (from + 7) & ~(uintptr_t)7; p + sizeof(uintptr_t) <= to; p += sizeof(uintptr_t)) {
+        siyo_gc_mark_word(*(const uintptr_t *)p);
+    }
+}
+
+static void siyo_gc_drain(void) {
+    while (siyo_gc_mark_count > 0) {
+        uintptr_t end = siyo_gc_mark_stack[--siyo_gc_mark_count];
+        uintptr_t start = siyo_gc_mark_stack[--siyo_gc_mark_count];
+        siyo_gc_mark_range(start, end);
+    }
+}
+
+/* Marks from every root. Its frame lies below the collector's, which holds
+   the spilled registers, so scanning from here up covers them. */
+__attribute__((noinline))
+static void siyo_gc_mark_roots(void *registers, size_t size) {
+    volatile uintptr_t here = 0;
+    siyo_gc_mark_range((uintptr_t)registers, (uintptr_t)registers + size);
+    siyo_gc_mark_range((uintptr_t)&here, siyo_gc_stack_top);
+    siyo_gc_mark_range((uintptr_t)__data_start, (uintptr_t)_end);
+    siyo_gc_mark_word((uintptr_t)siyo_rt_pending_payload);
+    siyo_gc_mark_word((uintptr_t)siyo_rt_pending_message);
+    siyo_gc_drain();
+}
+
+static void siyo_gc_sweep(void) {
+    for (int32_t c = 0; c < SIYO_GC_CLASSES; c++) siyo_gc_avail[c] = NULL;
+    size_t i = 0;
+    while (i < siyo_gc_page_count) {
+        SiyoGcPage *page = siyo_gc_pages[i];
+        if (page->size_class == SIYO_GC_POOLED) {
+            i++;
+            continue;
+        }
+        if (page->size_class == SIYO_GC_LARGE) {
+            if ((page->state[0] & SIYO_GC_MARKED) != 0) {
+                page->state[0] = (uint8_t)(page->state[0] & ~SIYO_GC_MARKED);
+                i++;
+            } else {
+                siyo_gc_heap_bytes -= page->span;
+                siyo_gc_release(i);
+            }
+            continue;
+        }
+        for (uint32_t b = 0; b < page->bump; b++) {
+            uint8_t state = page->state[b];
+            if ((state & SIYO_GC_ALLOCATED) == 0) continue;
+            if ((state & SIYO_GC_MARKED) != 0) {
+                page->state[b] = (uint8_t)(state & ~SIYO_GC_MARKED);
+                continue;
+            }
+            void *block = (void *)(page->base + (uintptr_t)b * page->block_size);
+            page->state[b] = 0;
+            *(void **)block = page->free_list;
+            page->free_list = block;
+            page->live--;
+            siyo_gc_heap_bytes -= page->block_size;
+        }
+        if (page->live == 0) {
+            if (siyo_gc_pool_count < SIYO_GC_RESERVE_PAGES) {
+                memset(page->state, 0, page->block_count);
+                page->size_class = SIYO_GC_POOLED;
+                page->free_list = NULL;
+                page->bump = 0;
+                page->next = siyo_gc_pool;
+                siyo_gc_pool = page;
+                siyo_gc_pool_count++;
+                i++;
+            } else {
+                siyo_gc_release(i);
+            }
+            continue;
+        }
+        if (page->free_list != NULL || page->bump < page->block_count) {
+            page->next = siyo_gc_avail[page->size_class];
+            siyo_gc_avail[page->size_class] = page;
+        }
+        i++;
+    }
+}
+
+/* One collection. __builtin_unwind_init makes this function save every
+   callee-saved register in its own frame, and setjmp copies them again, so a
+   pointer held only in a register is on the stack the marker scans. */
+__attribute__((noinline))
+static void siyo_gc_collect(void) {
+    jmp_buf registers;
+    __builtin_unwind_init();
+    (void)setjmp(registers);
+    siyo_gc_mark_roots(registers, sizeof registers);
+    siyo_gc_sweep();
+    siyo_gc_live_after = siyo_gc_heap_bytes;
+    siyo_gc_since = 0;
+    siyo_gc_collection_count++;
+}
+
+/* A zeroed block of size bytes of the given kind (0 or SIYO_GC_SCAN). */
+static void *siyo_gc_alloc(size_t size, uint8_t kind) {
+    if (size > SIZE_MAX / 4) siyo_gc_out_of_memory();
+    uint64_t trigger = siyo_gc_live_after > SIYO_GC_MIN_TRIGGER ? siyo_gc_live_after : SIYO_GC_MIN_TRIGGER;
+    _Bool stress = siyo_gc_stress != 0 && ++siyo_gc_stress_count >= siyo_gc_stress;
+    if (stress || siyo_gc_since >= trigger) {
+        siyo_gc_stress_count = 0;
+        siyo_gc_collect();
+    }
+    void *block;
+    uint64_t bytes;
+    if (size <= SIYO_GC_SMALL_MAX) {
+        int32_t c = 0;
+        while (siyo_gc_class_sizes[c] < size) c++;
+        block = siyo_gc_alloc_small(c, kind);
+        bytes = siyo_gc_class_sizes[c];
+    } else {
+        block = siyo_gc_alloc_large(size, kind);
+        bytes = siyo_gc_pages[siyo_gc_page_count - 1]->span;
+    }
+    siyo_gc_since += bytes;
+    siyo_gc_heap_bytes += bytes;
+    if (siyo_gc_heap_bytes > siyo_gc_heap_peak) siyo_gc_heap_peak = siyo_gc_heap_bytes;
+    return block;
+}
 
 void *siyo_rt_alloc(size_t size) {
-    void *p = malloc(size == 0 ? 1 : size);
-    if (p == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
-    siyo_rt_allocated += size;
-    return p;
+    return siyo_gc_alloc(size, SIYO_GC_SCAN);
+}
+
+void *siyo_rt_alloc_noscan(size_t size) {
+    return siyo_gc_alloc(size, 0);
+}
+
+void siyo_rt_gc_collect(void) {
+    siyo_gc_collect();
+}
+
+void *siyo_rt_gc_block_of(const void *p) {
+    uint32_t index;
+    uintptr_t start, end;
+    SiyoGcPage *page = siyo_gc_find((uintptr_t)p, &index, &start, &end);
+    if (page == NULL || (page->state[index] & SIYO_GC_ALLOCATED) == 0) return NULL;
+    return (void *)start;
+}
+
+void siyo_rt_gc_counts(uint64_t *blocks, uint64_t *bytes) {
+    uint64_t count = 0;
+    for (size_t i = 0; i < siyo_gc_page_count; i++) {
+        if (siyo_gc_pages[i]->size_class != SIYO_GC_POOLED) count += siyo_gc_pages[i]->live;
+    }
+    *blocks = count;
+    *bytes = siyo_gc_heap_bytes;
+}
+
+uint64_t siyo_rt_gc_collections(void) {
+    return siyo_gc_collection_count;
+}
+
+/* The top of the calling thread's stack, from pthread_getattr_np; fallback if unknown. */
+static uintptr_t siyo_gc_thread_stack_top(uintptr_t fallback) {
+    pthread_attr_t attr;
+    uintptr_t top = 0;
+    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+        void *addr;
+        size_t size;
+        if (pthread_attr_getstack(&attr, &addr, &size) == 0) top = (uintptr_t)addr + size;
+        pthread_attr_destroy(&attr);
+    }
+    return top > fallback ? top : fallback;
+}
+
+/* SIYO_GC_STRESS=<n>, n a positive decimal: a collection every n allocations. */
+static void siyo_gc_read_stress(void) {
+    const char *text = getenv("SIYO_GC_STRESS");
+    if (text == NULL || *text == '\0') return;
+    char *end;
+    errno = 0;
+    unsigned long long n = strtoull(text, &end, 10);
+    if (*end == '\0' && errno == 0 && n > 0 && text[0] != '-') siyo_gc_stress = n;
 }
 
 /* Peak resident set of this process in KiB: VmHWM from /proc/self/status,
@@ -1419,12 +1912,13 @@ static long siyo_rt_rss_peak_kb(void) {
 
 /* SIYO_RT_STATS=1: at exit, by whatever path, after stdout is flushed and
    after anything else the program wrote to stderr, one line of memory
-   statistics. There is no collector yet, so collections is always 0. */
+   statistics: the collections run, the heap's peak (bytes in allocated
+   blocks, garbage not yet swept included) and the peak resident set. */
 static void siyo_rt_print_stats(void) {
     fflush(stdout);
     long rss_kb = siyo_rt_rss_peak_kb();
-    fprintf(stderr, "siyo-rt: collections=0 heap_peak_kb=%llu rss_peak_kb=%ld\n",
-            (unsigned long long)(siyo_rt_allocated / 1024), rss_kb);
+    fprintf(stderr, "siyo-rt: collections=%llu heap_peak_kb=%llu rss_peak_kb=%ld\n",
+            (unsigned long long)siyo_gc_collection_count, (unsigned long long)(siyo_gc_heap_peak / 1024), rss_kb);
     fflush(stderr);
 }
 
@@ -1433,6 +1927,7 @@ static void *siyo_rt_program_thread(void *unused) {
     (void)unused;
     uint64_t here = (uint64_t)(uintptr_t)__builtin_frame_address(0);
     siyo_rt_stack_limit = here - SIYO_RT_STACK_SIZE + SIYO_RT_STACK_HEADROOM;
+    siyo_gc_stack_top = siyo_gc_thread_stack_top(here);
     siyo_program();
     return NULL;
 }
@@ -1446,6 +1941,7 @@ int main(int argc, char **argv) {
     if (stats != NULL && strcmp(stats, "1") == 0 && atexit(siyo_rt_print_stats) != 0) {
         siyo_rt_fail("SiyoLLVM runtime: cannot register SIYO_RT_STATS\n");
     }
+    siyo_gc_read_stress();
     pthread_attr_t attr;
     pthread_t thread;
     int failed = pthread_attr_init(&attr);
@@ -1615,17 +2111,19 @@ static void siyo_rt_map_grow(SiyoMap *map) {
     for (int32_t i = 0; i < map->used; i++) {
         if (map->entries[i].live) map->entries[live++] = map->entries[i];
     }
+    /* The entries the compaction vacated keep nothing alive. */
+    if (map->used > live) memset(&map->entries[live], 0, (size_t)(map->used - live) * sizeof(SiyoMapEntry));
     map->used = live;
     if (live >= map->cap / 2) {
+        /* New blocks; the old ones are left to the collector. */
         if (map->cap >= INT32_MAX / 4) siyo_rt_fail("java.lang.OutOfMemoryError\n");
         int32_t cap = map->cap < 8 ? 8 : map->cap * 2;
-        SiyoMapEntry *entries = realloc(map->entries, (size_t)cap * sizeof(SiyoMapEntry));
-        if (entries == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+        SiyoMapEntry *entries = siyo_rt_alloc((size_t)cap * sizeof(SiyoMapEntry));
+        if (live > 0) memcpy(entries, map->entries, (size_t)live * sizeof(SiyoMapEntry));
         map->entries = entries;
         map->cap = cap;
         map->slot_count = cap * 2;
-        free(map->slots);
-        map->slots = siyo_rt_alloc((size_t)map->slot_count * sizeof(int32_t));
+        map->slots = siyo_rt_alloc_noscan((size_t)map->slot_count * sizeof(int32_t));
     }
     for (int32_t i = 0; i < map->slot_count; i++) map->slots[i] = -1;
     for (int32_t i = 0; i < map->used; i++) siyo_rt_map_index(map, i);
@@ -1713,7 +2211,8 @@ SiyoArray *siyo_rt_map_keys(SiyoMap *map) {
 
 /* --- std/io and std/os ------------------------------------------------------ */
 
-/* A growable byte buffer for building file contents, paths and names. */
+/* A growable byte buffer for building file contents, paths and names:
+   scratch memory (malloc), raw bytes only, released with free(bytes). */
 typedef struct SiyoBytes {
     unsigned char *bytes;
     size_t len;
@@ -1725,7 +2224,7 @@ static void siyo_rt_bytes_reserve(SiyoBytes *b, size_t extra) {
     if (b->len + extra <= b->cap) return;
     size_t cap = b->cap < 64 ? 64 : b->cap;
     while (cap < b->len + extra) cap *= 2;
-    unsigned char *bytes = siyo_rt_alloc(cap);
+    unsigned char *bytes = siyo_rt_scratch(cap);
     if (b->len > 0) memcpy(bytes, b->bytes, b->len);
     free(b->bytes);
     b->bytes = bytes;
@@ -1930,8 +2429,11 @@ static _Bool siyo_rt_path(const SiyoStr *s, SiyoPath *path) {
     SiyoBytes os = {0};
     siyo_rt_to_os(&os, normal.bytes, normal.len);
     siyo_rt_bytes_byte(&os, 0);
-    path->os = (char *)os.bytes;
     free(normal.bytes);
+    /* Callers keep os until they return; a NOSCAN block, so nothing frees it. */
+    path->os = siyo_rt_alloc_noscan(os.len);
+    memcpy(path->os, os.bytes, os.len);
+    free(os.bytes);
     return 1;
 }
 
@@ -2188,13 +2690,13 @@ SiyoArray *siyo_rt_io_list_dir(const SiyoStr *s) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
         if (count == cap) {
             cap = cap == 0 ? 16 : cap * 2;
-            char **grown = siyo_rt_alloc(cap * sizeof(char *));
+            char **grown = siyo_rt_scratch(cap * sizeof(char *));
             if (count > 0) memcpy(grown, names, count * sizeof(char *));
             free(names);
             names = grown;
         }
         size_t len = strlen(entry->d_name);
-        names[count] = siyo_rt_alloc(len + 1);
+        names[count] = siyo_rt_scratch(len + 1);
         memcpy(names[count], entry->d_name, len + 1);
         count++;
     }

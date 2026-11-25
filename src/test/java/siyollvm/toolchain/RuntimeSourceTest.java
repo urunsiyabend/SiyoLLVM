@@ -31,8 +31,9 @@ class RuntimeSourceTest {
         assertTrue(source.contains("getenv(\"SIYO_RT_STATS\")"), "reads SIYO_RT_STATS");
         assertTrue(source.contains("atexit(siyo_rt_print_stats)"), "printed on every exit path");
         assertTrue(source.contains("\"VmHWM:\""), "this process's own peak RSS, not one inherited across exec");
-        assertTrue(source.contains("\"siyo-rt: collections=0 heap_peak_kb=%llu rss_peak_kb=%ld\\n\""),
+        assertTrue(source.contains("\"siyo-rt: collections=%llu heap_peak_kb=%llu rss_peak_kb=%ld\\n\""),
                 "the documented line format");
+        assertTrue(source.contains("getenv(\"SIYO_GC_STRESS\")"), "reads SIYO_GC_STRESS");
     }
 
     @Test

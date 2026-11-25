@@ -71,8 +71,9 @@ _Static_assert(offsetof(SiyoBox, value) == 8, "SiyoBox layout");
 /*
  * A Siyo array (tag SIYO_TAG_ARRAY), as the JVM's SiyoArray over an
  * ArrayList<Object>: len items, each an any value (a primitive boxed), in a
- * block of cap slots that doubles when full. Arrays are shared by
- * reference and mutated in place; they are never freed.
+ * block of cap slots that doubles when full (into a new block; the old one
+ * is left to the collector). Arrays are shared by reference and mutated in
+ * place; the collector reclaims them once unreachable.
  */
 typedef struct SiyoArray {
     uint32_t tag;
@@ -90,7 +91,8 @@ _Static_assert(offsetof(SiyoArray, items) == 16, "SiyoArray layout must match th
  * LinkedHashMap<String, Object> carrying the struct's name: count fields,
  * names[i] holding values[i] (an any value, a primitive boxed), in the order
  * the literal wrote them; a field set later is appended. Structs are shared
- * by reference and mutated in place; they are never freed. names starts out
+ * by reference and mutated in place; the collector reclaims them once
+ * unreachable. names starts out
  * as the literal's constant array and is copied before it grows.
  */
 typedef struct SiyoStruct {
@@ -113,7 +115,8 @@ _Static_assert(offsetof(SiyoStruct, values) == 24, "SiyoStruct layout must match
  * appends it), each an any key and value, found through an open-addressing
  * index of entry numbers. Keys are compared by siyo_rt_any_equals and hashed
  * consistently with it. Maps are shared by reference and mutated in place;
- * they are never freed. The layout past the tag is private to the runtime.
+ * the collector reclaims them once unreachable. The layout past the tag is
+ * private to the runtime.
  */
 typedef struct SiyoMapEntry {
     void *key;
@@ -418,7 +421,27 @@ SiyoStr *siyo_rt_os_cwd(void);
 /* System.exit(code): flushes stdout and stderr and exits. */
 _Noreturn void siyo_rt_os_exit(int32_t code);
 
-/* malloc that never returns NULL: failure is java.lang.OutOfMemoryError. Never freed. */
+/*
+ * Collector memory (see "memory" in siyo_rt.c). A zeroed block of size bytes,
+ * never NULL (failure is java.lang.OutOfMemoryError), never freed explicitly:
+ * a collection, which may run inside either call, reclaims it once no root
+ * or reachable block points into it. siyo_rt_alloc's blocks may hold
+ * pointers and are scanned; siyo_rt_alloc_noscan's hold raw bytes (string
+ * bytes, box payloads, index arrays) and are not.
+ */
 void *siyo_rt_alloc(size_t size);
+void *siyo_rt_alloc_noscan(size_t size);
+
+/*
+ * Collector hooks for tests (RuntimeGcNativeTest); the IR does not use them.
+ * collect runs a collection now. block_of is the start of the allocated
+ * block p points into (interior pointers included), NULL for anything else.
+ * counts gives the allocated blocks and the heap's bytes; collections the
+ * number of collections so far.
+ */
+void siyo_rt_gc_collect(void);
+void *siyo_rt_gc_block_of(const void *p);
+void siyo_rt_gc_counts(uint64_t *blocks, uint64_t *bytes);
+uint64_t siyo_rt_gc_collections(void);
 
 #endif
