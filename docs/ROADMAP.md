@@ -19,6 +19,17 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 | F5 | `projects/ledger` application + independent oracles | F4 | done | 134bd0d..9f0ecf3, pushed at c317efb | `docs/evidence/f5-ledger/`; CI run 42346474485 green at c317efb; fresh clone gates green (`docs/evidence/milestone/`) |
 | — | float, sum types + match, lambdas, sets, GC | after milestone | planned | | |
 
+## Runtime readiness (goal: `docs/RUNTIME_READINESS_GOAL.md`, renewed 2026-11-25)
+
+| # | Feature | Depends on | Status | Commit | Evidence |
+|---|---|---|---|---|---|
+| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress | | `docs/evidence/r1-gc/` |
+| R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | planned | | |
+| R3 | Scalability: cached UTF-16 offsets for non-ASCII indexing; a native sort for distinct keys if a lambda-free API fits the reference | R1 | planned | | |
+
+Historical baseline (supervisor acceptance, 2026-11-25, automation evidence `acceptance-20261125/`; not re-measured here):
+the ledger at 313 141 / 939 355 / 3 131 104 input bytes peaked at 28 404 / 81 620 / 268 416 KiB RSS (never-free).
+
 ## Acceptance criteria
 
 **F1** — `+` on strings with int/long/bool/string operands, `+=`,
@@ -101,10 +112,8 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Status (2026-11-07): F0–F5 published; milestone criteria evidenced in `docs/evidence/milestone/`
-  (fresh clone + exact-head CI at c317efb). Next actionable step: post-milestone work by priority —
-  a memory-reclamation design (arena or GC; owner decision, see limitations), then float, sum
-  types/match and lambdas (enables `sort`).
+- Status (2026-11-25): F0–F5 published (milestone evidence `docs/evidence/milestone/`). Runtime readiness
+  started: R1 plan `docs/superpowers/plans/2026-11-25-r1-gc.md`; next step R1 Task 1 (RED memory-bound suite).
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
