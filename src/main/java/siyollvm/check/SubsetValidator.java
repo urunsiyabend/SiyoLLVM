@@ -206,7 +206,7 @@ public final class SubsetValidator {
                 BuiltinFunctions.SUBSTRING, BuiltinFunctions.CONTAINS, BuiltinFunctions.INDEX_OF,
                 BuiltinFunctions.STARTS_WITH, BuiltinFunctions.ENDS_WITH, BuiltinFunctions.REPLACE,
                 BuiltinFunctions.TRIM, BuiltinFunctions.TO_UPPER, BuiltinFunctions.TO_LOWER, BuiltinFunctions.ORD,
-                BuiltinFunctions.PARSE_INT, BuiltinFunctions.TO_INT_STR, BuiltinFunctions.SPLIT));
+                BuiltinFunctions.PARSE_INT, BuiltinFunctions.SPLIT));
     }
 
     /** Orderings an any operand beside an int or long is unboxed for. */

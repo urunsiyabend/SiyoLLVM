@@ -257,6 +257,7 @@ class SubsetValidatorTest {
             fn main() { mut a: any = true while a { println(1) } }             | conditions of type any are
             fn main() { mut a: any = 1 println(toLong(a)) }                    | arguments of type any to toLong() are
             fn main() { mut a: any = "1" println(parseLong(a)) }               | arguments of type any to parseLong() are
+            fn main() { mut a: any = "1" println(toInt(a)) }                   | the builtin toInt() is
             fn main() { mut a: any = 1 println(substring("ab", a, 2)) }        | arguments of type any to substring() are
             fn main() { mut a: any = 65 println(chr(a)) }                      | arguments of type any to chr() are
             fn main() { mut a: any = 1 a = 2 println(a) }                      | assignments of int to any are

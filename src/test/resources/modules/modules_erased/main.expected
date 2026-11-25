@@ -1,0 +1,16 @@
+3
+true
+6
+true
+6
+ab
+true
+2
+7
+5
+3
+12
+12
+box: class java.lang.Integer cannot be cast to class java.util.Map (java.lang.Integer and java.util.Map are in module java.base of loader 'bootstrap')
+long: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+replace: class java.lang.Integer cannot be cast to class java.lang.String (java.lang.Integer and java.lang.String are in module java.base of loader 'bootstrap')

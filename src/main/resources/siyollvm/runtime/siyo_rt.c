@@ -2267,8 +2267,10 @@ int32_t siyo_rt_any_len(const void *value) {
     }
     /* An Integer, Long or Boolean: SiyoThrow with the class's simple name. */
     const char *java_class = siyo_rt_java_class_of(value);
+    const char *simple = strrchr(java_class, '.');
+    simple = simple != NULL ? simple + 1 : java_class;
     char text[64];
-    int n = snprintf(text, sizeof text, "len is not defined for %s", strrchr(java_class, '.') + 1);
+    int n = snprintf(text, sizeof text, "len is not defined for %s", simple);
     siyo_rt_throw(siyo_rt_str_from_bytes(text, n, n));
     return 0;
 }

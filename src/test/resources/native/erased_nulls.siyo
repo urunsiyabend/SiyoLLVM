@@ -1,0 +1,39 @@
+// A null any at the newly accepted unboxing sites, where the reference's
+// message is deterministic and SiyoLLVM matches it exactly: long operands
+// (SiyoRuntime.unboxLong: `because "value" is null`), an int operand read
+// from a struct field (`because the return value of "java.util.Map.get(Object)"
+// is null`), len and for-in over null (0 / no iterations), parseInt(null) (0).
+// Not here, as documented deviations (docs/SUBSET.md, Deviations): a null
+// local or parameter unboxed to int (the JVM's helpful message names
+// "<parameter1>"/"<localN>"; SiyoLLVM prints the message without the
+// `because` part), and null strings passed to string builtins, including a
+// null field (SiyoLLVM prints a bare NullPointerException).
+struct Q { v: any, w: int }
+fn side(n: int) -> int { println("side " + toString(n)) return n }
+fn sideL(n: long) -> long { println("sideL " + toString(n)) return n }
+fn t(a: any) {
+    try { println(a + sideL(2L)) } catch e { println("L+: " + e) }
+    try { println(sideL(2L) - a) } catch e { println("L-: " + e) }
+    try { println(a > 3L) } catch e { println("L>: " + e) }
+    try { println(a % 2L) } catch e { println("L%: " + e) }
+    try { println(len(a)) } catch e { println("len: " + e) }
+    try { for x in a { println(x) } } catch e { println("for: " + e) }
+    try { println(parseInt(a)) } catch e { println("parseInt: " + e) }
+}
+fn f(a: any) {
+    imut q: Q = a
+    try { println(q.v + 1) } catch e { println("field+: " + e) }
+    try { println(side(1) + q.v) } catch e { println("side+field: " + e) }
+    try { println(q.v % 2) } catch e { println("field%: " + e) }
+    try { println(q.v < side(1)) } catch e { println("field<: " + e) }
+    try { println(q.v * sideL(2L)) } catch e { println("fieldL: " + e) }
+    try { println(len(q.v)) } catch e { println("fieldLen: " + e) }
+    println(q.w + 1)
+}
+fn main() {
+    t(null)
+    imut q: any = Q { v: null, w: 1 }
+    f(q)
+    imut p: Q = q
+    println(p.v - 1)
+}

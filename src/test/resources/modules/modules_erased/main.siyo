@@ -1,0 +1,49 @@
+// A struct and an array returned from module geo, kept in map fields of a
+// struct here, read back (the binder sees inferred-any shapes), used at the
+// erased use sites the reference accepts, and passed back to geo. Then a
+// wrong runtime type behind the same reads: the reference's checked casts.
+import "geo"
+
+struct Store { boxes: Map<string, Box>, lists: Map<string, int[]>, misc: Map<string, any> }
+
+fn main() {
+    mut bm: Map<string, Box> = {}
+    bm["a"] = geo.box(2, 3L, "Ab")
+    mut lm: Map<string, int[]> = {}
+    lm["xs"] = geo.nums()
+    mut am: Map<string, any> = {}
+    am["n"] = 5
+    am["s"] = "str"
+    imut s = Store { boxes: bm, lists: lm, misc: am }
+
+    imut boxes = s.boxes
+    imut b: Box = boxes["a"]
+    println(b.w + 1)
+    println(b.w <= 2)
+    println(b.h * 2L)
+    println(b.h > 1L)
+    println(b.tag % 7)
+    println(toLower(b.name))
+    println(endsWith("xAb", b.name))
+    println(len(b.name))
+    println(geo.area(b))
+
+    imut lists = s.lists
+    imut xs = lists["xs"]
+    println(xs[1] + 1)
+    println(len(xs))
+    mut t = 0
+    for x in xs { t += x }
+    println(t)
+    println(geo.sum(xs))
+
+    imut misc = s.misc
+    try {
+        imut bad: Box = misc["n"]
+        println(bad.w + 1)
+    } catch e { println("box: " + e) }
+    try { println(misc["s"] + 1L) } catch e { println("long: " + e) }
+    try { println(replace("abc", "b", misc["n"])) } catch e { println("replace: " + e) }
+    imut wrong: int[] = misc["s"]
+    println(geo.sum(wrong))
+}

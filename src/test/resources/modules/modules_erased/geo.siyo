@@ -1,0 +1,14 @@
+// Returns a struct and an array to the importer, and takes them back.
+struct Box { w: int, h: long, name: string, tag: any }
+
+fn box(w: int, h: long, name: string) -> Box { Box { w: w, h: h, name: name, tag: w * 10 } }
+
+fn nums() -> int[] { [3, 4, 5] }
+
+fn area(b: Box) -> long { b.h * 2L + 1L }
+
+fn sum(xs: int[]) -> int {
+    mut t = 0
+    for x in xs { t += x }
+    return t
+}

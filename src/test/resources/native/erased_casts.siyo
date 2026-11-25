@@ -1,0 +1,66 @@
+// Erased (any) values at the use sites beyond the probe matrix that the
+// reference runs: % <= >= beside an int, > <= % beside a long, the string
+// builtins endsWith/replace/toLower/ord/trim and every non-first string
+// parameter. Each runs with the right type and with wrong ones (int, long,
+// bool, array): the checked cast's ClassCastException, or SiyoThrow for len.
+// Evaluation order: an any operand is unboxed right after it is evaluated,
+// so `a + sideL(2L)` fails before sideL prints and `sideL(2L) - a` prints
+// first; a string argument is cast before the next argument is evaluated.
+fn side(n: int) -> int { println("side " + toString(n)) return n }
+fn sideL(n: long) -> long { println("sideL " + toString(n)) return n }
+fn sideS(s: string) -> string { println("sideS " + s) return s }
+fn ints(a: any) {
+    try { println(a % 3) } catch e { println("a%3: " + e) }
+    try { println(10 % a) } catch e { println("10%a: " + e) }
+    try { println(a <= 5) } catch e { println("a<=5: " + e) }
+    try { println(5 <= a) } catch e { println("5<=a: " + e) }
+    try { println(a >= 6) } catch e { println("a>=6: " + e) }
+    try { println(6 >= a) } catch e { println("6>=a: " + e) }
+    try { println(a % side(3)) } catch e { println("a%side: " + e) }
+    try { println(side(3) >= a) } catch e { println("side>=a: " + e) }
+}
+fn longs(l: any) {
+    try { println(l > 2L) } catch e { println("l>2L: " + e) }
+    try { println(2L > l) } catch e { println("2L>l: " + e) }
+    try { println(l <= 2L) } catch e { println("l<=2L: " + e) }
+    try { println(l % 2L) } catch e { println("l%2L: " + e) }
+    try { println(7L % l) } catch e { println("7L%l: " + e) }
+    try { println(l + sideL(2L)) } catch e { println("l+sideL: " + e) }
+    try { println(sideL(2L) - l) } catch e { println("sideL-l: " + e) }
+    try { println(l <= sideL(3L)) } catch e { println("l<=sideL: " + e) }
+    try { println(sideL(3L) > l) } catch e { println("sideL>l: " + e) }
+}
+fn strs(s: any) {
+    try { println(endsWith(s, "c")) } catch e { println("endsWith1: " + e) }
+    try { println(endsWith("abc", s)) } catch e { println("endsWith2: " + e) }
+    try { println(replace(s, sideS("b"), "x")) } catch e { println("replace1: " + e) }
+    try { println(replace("abc", s, sideS("x"))) } catch e { println("replace2: " + e) }
+    try { println(replace("abc", "b", s)) } catch e { println("replace3: " + e) }
+    try { println(toLower(s)) } catch e { println("toLower: " + e) }
+    try { println(ord(s)) } catch e { println("ord: " + e) }
+    try { println(trim(s)) } catch e { println("trim: " + e) }
+    try { println(contains("abc", s)) } catch e { println("contains2: " + e) }
+    try { println(indexOf("abc", s)) } catch e { println("indexOf2: " + e) }
+    try { println(startsWith("abc", s)) } catch e { println("startsWith2: " + e) }
+    try { println(len(split("a,b", s))) } catch e { println("split2: " + e) }
+    try { println(len(s)) } catch e { println("len: " + e) }
+}
+fn all(name: string, v: any) {
+    println("-- " + name)
+    ints(v)
+    longs(v)
+    strs(v)
+}
+fn main() {
+    all("int", 5)
+    all("long", 7L)
+    all("string", "b")
+    all("bool", true)
+    all("array", [1, 2])
+    imut l: any = 9L
+    imut s: any = "B"
+    println(l % 2L)
+    println(toLower(s))
+    imut w: any = "x"
+    println(w % 2L)
+}

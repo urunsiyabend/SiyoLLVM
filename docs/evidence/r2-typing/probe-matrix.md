@@ -132,7 +132,7 @@ null, and the long operand NPE `because "value" is null`. The helpful NPEs
 | `op_lt_string` | VerifyError | VerifyError | VerifyError | rejects `operator LessThan on any and string` |
 | `op_mul_int` | runs: `10` | CCE String→Integer | NPE `Cannot invoke "Integer.intValue()" because "<parameter1>" is null` | rejects `operator Multiplication on any and int` |
 | `op_mul_long` | runs: `10` | CCE String→Long | NPE `Cannot invoke "Long.longValue()" because "value" is null` | rejects `operator Multiplication on any and long` |
-| `op_pluseq_any_target` | VerifyError | VerifyError | VerifyError | rejects `operator Addition on any and int` |
+| `op_pluseq_any_target` | VerifyError | VerifyError | VerifyError | rejects `operator Addition on any and int` (after Task 2: `assignments of int to any are`, still rejected) |
 | `op_pluseq_int_target` | runs: `6` | CCE String→Integer | NPE `Cannot invoke "Integer.intValue()" because "<parameter1>" is null` | rejects `operator Addition on int and any` |
 | `op_pluseq_long_target` | runs: `6` | runs: `6` | NPE `Cannot invoke "Long.longValue()" because "value" is null` | rejects `operator Addition on long and any` |
 | `op_pluseq_string_target` | runs: `xabc` | runs: `x5` | runs: `xnull` | accepts, matches |
@@ -156,3 +156,15 @@ evaluation order (each side is unboxed right after it is evaluated), `len`
 and `for` over an any holding a struct, and the null-field NPE `because the
 return value of "java.util.Map.get(Object)" is null`. Both match byte for
 byte, stdout and first stderr line.
+
+These probes are evidence only. The constructs they establish are pinned
+by oracle-generated corpus cases (Task 2 fix round 1):
+`src/test/resources/native/erased_casts` (each extra operator, long
+ordering and `%`, `endsWith`/`replace`/`toLower`/`ord`/`trim`, every
+non-first string parameter, each with the right type and with int, long,
+string, bool and array values, plus the evaluation-order cases),
+`src/test/resources/native/erased_nulls` (the null runs whose reference
+message is deterministic: long unboxing, a null int field, `len`/`for`/
+`parseInt` of null) and the module case
+`src/test/resources/modules/modules_erased` (a struct and an array from
+another module, read through map fields, used and passed back).
