@@ -1,5 +1,5 @@
 // Memory-bound workload: all allocation happens inside an imported module's
-// functions; the module's global counter stays live.
+// functions; the module's globals (counters, a string, a map) stay live.
 import "std/os"
 import "churn"
 
@@ -15,4 +15,5 @@ fn main() {
     }
     println("gc_modules n=" + toString(n))
     println("total=" + toString(total) + " calls=" + toString(churn.calls) + " digest=" + toString(churn.digest))
+    println("trail=" + churn.trail + " recent=" + toString(churn.recent.size()) + " r5=" + churn.recent["5"])
 }

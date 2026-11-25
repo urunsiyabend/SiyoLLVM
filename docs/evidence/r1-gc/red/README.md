@@ -1,5 +1,46 @@
 # R1 Task 1: RED evidence (pre-collector, never-free runtime)
 
+## Current RED (after tightening, fix round 1)
+
+Files: `memory-bounds-red.log`, `bounded-receipt.json`. The suite was tightened
+at the controller's ruling: (1) a third assertion per workload, the flatness
+bound `rss(N3) <= rss(N2) + 8 MiB` (a bounded live set makes peak RSS past the
+first collection threshold independent of N, so this catches partial leaks that
+the 1.5x ratio bound would miss); (2) `gc_modules` now keeps a heap string
+(`trail`) and a 16-entry `Map<string, string>` (`recent`) in module globals,
+replaced or updated every call and printed at the end, so a collector that
+skips module-global roots fails on stdout; expectations regenerated with the
+JVM oracle for all three N.
+
+Result: 8 tests, 8 failures; every workload failed all three assertions
+(16 "memory bounds (3 failures)" lines in the log, as the factory reports each
+test twice). stdout equalled the JVM reference at all 24 runs (24 `MEMORY`
+lines, printed only after the stdout, exit and stderr checks). Receipt: child
+return code 1, `oom_kill_delta` 0, scope `memory.peak` 499 MiB of 768.
+The earlier `gc_modules` draft (calling `label` twice per step) reached 434 MB
+RSS and a 728 MiB scope peak, too close to the cap, so the module global reuses
+the already built string.
+
+| Workload | rss N1 (KiB) | rss N2 (KiB) | rss N3 (KiB) | heap N3 (KiB) | abs (<=65 536) | ratio (<=1.5*N2+8192) | flat (<=N2+8192) |
+|---|---|---|---|---|---|---|---|
+| gc_arrays | 64 908 | 127 800 | 253 576 | 98 438 | FAIL | FAIL | FAIL |
+| gc_cycles | 62 960 | 123 896 | 245 768 | 151 628 | FAIL | FAIL | FAIL |
+| gc_exceptions | 57 024 | 112 020 | 222 020 | 151 774 | FAIL | FAIL | FAIL |
+| gc_lines | 36 436 | 70 504 | 138 644 | 177 476 | FAIL | FAIL | FAIL |
+| gc_maps | 58 880 | 115 740 | 229 464 | 139 692 | FAIL | FAIL | FAIL |
+| gc_modules | 75 028 | 148 148 | 294 404 | 185 085 | FAIL | FAIL | FAIL |
+| gc_strings | 57 420 | 113 216 | 224 976 | 159 345 | FAIL | FAIL | FAIL |
+| gc_structs | 61 392 | 120 768 | 239 520 | 145 877 | FAIL | FAIL | FAIL |
+
+The initial RED (before tightening) is kept as
+`memory-bounds-red-initial-before-tightening.log` and
+`bounded-receipt-initial-before-tightening.json`; the section below describes
+that run. `memory-bounds-red-ru_maxrss-superseded.log` is older still.
+
+---
+
+## Initial RED (before tightening)
+
 This is **pre-collector RED evidence**: the memory-bound suite run against the
 runtime as it is before R1 Task 2, which never frees memory. It is expected to
 fail, and does, on the memory bounds only. It is not evidence about the

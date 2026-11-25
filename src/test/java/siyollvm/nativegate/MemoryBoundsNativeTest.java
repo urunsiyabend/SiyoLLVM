@@ -41,7 +41,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *       see {@link #BOUND_KB});</li>
  *   <li>growth bound: {@code rss(N3) <= 1.5 * rss(N2) + 8 MiB}: N3 is twice
  *       N2, so memory that grows linearly with N (nothing reclaimed) fails it,
- *       while a bounded live set plus collector slack passes.</li>
+ *       while a bounded live set plus collector slack passes;</li>
+ *   <li>flatness bound: {@code rss(N3) <= rss(N2) + 8 MiB}. With a bounded
+ *       live set, peak RSS past the first collection threshold does not depend
+ *       on N, so it must not creep as N doubles. This catches partial leaks (a
+ *       leaked exception payload, a self-cycle that is never reclaimed) that
+ *       grow slowly enough to stay under the 1.5x ratio bound and the absolute
+ *       bound at these sizes.</li>
  * </ul>
  *
  * <p>The sizes were chosen so that the never-free runtime (before the R1
@@ -74,6 +80,7 @@ class MemoryBoundsNativeTest {
 
     private static final double GROWTH_FACTOR = 1.5;
     private static final long GROWTH_SLACK_KB = 8 * MIB_KB;
+    private static final long FLAT_SLACK_KB = 8 * MIB_KB;
 
     private static Clang clang;
 
@@ -112,13 +119,17 @@ class MemoryBoundsNativeTest {
         long rss3 = measures.get(2).rssKb();
         long bound = BOUND_KB.get(name);
         long growthBound = (long) (GROWTH_FACTOR * rss2) + GROWTH_SLACK_KB;
+        long flatBound = rss2 + FLAT_SLACK_KB;
         String table = name + " " + measures;
         assertAll(name + " memory bounds",
                 () -> assertTrue(rss3 <= bound,
                         name + ": rss_peak_kb(N3=" + sizes[2] + ") = " + rss3 + " > bound " + bound + "; " + table),
                 () -> assertTrue(rss3 <= growthBound,
                         name + ": rss_peak_kb(N3=" + sizes[2] + ") = " + rss3 + " > 1.5 * rss_peak_kb(N2="
-                                + sizes[1] + ") + 8 MiB = " + growthBound + "; " + table));
+                                + sizes[1] + ") + 8 MiB = " + growthBound + "; " + table),
+                () -> assertTrue(rss3 <= flatBound,
+                        name + ": rss_peak_kb(N3=" + sizes[2] + ") = " + rss3 + " > rss_peak_kb(N2="
+                                + sizes[1] + ") + 8 MiB = " + flatBound + "; " + table));
     }
 
     private static Path build(String name, Path source) throws Exception {

@@ -1,5 +1,9 @@
 mut calls = 0
 mut digest = 0
+// Heap pointers held by module globals: a fresh string and a small map that are
+// replaced/updated every call and must stay reachable between calls.
+mut trail = ""
+mut recent: Map<string, string> = {}
 
 fn label(i: int) -> string {
     mut s = "item"
@@ -13,12 +17,15 @@ fn label(i: int) -> string {
 
 fn step(i: int) -> int {
     calls += 1
-    imut parts = split(label(i), "-")
+    imut text = label(i)
+    imut parts = split(text, "-")
     mut m: Map<string, int> = {}
     for p in parts {
         imut q: string = p
         m[q] = len(q)
     }
     digest = (digest * 11 + len(parts) + m.size()) % 1000003
+    trail = "t" + toString(i) + ":" + text
+    recent[toString(i % 16)] = trail
     return len(parts) + m.size()
 }
