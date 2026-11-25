@@ -1408,6 +1408,9 @@ _Noreturn void siyo_rt_stack_overflow(void) {
  * bytes, or a large block of round8(n + 1) bytes, so the one-past-the-end
  * pointer start + n (which the IR or C code may hold as a loop bound) still
  * resolves to the same block and keeps it alive, never to the next block.
+ * The 24-byte class exists for the 16-byte boxes, which would otherwise take
+ * 32 bytes; blocks are therefore only 8-byte aligned, which every heap object
+ * (words and bytes) needs at most.
  *
  * Descriptors, the page table and the mark stack are malloc'd and never
  * scanned; blocks are zeroed when handed out.
@@ -1439,7 +1442,7 @@ _Noreturn void siyo_rt_stack_overflow(void) {
 #define SIYO_GC_PAGE_SHIFT 16
 #define SIYO_GC_PAGE_SIZE ((size_t)1 << SIYO_GC_PAGE_SHIFT)
 #define SIYO_GC_SMALL_MAX 2048
-#define SIYO_GC_CLASSES 14
+#define SIYO_GC_CLASSES 15
 #define SIYO_GC_MAX_BLOCKS (SIYO_GC_PAGE_SIZE / 16)
 #define SIYO_GC_RESERVE_PAGES 16
 #define SIYO_GC_MIN_TRIGGER ((uint64_t)4 * 1024 * 1024)
@@ -1449,7 +1452,7 @@ _Noreturn void siyo_rt_stack_overflow(void) {
 enum { SIYO_GC_ALLOCATED = 1, SIYO_GC_MARKED = 2, SIYO_GC_SCAN = 4 };
 
 static const uint32_t siyo_gc_class_sizes[SIYO_GC_CLASSES] = {
-    16, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048
+    16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048
 };
 
 /* A small page (one size class) or a large block. */

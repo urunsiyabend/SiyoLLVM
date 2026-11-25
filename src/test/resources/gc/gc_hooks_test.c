@@ -344,9 +344,9 @@ static void pending_exception_root(void) {
 
 /* Request sizes whose end pointer (start + size) would land exactly on a block
    boundary without the collector's one-byte slack: every small class size and
-   page-multiple large sizes. */
+   page-multiple large sizes. 17 and 23 go to the 24-byte class. */
 static const size_t end_sizes[] = {
-    8, 16, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2047, 2048, 2049,
+    8, 16, 17, 23, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2047, 2048, 2049,
     4096, 8192, 65536 - 8, 65536, 3 * 65536
 };
 
@@ -372,7 +372,7 @@ static void end_pointers(void) {
                 && siyo_rt_gc_block_of(next + size) == next, name);
     }
     /* A block referenced only by its end pointer survives; its neighbour, unreferenced, does not. */
-    static const size_t kept_sizes[] = {16, 32, 2048, 4096, 65536};
+    static const size_t kept_sizes[] = {16, 23, 32, 2048, 4096, 65536};
     for (size_t k = 0; k < sizeof kept_sizes / sizeof kept_sizes[0]; k++) {
         size_t size = kept_sizes[k];
         uintptr_t end;
@@ -386,6 +386,21 @@ static void end_pointers(void) {
         snprintf(name, sizeof name, "end: the %zu-byte block goes once its end pointer does", size);
         check(reclaimed(block), name);
     }
+}
+
+/* The 24-byte class: a 16-byte box (16 + 1 slack bytes) takes 24 bytes, not 32. */
+static void class_24(void) {
+    static const size_t sizes[] = {16, 23};
+    char name[96];
+    for (size_t k = 0; k < sizeof sizes / sizeof sizes[0]; k++) {
+        char *p = siyo_rt_alloc(sizes[k]);
+        siyo_rt_alloc(sizes[k]);
+        snprintf(name, sizeof name, "class 24: a %zu-byte block spans [p, p + 24)", sizes[k]);
+        check(siyo_rt_gc_block_of(p + 23) == p && siyo_rt_gc_block_of(p + 24) != p, name);
+    }
+    char *box = siyo_rt_box_int(100000);
+    check(siyo_rt_gc_block_of(box + 23) == box && siyo_rt_gc_block_of(box + 24) != box,
+            "class 24: an int box takes a 24-byte block");
 }
 
 static void box_cache(void) {
@@ -409,6 +424,7 @@ void siyo_program(void) {
     pending_exception_root();
     box_cache();
     end_pointers();
+    class_24();
     printf("done %d\n", failures);
     fflush(stdout);
     if (failures != 0) exit(1);

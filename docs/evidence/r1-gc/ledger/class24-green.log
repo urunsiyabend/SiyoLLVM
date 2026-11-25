@@ -1,0 +1,114 @@
+BOUNDED evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-093736-d4c870373a8c47cc817fedd638f58f43
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< com.siyo:siyollvm >--------------------------
+[INFO] Building SiyoLLVM 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- build-helper:3.6.0:add-source (add-upstream-frontend) @ siyollvm ---
+[INFO] Source directory: /home/urunsiyabend/development/SiyoLLVM-native/upstream/siyocompiler/src/main/java added.
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ siyollvm ---
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] The encoding used to copy filtered properties files has not been set. This means that the same encoding will be used to copy filtered properties files as when copying other filtered resources. This might not be what you want! Run your build with --debug to see which files might be affected. Read more at https://maven.apache.org/plugins/maven-resources-plugin/examples/filtering-properties-files.html
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ siyollvm ---
+[INFO] Copying 343 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- antrun:3.1.0:run (create-test-tmpdir) @ siyollvm ---
+[INFO] Executing tasks
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ siyollvm ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running siyollvm.nativegate.MemoryBoundsNativeTest
+MEMORY gc_arrays N=50000 collections=17 heap_peak_kb=4612 rss_peak_kb=6308
+MEMORY gc_arrays N=100000 collections=35 heap_peak_kb=5124 rss_peak_kb=6792
+MEMORY gc_arrays N=200000 collections=70 heap_peak_kb=6148 rss_peak_kb=7468
+MEMORY gc_cycles N=50000 collections=14 heap_peak_kb=4097 rss_peak_kb=6056
+MEMORY gc_cycles N=100000 collections=28 heap_peak_kb=4097 rss_peak_kb=6060
+MEMORY gc_cycles N=200000 collections=56 heap_peak_kb=4097 rss_peak_kb=6120
+MEMORY gc_exceptions N=120000 collections=12 heap_peak_kb=4096 rss_peak_kb=6016
+MEMORY gc_exceptions N=240000 collections=25 heap_peak_kb=4096 rss_peak_kb=6052
+MEMORY gc_exceptions N=480000 collections=51 heap_peak_kb=4096 rss_peak_kb=5976
+MEMORY gc_lines N=60000 collections=8 heap_peak_kb=4145 rss_peak_kb=6324
+MEMORY gc_lines N=120000 collections=16 heap_peak_kb=4145 rss_peak_kb=6376
+MEMORY gc_lines N=240000 collections=32 heap_peak_kb=4145 rss_peak_kb=6264
+MEMORY gc_maps N=16000 collections=15 heap_peak_kb=4099 rss_peak_kb=6148
+MEMORY gc_maps N=32000 collections=30 heap_peak_kb=4100 rss_peak_kb=6172
+MEMORY gc_maps N=64000 collections=60 heap_peak_kb=4100 rss_peak_kb=5988
+MEMORY gc_modules N=24000 collections=17 heap_peak_kb=4102 rss_peak_kb=6068
+MEMORY gc_modules N=48000 collections=35 heap_peak_kb=4102 rss_peak_kb=6080
+MEMORY gc_modules N=96000 collections=71 heap_peak_kb=4102 rss_peak_kb=6048
+MEMORY gc_strings N=12000 collections=13 heap_peak_kb=4096 rss_peak_kb=5964
+MEMORY gc_strings N=24000 collections=26 heap_peak_kb=4096 rss_peak_kb=6156
+MEMORY gc_strings N=48000 collections=52 heap_peak_kb=4096 rss_peak_kb=6344
+MEMORY gc_structs N=50000 collections=12 heap_peak_kb=4096 rss_peak_kb=6300
+MEMORY gc_structs N=100000 collections=25 heap_peak_kb=4096 rss_peak_kb=6172
+MEMORY gc_structs N=200000 collections=51 heap_peak_kb=4096 rss_peak_kb=5928
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.745 s -- in siyollvm.nativegate.MemoryBoundsNativeTest
+[INFO] Running siyollvm.nativegate.RuntimeGcNativeTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.764 s -- in siyollvm.nativegate.RuntimeGcNativeTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ siyollvm ---
+[INFO] Building jar: /home/urunsiyabend/development/SiyoLLVM-native/target/siyollvm-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- shade:3.5.1:shade (default) @ siyollvm ---
+[INFO] Including org.ow2.asm:asm:jar:9.6 in the shaded jar.
+[INFO] Including org.ow2.asm:asm-util:jar:9.6 in the shaded jar.
+[INFO] Including org.ow2.asm:asm-tree:jar:9.6 in the shaded jar.
+[INFO] Including org.ow2.asm:asm-analysis:jar:9.6 in the shaded jar.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] asm-9.6.jar, asm-analysis-9.6.jar, asm-tree-9.6.jar, asm-util-9.6.jar, siyollvm-0.1.0-SNAPSHOT.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/MANIFEST.MF
+[WARNING] maven-shade-plugin has detected that some files are
+[WARNING] present in two or more JARs. When this happens, only one
+[WARNING] single version of the file is copied to the uber jar.
+[WARNING] Usually this is not harmful and you can skip these warnings,
+[WARNING] otherwise try to manually exclude artifacts based on
+[WARNING] mvn dependency:tree -Ddetail=true and the above output.
+[WARNING] See https://maven.apache.org/plugins/maven-shade-plugin/
+[INFO] Replacing original artifact with shaded artifact.
+[INFO] Replacing /home/urunsiyabend/development/SiyoLLVM-native/target/siyollvm-0.1.0-SNAPSHOT.jar with /home/urunsiyabend/development/SiyoLLVM-native/target/siyollvm-0.1.0-SNAPSHOT-shaded.jar
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (default) @ siyollvm ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running siyollvm.cli.LauncherIT
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.163 s -- in siyollvm.cli.LauncherIT
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- failsafe:3.2.5:verify (default) @ siyollvm ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  13.181 s
+[INFO] Finished at: 2026-11-25T09:37:50+03:00
+[INFO] ------------------------------------------------------------------------
+BOUNDED accepted=True evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-093736-d4c870373a8c47cc817fedd638f58f43
