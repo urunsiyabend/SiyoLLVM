@@ -11,3 +11,4 @@ count 2
 count 0
 int: len is not defined for Integer
 string: class java.lang.String cannot be cast to class java.util.List (java.lang.String and java.util.List are in module java.base of loader 'bootstrap')
+struct: class codeanalysis.SiyoObject cannot be cast to class java.util.List (codeanalysis.SiyoObject is in unnamed module of loader 'app'; java.util.List is in module java.base of loader 'bootstrap')

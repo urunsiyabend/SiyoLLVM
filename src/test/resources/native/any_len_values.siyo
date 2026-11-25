@@ -1,5 +1,7 @@
 // len of an any holding a string, an array or a map; null is 0; another type
 // raises the reference's "len is not defined for <class>".
+struct Pt { x: int, y: int, z: int }
+
 fn size(a: any) -> int { return len(a) }
 
 fn main() {
@@ -9,6 +11,8 @@ fn main() {
     println(size(null))
     imut xs: any = ["x", "y"]
     println(len(xs) + 1)
+    imut pt: any = Pt { x: 1, y: 2, z: 3 }
+    println(size(pt))
     try { println(size(5)) } catch e { println("int: " + e) }
     try { println(size(5L)) } catch e { println("long: " + e) }
     try { println(size(true)) } catch e { println("bool: " + e) }

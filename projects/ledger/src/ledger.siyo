@@ -54,10 +54,10 @@ fn accept(book: Book, tx: Transaction) {
     if !accounts.has(tx.account) {
         accounts[tx.account] = Account { name: tx.account, count: 0, credits: 0L, debits: 0L }
     }
-    // `accounts` is inferred from a field, so its values are `any` to the binder
-    // and member access needs the declared struct type (`.count` on a plain
-    // `any` is a bind error on the reference). The fields stay `any`; the
-    // arithmetic on them is checked as on the JVM (SUBSET.md, maps).
+    // `accounts` is inferred from a field, so its values are `any` to the binder;
+    // the declared struct type makes member reads bindable (`.count` on a plain
+    // `any` is a bind error on the reference). The fields themselves stay `any`
+    // and are checked at use, as on the JVM (SUBSET.md, maps).
     imut account: Account = accounts[tx.account]
     account.count += 1
     if tx.cents > 0L {
