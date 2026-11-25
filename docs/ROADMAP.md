@@ -112,9 +112,9 @@ See `docs/SUBSET.md`. Updated as features land.
 
 ## Continuity notes
 
-- Status (2026-11-25): R1 Task 1 (RED memory-bound suite) committed locally at 8f0b8f5, not pushed
-  (native gate intentionally red until the collector lands). Next: R1 Task 2 (mark-sweep collector).
-  Ledger: `.superpowers/sdd/2026-11-25-r1-gc/progress.md`.
+- Status (2026-11-25): R1 Tasks 1–2 done locally (RED suite 8f0b8f5; collector 77f5281..39235b1, reviewed),
+  not pushed. Next: R1 Task 3 (ledger re-measure, docs), whole-feature review, final gates, fresh clone,
+  publish. Ledger: `.superpowers/sdd/2026-11-25-r1-gc/progress.md`.
 - Local clang 19 is provided in `$SIYOLLVM_CLANG`. `mvn` on this host is a memory-bounded wrapper; run other
   probes through `python3 ~/.hermes/automation/siyollvm/bounded.py -- CMD`.
 - SDD ledgers live in `.superpowers/sdd/<plan>/progress.md` (git-ignored).
