@@ -23,7 +23,7 @@ Status legend: `done` (tested, reviewed, pushed, CI green at that head),
 
 | # | Feature | Depends on | Status | Commit | Evidence |
 |---|---|---|---|---|---|
-| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress (publishing) | a984cbc..<final> (set at publication) | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
+| R1 | Memory reclamation: non-moving mark-sweep collector (spec `docs/superpowers/specs/2026-11-25-memory-reclamation-design.md`) | F5 | in progress (publishing) | a984cbc..e231e8e (publishing) | `docs/evidence/r1-gc/` (RED suite, collector, ledger ×1/×3/×10 against the oracle) |
 | R2 | Typing gaps met by applications: cross-module array element types, struct values via map-field locals | R1 | planned | | |
 | R3 | Scalability: cached UTF-16 offsets for non-ASCII indexing; a native sort for distinct keys if a lambda-free API fits the reference | R1 | planned | | |
 
