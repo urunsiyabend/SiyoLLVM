@@ -1,0 +1,15 @@
+// len of an any holding a string, an array or a map; null is 0; another type
+// raises the reference's "len is not defined for <class>".
+fn size(a: any) -> int { return len(a) }
+
+fn main() {
+    println(size("abcd"))
+    println(size([1, 2, 3]))
+    println(size({"k": 1, "j": 2}))
+    println(size(null))
+    imut xs: any = ["x", "y"]
+    println(len(xs) + 1)
+    try { println(size(5)) } catch e { println("int: " + e) }
+    try { println(size(5L)) } catch e { println("long: " + e) }
+    try { println(size(true)) } catch e { println("bool: " + e) }
+}

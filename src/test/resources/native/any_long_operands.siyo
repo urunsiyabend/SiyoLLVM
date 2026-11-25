@@ -1,0 +1,37 @@
+// An any as an operand of long arithmetic and ordering, and as the value of
+// += on a long: the reference converts through Number, so an Integer works
+// too; a String raises ClassCastException and null a NullPointerException.
+fn probe(a: any) {
+    println(a + 1L)
+    println(1L + a)
+    println(a - 1L)
+    println(a * 2L)
+    println(a / 2L)
+    println(a < 6L)
+    println(1L < a)
+    mut n = 1L
+    n += a
+    println(n)
+}
+
+fn wrong(a: any) {
+    try { println(a + 1L) } catch e { println("+: " + e) }
+    try { println(a - 1L) } catch e { println("-: " + e) }
+    try { println(a * 2L) } catch e { println("*: " + e) }
+    try { println(a / 2L) } catch e { println("/: " + e) }
+    try { println(a < 6L) } catch e { println("<: " + e) }
+    try {
+        mut n = 1L
+        n += a
+        println(n)
+    } catch e { println("+=: " + e) }
+}
+
+fn main() {
+    probe(5L)
+    probe(9000000000L)
+    probe(5)
+    wrong("x")
+    wrong(true)
+    wrong(null)
+}

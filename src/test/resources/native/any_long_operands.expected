@@ -1,0 +1,42 @@
+6
+6
+4
+10
+2
+true
+true
+6
+9000000001
+9000000001
+8999999999
+18000000000
+4500000000
+false
+true
+9000000001
+6
+6
+4
+10
+2
+true
+true
+6
++: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+-: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+*: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+/: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
+<: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
++=: class java.lang.String cannot be cast to class java.lang.Long (java.lang.String and java.lang.Long are in module java.base of loader 'bootstrap')
++: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+-: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+*: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+/: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
+<: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
++=: class java.lang.Boolean cannot be cast to class java.lang.Long (java.lang.Boolean and java.lang.Long are in module java.base of loader 'bootstrap')
++: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+-: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+*: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+/: Cannot invoke "java.lang.Long.longValue()" because "value" is null
+<: Cannot invoke "java.lang.Long.longValue()" because "value" is null
++=: Cannot invoke "java.lang.Long.longValue()" because "value" is null

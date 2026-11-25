@@ -1,0 +1,52 @@
+// A struct read from an any into a variable declared with its type: its field
+// reads are any to the binder, so arithmetic, += and comparisons on them go
+// through the any operand rules; writes are seen by every holder. Indexing an
+// any holding an array is an any too. A non-struct raises the cast's
+// ClassCastException at the declaration. (Two any operands, `p.x * p.y`, are
+// a bind error on the reference: `Binary operator '*' is not defined for
+// types <class java.lang.Object> and <class java.lang.Object>`.)
+struct Point { x: int, y: int }
+struct Acc { count: int, net: long, name: string }
+
+fn probe(a: any, xs: any) {
+    imut p: Point = a
+    println(p.x + 1)
+    println(p.x * 3)
+    p.x += 10
+    p.y = p.y + 4
+    println(p.x < 12)
+    println(p)
+    println(xs[1] + 1)
+    println(xs[0] < 4)
+}
+
+fn acc(a: any) {
+    imut c: Acc = a
+    c.count += 1
+    c.net = c.net + 5L
+    c.name += "!"
+    println(c.count * 2)
+    println(c.net - 1L)
+    println(len(c.name))
+}
+
+fn wrong(a: any) {
+    try {
+        imut p: Point = a
+        p.x += 1
+        println(p.x)
+    } catch e { println("field: " + e) }
+}
+
+fn main() {
+    imut q = Point { x: 1, y: 2 }
+    probe(q, [3, 4])
+    println(q.x)
+    imut c = Acc { count: 0, net: 0L, name: "n" }
+    acc(c)
+    acc(c)
+    println(c)
+    wrong("s")
+    wrong([1])
+    try { probe(q, ["a", "b"]) } catch e { println("element: " + e) }
+}

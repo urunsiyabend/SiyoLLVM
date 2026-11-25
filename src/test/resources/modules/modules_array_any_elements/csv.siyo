@@ -1,0 +1,4 @@
+// Splits a CSV line; the importer sees the elements as any.
+fn cols(line: string) -> string[] {
+    return split(line, ",")
+}

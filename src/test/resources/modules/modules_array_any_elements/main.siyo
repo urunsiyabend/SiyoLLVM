@@ -1,0 +1,21 @@
+// An array returned from another module's function has any elements to the
+// binder. The reference runs string builtins, len, + and arithmetic on the
+// parsed values. (`f[0] < s` fails with VerifyError on the reference, so it
+// is not here.)
+import "csv"
+
+fn main() {
+    imut lines = ["abc,42,z,hello", "de,-7,yy,"]
+    mut total = 0
+    for line in lines {
+        imut f = csv.cols(line)
+        imut n = parseInt(f[1])
+        total += n
+        println(f[2] + "x")
+        println(len(f[3]))
+        println(len(f))
+        println(toUpper(f[0]) + " " + toString(n * 2))
+        println(contains(f[0], "b"))
+    }
+    println(total)
+}

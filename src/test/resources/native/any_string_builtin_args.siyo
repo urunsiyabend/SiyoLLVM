@@ -1,0 +1,40 @@
+// An any as the argument of a string builtin: the reference casts it to
+// String (ClassCastException for another type). parseInt and len of null
+// give 0; other builtins on null raise a helpful NullPointerException naming
+// JVM locals (docs/SUBSET.md, "Deviations"), so they are not here.
+fn probe(a: any, b: any) {
+    println(parseInt(a))
+    println(len(b))
+    println(contains(b, "b"))
+    println(contains("abc", a))
+    println(substring(b, 1, 2))
+    println(trim(b))
+    println(toUpper(b))
+    println(split(b, "b"))
+    println(startsWith(b, "a"))
+    println(indexOf(b, "c"))
+}
+
+fn wrong(a: any) {
+    try { println(parseInt(a)) } catch e { println("parseInt: " + e) }
+    try { println(contains(a, "b")) } catch e { println("contains: " + e) }
+    try { println(contains("abc", a)) } catch e { println("contains 2: " + e) }
+    try { println(substring(a, 1, 2)) } catch e { println("substring: " + e) }
+    try { println(trim(a)) } catch e { println("trim: " + e) }
+    try { println(toUpper(a)) } catch e { println("toUpper: " + e) }
+    try { println(split(a, "b")) } catch e { println("split: " + e) }
+    try { println(startsWith(a, "a")) } catch e { println("startsWith: " + e) }
+    try { println(indexOf(a, "c")) } catch e { println("indexOf: " + e) }
+    try { println(len(a)) } catch e { println("len: " + e) }
+}
+
+fn main() {
+    probe("42", "abc")
+    probe("7", " abc ")
+    wrong(5)
+    wrong(5L)
+    wrong(true)
+    mut n: any = null
+    println(parseInt(n))
+    println(len(n))
+}

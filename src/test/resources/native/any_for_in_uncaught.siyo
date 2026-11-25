@@ -1,0 +1,8 @@
+// for … in over an any holding a long, uncaught.
+fn main() {
+    imut ok: any = [1]
+    for x in ok { println(x) }
+    imut a: any = 5L
+    for x in a { println(x) }
+    println("unreached")
+}

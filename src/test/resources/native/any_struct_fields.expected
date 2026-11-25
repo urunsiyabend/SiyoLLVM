@@ -1,0 +1,21 @@
+2
+3
+true
+Point { x: 11, y: 6 }
+5
+true
+11
+2
+4
+2
+4
+9
+3
+Acc { count: 2, net: 10, name: n!! }
+field: class java.lang.String cannot be cast to class java.util.Map (java.lang.String and java.util.Map are in module java.base of loader 'bootstrap')
+field: class codeanalysis.SiyoArray cannot be cast to class java.util.Map (codeanalysis.SiyoArray is in unnamed module of loader 'app'; java.util.Map is in module java.base of loader 'bootstrap')
+12
+33
+false
+Point { x: 21, y: 10 }
+element: class java.lang.String cannot be cast to class java.lang.Integer (java.lang.String and java.lang.Integer are in module java.base of loader 'bootstrap')

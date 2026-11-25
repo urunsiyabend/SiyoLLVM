@@ -1,0 +1,26 @@
+// A map held in a local inferred from a struct field has any values: a struct
+// read from it is an any even when declared, and so are its fields. The
+// reference runs field reads, +=, writes and arithmetic through them; writes
+// are seen through the map. (A method call on it fails on the reference with
+// "No matching method", so it is not here.)
+struct Account { count: int, net: long }
+struct Book { accounts: Map<string, Account> }
+
+fn main() {
+    mut m: Map<string, Account> = {}
+    m["a"] = Account { count: 0, net: 0L }
+    m["b"] = Account { count: 5, net: 10L }
+    imut book = Book { accounts: m }
+    imut accounts = book.accounts
+    for k in ["a", "b", "a"] {
+        imut amt = 7L
+        imut a: Account = accounts[k]
+        a.count += 1
+        a.net = a.net + amt
+        println(k + " " + toString(a.count + 1) + " " + toString(a.net * 2L))
+        if a.count > 1 { println("again " + k) }
+    }
+    println(m["a"].count)
+    println(m["b"].net)
+    println(book.accounts["a"])
+}

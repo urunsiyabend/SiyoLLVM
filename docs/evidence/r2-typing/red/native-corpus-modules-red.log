@@ -1,0 +1,391 @@
+BOUNDED evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-101549-0efeddc288874348b7d9a4695f7305bf
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< com.siyo:siyollvm >--------------------------
+[INFO] Building SiyoLLVM 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- build-helper:3.6.0:add-source (add-upstream-frontend) @ siyollvm ---
+[INFO] Source directory: /home/urunsiyabend/development/SiyoLLVM-native/upstream/siyocompiler/src/main/java added.
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ siyollvm ---
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] The encoding used to copy filtered properties files has not been set. This means that the same encoding will be used to copy filtered properties files as when copying other filtered resources. This might not be what you want! Run your build with --debug to see which files might be affected. Read more at https://maven.apache.org/plugins/maven-resources-plugin/examples/filtering-properties-files.html
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ siyollvm ---
+[INFO] Copying 384 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ siyollvm ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- antrun:3.1.0:run (create-test-tmpdir) @ siyollvm ---
+[INFO] Executing tasks
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ siyollvm ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running siyollvm.nativegate.NativeCorpusTest
+[ERROR] Tests run: 99, Failures: 13, Errors: 0, Skipped: 0, Time elapsed: 36.81 s <<< FAILURE! -- in siyollvm.nativegate.NativeCorpusTest
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.008 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_for_in: [any_for_in.siyo(4, 5): [llvm] for … in over any values is not supported by SiyoLLVM, any_for_in.siyo(7, 9): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_for_in_uncaught: [any_for_in_uncaught.siyo(3, 5): [llvm] for … in over any values is not supported by SiyoLLVM, any_for_in_uncaught.siyo(4, 19): [llvm] len() on any is not supported by SiyoLLVM, any_for_in_uncaught.siyo(5, 5): [llvm] for … in over any values is not supported by SiyoLLVM, any_for_in_uncaught.siyo(6, 18): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_int_operand_uncaught: [any_int_operand_uncaught.siyo(5, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_int_operand_uncaught.siyo(6, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_int_operands: [any_int_operands.siyo(6, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_int_operands.siyo(7, 13): [llvm] operator Addition on int and any is not supported by SiyoLLVM, any_int_operands.siyo(8, 13): [llvm] operator Subtraction on any and int is not supported by SiyoLLVM, any_int_operands.siyo(9, 13): [llvm] operator Subtraction on int and any is not supported by SiyoLLVM, any_int_operands.siyo(10, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_int_operands.siyo(11, 13): [llvm] operator Division on any and int is not supported by SiyoLLVM, any_int_operands.siyo(12, 13): [llvm] operator Division on int and any is not supported by SiyoLLVM, any_int_operands.siyo(13, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_int_operands.siyo(14, 13): [llvm] operator LessThan on int and any is not supported by SiyoLLVM, any_int_operands.siyo(15, 13): [llvm] operator GreaterThan on any and int is not supported by SiyoLLVM, any_int_operands.siyo(17, 5): [llvm] operator Addition on int and any is not supported by SiyoLLVM, any_int_operands.siyo(19, 5): [llvm] operator Subtraction on int and any is not supported by SiyoLLVM, any_int_operands.siyo(24, 19): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_int_operands.siyo(25, 19): [llvm] operator Addition on int and any is not supported by SiyoLLVM, any_int_operands.siyo(26, 19): [llvm] operator Subtraction on any and int is not supported by SiyoLLVM, any_int_operands.siyo(27, 19): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_int_operands.siyo(28, 19): [llvm] operator Division on any and int is not supported by SiyoLLVM, any_int_operands.siyo(29, 19): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_int_operands.siyo(32, 9): [llvm] operator Addition on int and any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_len_uncaught: [any_len_uncaught.siyo(5, 13): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_len_values: [any_len_values.siyo(3, 33): [llvm] len() on any is not supported by SiyoLLVM, any_len_values.siyo(11, 13): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_long_operand_uncaught: [any_long_operand_uncaught.siyo(5, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, any_long_operand_uncaught.siyo(6, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_long_operands: [any_long_operands.siyo(5, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM, any_long_operands.siyo(6, 13): [llvm] operator Addition on long and any is not supported by SiyoLLVM, any_long_operands.siyo(7, 13): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM, any_long_operands.siyo(8, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, any_long_operands.siyo(9, 13): [llvm] operator Division on any and long is not supported by SiyoLLVM, any_long_operands.siyo(10, 13): [llvm] operator LessThan on any and long is not supported by SiyoLLVM, any_long_operands.siyo(11, 13): [llvm] operator LessThan on long and any is not supported by SiyoLLVM, any_long_operands.siyo(13, 5): [llvm] operator Addition on long and any is not supported by SiyoLLVM, any_long_operands.siyo(18, 19): [llvm] operator Addition on any and long is not supported by SiyoLLVM, any_long_operands.siyo(19, 19): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM, any_long_operands.siyo(20, 19): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, any_long_operands.siyo(21, 19): [llvm] operator Division on any and long is not supported by SiyoLLVM, any_long_operands.siyo(22, 19): [llvm] operator LessThan on any and long is not supported by SiyoLLVM, any_long_operands.siyo(25, 9): [llvm] operator Addition on long and any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_string_builtin_arg_uncaught: [any_string_builtin_arg_uncaught.siyo(2, 37): [llvm] arguments of type any to trim() are not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_string_builtin_args: [any_string_builtin_args.siyo(6, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, any_string_builtin_args.siyo(7, 13): [llvm] len() on any is not supported by SiyoLLVM, any_string_builtin_args.siyo(8, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(9, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(10, 13): [llvm] arguments of type any to substring() are not supported by SiyoLLVM, any_string_builtin_args.siyo(11, 13): [llvm] arguments of type any to trim() are not supported by SiyoLLVM, any_string_builtin_args.siyo(12, 13): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM, any_string_builtin_args.siyo(13, 13): [llvm] arguments of type any to split() are not supported by SiyoLLVM, any_string_builtin_args.siyo(14, 13): [llvm] arguments of type any to startsWith() are not supported by SiyoLLVM, any_string_builtin_args.siyo(15, 13): [llvm] arguments of type any to indexOf() are not supported by SiyoLLVM, any_string_builtin_args.siyo(19, 19): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, any_string_builtin_args.siyo(20, 19): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(21, 19): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(22, 19): [llvm] arguments of type any to substring() are not supported by SiyoLLVM, any_string_builtin_args.siyo(23, 19): [llvm] arguments of type any to trim() are not supported by SiyoLLVM, any_string_builtin_args.siyo(24, 19): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM, any_string_builtin_args.siyo(25, 19): [llvm] arguments of type any to split() are not supported by SiyoLLVM, any_string_builtin_args.siyo(26, 19): [llvm] arguments of type any to startsWith() are not supported by SiyoLLVM, any_string_builtin_args.siyo(27, 19): [llvm] arguments of type any to indexOf() are not supported by SiyoLLVM, any_string_builtin_args.siyo(28, 19): [llvm] len() on any is not supported by SiyoLLVM, any_string_builtin_args.siyo(38, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, any_string_builtin_args.siyo(39, 13): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_struct_field_uncaught: [any_struct_field_uncaught.siyo(6, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: any_struct_fields: [any_struct_fields.siyo(13, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(14, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(15, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(16, 11): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(17, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(19, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(20, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(25, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(26, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM, any_struct_fields.siyo(28, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(29, 13): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM, any_struct_fields.siyo(30, 13): [llvm] len() on any is not supported by SiyoLLVM, any_struct_fields.siyo(36, 9): [llvm] operator Addition on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: map_field_struct_values: [map_field_struct_values.siyo(18, 9): [llvm] operator Addition on any and int is not supported by SiyoLLVM, map_field_struct_values.siyo(19, 17): [llvm] operator Addition on any and long is not supported by SiyoLLVM, map_field_struct_values.siyo(20, 36): [llvm] operator Addition on any and int is not supported by SiyoLLVM, map_field_struct_values.siyo(20, 66): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, map_field_struct_values.siyo(21, 12): [llvm] operator GreaterThan on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:62)
+	at siyollvm.nativegate.NativeCorpusTest.lambda$corpus$0(NativeCorpusTest.java:27)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running siyollvm.nativegate.ModulesNativeTest
+[ERROR] Tests run: 16, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 6.436 s <<< FAILURE! -- in siyollvm.nativegate.ModulesNativeTest
+[ERROR] siyollvm.nativegate.ModulesNativeTest.modules -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: modules_array_any_elements: [main.siyo(12, 18): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, main.siyo(15, 17): [llvm] len() on any is not supported by SiyoLLVM, main.siyo(17, 17): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM, main.siyo(18, 17): [llvm] arguments of type any to contains() are not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:91)
+	at siyollvm.nativegate.NativeRunner.buildRunAndCompare(NativeRunner.java:71)
+	at siyollvm.nativegate.ModulesNativeTest.lambda$modules$1(ModulesNativeTest.java:56)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR] siyollvm.nativegate.ModulesNativeTest.modules
+[INFO]   Run 1: PASS
+[ERROR]   Run 2: ModulesNativeTest.lambda$modules$1:56 modules_array_any_elements: [main.siyo(12, 18): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, main.siyo(15, 17): [llvm] len() on any is not supported by SiyoLLVM, main.siyo(17, 17): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM, main.siyo(18, 17): [llvm] arguments of type any to contains() are not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[INFO]   Run 3: PASS
+[INFO]   Run 4: PASS
+[INFO]   Run 5: PASS
+[INFO]   Run 6: PASS
+[INFO]   Run 7: PASS
+[INFO]   Run 8: PASS
+[INFO]   Run 9: PASS
+[INFO]   Run 10: PASS
+[INFO]   Run 11: PASS
+[INFO]   Run 12: PASS
+[INFO]   Run 13: PASS
+[INFO]   Run 14: PASS
+[INFO]   Run 15: PASS
+[INFO]   Run 16: PASS
+[INFO] 
+[ERROR] siyollvm.nativegate.NativeCorpusTest.corpus
+[INFO]   Run 1: PASS
+[ERROR]   Run 2: NativeCorpusTest.lambda$corpus$0:27 any_for_in: [any_for_in.siyo(4, 5): [llvm] for … in over any values is not supported by SiyoLLVM, any_for_in.siyo(7, 9): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 3: NativeCorpusTest.lambda$corpus$0:27 any_for_in_uncaught: [any_for_in_uncaught.siyo(3, 5): [llvm] for … in over any values is not supported by SiyoLLVM, any_for_in_uncaught.siyo(4, 19): [llvm] len() on any is not supported by SiyoLLVM, any_for_in_uncaught.siyo(5, 5): [llvm] for … in over any values is not supported by SiyoLLVM, any_for_in_uncaught.siyo(6, 18): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 4: NativeCorpusTest.lambda$corpus$0:27 any_int_operand_uncaught: [any_int_operand_uncaught.siyo(5, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_int_operand_uncaught.siyo(6, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 5: NativeCorpusTest.lambda$corpus$0:27 any_int_operands: [any_int_operands.siyo(6, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_int_operands.siyo(7, 13): [llvm] operator Addition on int and any is not supported by SiyoLLVM, any_int_operands.siyo(8, 13): [llvm] operator Subtraction on any and int is not supported by SiyoLLVM, any_int_operands.siyo(9, 13): [llvm] operator Subtraction on int and any is not supported by SiyoLLVM, any_int_operands.siyo(10, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_int_operands.siyo(11, 13): [llvm] operator Division on any and int is not supported by SiyoLLVM, any_int_operands.siyo(12, 13): [llvm] operator Division on int and any is not supported by SiyoLLVM, any_int_operands.siyo(13, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_int_operands.siyo(14, 13): [llvm] operator LessThan on int and any is not supported by SiyoLLVM, any_int_operands.siyo(15, 13): [llvm] operator GreaterThan on any and int is not supported by SiyoLLVM, any_int_operands.siyo(17, 5): [llvm] operator Addition on int and any is not supported by SiyoLLVM, any_int_operands.siyo(19, 5): [llvm] operator Subtraction on int and any is not supported by SiyoLLVM, any_int_operands.siyo(24, 19): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_int_operands.siyo(25, 19): [llvm] operator Addition on int and any is not supported by SiyoLLVM, any_int_operands.siyo(26, 19): [llvm] operator Subtraction on any and int is not supported by SiyoLLVM, any_int_operands.siyo(27, 19): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_int_operands.siyo(28, 19): [llvm] operator Division on any and int is not supported by SiyoLLVM, any_int_operands.siyo(29, 19): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_int_operands.siyo(32, 9): [llvm] operator Addition on int and any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 6: NativeCorpusTest.lambda$corpus$0:27 any_len_uncaught: [any_len_uncaught.siyo(5, 13): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 7: NativeCorpusTest.lambda$corpus$0:27 any_len_values: [any_len_values.siyo(3, 33): [llvm] len() on any is not supported by SiyoLLVM, any_len_values.siyo(11, 13): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 8: NativeCorpusTest.lambda$corpus$0:27 any_long_operand_uncaught: [any_long_operand_uncaught.siyo(5, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, any_long_operand_uncaught.siyo(6, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 9: NativeCorpusTest.lambda$corpus$0:27 any_long_operands: [any_long_operands.siyo(5, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM, any_long_operands.siyo(6, 13): [llvm] operator Addition on long and any is not supported by SiyoLLVM, any_long_operands.siyo(7, 13): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM, any_long_operands.siyo(8, 13): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, any_long_operands.siyo(9, 13): [llvm] operator Division on any and long is not supported by SiyoLLVM, any_long_operands.siyo(10, 13): [llvm] operator LessThan on any and long is not supported by SiyoLLVM, any_long_operands.siyo(11, 13): [llvm] operator LessThan on long and any is not supported by SiyoLLVM, any_long_operands.siyo(13, 5): [llvm] operator Addition on long and any is not supported by SiyoLLVM, any_long_operands.siyo(18, 19): [llvm] operator Addition on any and long is not supported by SiyoLLVM, any_long_operands.siyo(19, 19): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM, any_long_operands.siyo(20, 19): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, any_long_operands.siyo(21, 19): [llvm] operator Division on any and long is not supported by SiyoLLVM, any_long_operands.siyo(22, 19): [llvm] operator LessThan on any and long is not supported by SiyoLLVM, any_long_operands.siyo(25, 9): [llvm] operator Addition on long and any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[INFO]   Run 10: PASS
+[ERROR]   Run 11: NativeCorpusTest.lambda$corpus$0:27 any_string_builtin_arg_uncaught: [any_string_builtin_arg_uncaught.siyo(2, 37): [llvm] arguments of type any to trim() are not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 12: NativeCorpusTest.lambda$corpus$0:27 any_string_builtin_args: [any_string_builtin_args.siyo(6, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, any_string_builtin_args.siyo(7, 13): [llvm] len() on any is not supported by SiyoLLVM, any_string_builtin_args.siyo(8, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(9, 13): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(10, 13): [llvm] arguments of type any to substring() are not supported by SiyoLLVM, any_string_builtin_args.siyo(11, 13): [llvm] arguments of type any to trim() are not supported by SiyoLLVM, any_string_builtin_args.siyo(12, 13): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM, any_string_builtin_args.siyo(13, 13): [llvm] arguments of type any to split() are not supported by SiyoLLVM, any_string_builtin_args.siyo(14, 13): [llvm] arguments of type any to startsWith() are not supported by SiyoLLVM, any_string_builtin_args.siyo(15, 13): [llvm] arguments of type any to indexOf() are not supported by SiyoLLVM, any_string_builtin_args.siyo(19, 19): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, any_string_builtin_args.siyo(20, 19): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(21, 19): [llvm] arguments of type any to contains() are not supported by SiyoLLVM, any_string_builtin_args.siyo(22, 19): [llvm] arguments of type any to substring() are not supported by SiyoLLVM, any_string_builtin_args.siyo(23, 19): [llvm] arguments of type any to trim() are not supported by SiyoLLVM, any_string_builtin_args.siyo(24, 19): [llvm] arguments of type any to toUpper() are not supported by SiyoLLVM, any_string_builtin_args.siyo(25, 19): [llvm] arguments of type any to split() are not supported by SiyoLLVM, any_string_builtin_args.siyo(26, 19): [llvm] arguments of type any to startsWith() are not supported by SiyoLLVM, any_string_builtin_args.siyo(27, 19): [llvm] arguments of type any to indexOf() are not supported by SiyoLLVM, any_string_builtin_args.siyo(28, 19): [llvm] len() on any is not supported by SiyoLLVM, any_string_builtin_args.siyo(38, 13): [llvm] arguments of type any to parseInt() are not supported by SiyoLLVM, any_string_builtin_args.siyo(39, 13): [llvm] len() on any is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 13: NativeCorpusTest.lambda$corpus$0:27 any_struct_field_uncaught: [any_struct_field_uncaught.siyo(6, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[ERROR]   Run 14: NativeCorpusTest.lambda$corpus$0:27 any_struct_fields: [any_struct_fields.siyo(13, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(14, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(15, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(16, 11): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(17, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(19, 13): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(20, 13): [llvm] operator LessThan on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(25, 5): [llvm] operator Addition on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(26, 13): [llvm] operator Addition on any and long is not supported by SiyoLLVM, any_struct_fields.siyo(28, 13): [llvm] operator Multiplication on any and int is not supported by SiyoLLVM, any_struct_fields.siyo(29, 13): [llvm] operator Subtraction on any and long is not supported by SiyoLLVM, any_struct_fields.siyo(30, 13): [llvm] len() on any is not supported by SiyoLLVM, any_struct_fields.siyo(36, 9): [llvm] operator Addition on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[INFO]   Run 15: PASS
+[INFO]   Run 16: PASS
+[INFO]   Run 17: PASS
+[INFO]   Run 18: PASS
+[INFO]   Run 19: PASS
+[INFO]   Run 20: PASS
+[INFO]   Run 21: PASS
+[INFO]   Run 22: PASS
+[INFO]   Run 23: PASS
+[INFO]   Run 24: PASS
+[INFO]   Run 25: PASS
+[INFO]   Run 26: PASS
+[INFO]   Run 27: PASS
+[INFO]   Run 28: PASS
+[INFO]   Run 29: PASS
+[INFO]   Run 30: PASS
+[INFO]   Run 31: PASS
+[INFO]   Run 32: PASS
+[INFO]   Run 33: PASS
+[INFO]   Run 34: PASS
+[INFO]   Run 35: PASS
+[INFO]   Run 36: PASS
+[INFO]   Run 37: PASS
+[INFO]   Run 38: PASS
+[INFO]   Run 39: PASS
+[INFO]   Run 40: PASS
+[INFO]   Run 41: PASS
+[INFO]   Run 42: PASS
+[INFO]   Run 43: PASS
+[INFO]   Run 44: PASS
+[INFO]   Run 45: PASS
+[INFO]   Run 46: PASS
+[ERROR]   Run 47: NativeCorpusTest.lambda$corpus$0:27 map_field_struct_values: [map_field_struct_values.siyo(18, 9): [llvm] operator Addition on any and int is not supported by SiyoLLVM, map_field_struct_values.siyo(19, 17): [llvm] operator Addition on any and long is not supported by SiyoLLVM, map_field_struct_values.siyo(20, 36): [llvm] operator Addition on any and int is not supported by SiyoLLVM, map_field_struct_values.siyo(20, 66): [llvm] operator Multiplication on any and long is not supported by SiyoLLVM, map_field_struct_values.siyo(21, 12): [llvm] operator GreaterThan on any and int is not supported by SiyoLLVM] ==> expected: <true> but was: <false>
+[INFO]   Run 48: PASS
+[INFO]   Run 49: PASS
+[INFO]   Run 50: PASS
+[INFO]   Run 51: PASS
+[INFO]   Run 52: PASS
+[INFO]   Run 53: PASS
+[INFO]   Run 54: PASS
+[INFO]   Run 55: PASS
+[INFO]   Run 56: PASS
+[INFO]   Run 57: PASS
+[INFO]   Run 58: PASS
+[INFO]   Run 59: PASS
+[INFO]   Run 60: PASS
+[INFO]   Run 61: PASS
+[INFO]   Run 62: PASS
+[INFO]   Run 63: PASS
+[INFO]   Run 64: PASS
+[INFO]   Run 65: PASS
+[INFO]   Run 66: PASS
+[INFO]   Run 67: PASS
+[INFO]   Run 68: PASS
+[INFO]   Run 69: PASS
+[INFO]   Run 70: PASS
+[INFO]   Run 71: PASS
+[INFO]   Run 72: PASS
+[INFO]   Run 73: PASS
+[INFO]   Run 74: PASS
+[INFO]   Run 75: PASS
+[INFO]   Run 76: PASS
+[INFO]   Run 77: PASS
+[INFO]   Run 78: PASS
+[INFO]   Run 79: PASS
+[INFO]   Run 80: PASS
+[INFO]   Run 81: PASS
+[INFO]   Run 82: PASS
+[INFO]   Run 83: PASS
+[INFO]   Run 84: PASS
+[INFO]   Run 85: PASS
+[INFO]   Run 86: PASS
+[INFO]   Run 87: PASS
+[INFO]   Run 88: PASS
+[INFO]   Run 89: PASS
+[INFO]   Run 90: PASS
+[INFO]   Run 91: PASS
+[INFO]   Run 92: PASS
+[INFO]   Run 93: PASS
+[INFO]   Run 94: PASS
+[INFO]   Run 95: PASS
+[INFO]   Run 96: PASS
+[INFO]   Run 97: PASS
+[INFO]   Run 98: PASS
+[INFO]   Run 99: PASS
+[INFO] 
+[INFO] 
+[ERROR] Tests run: 2, Failures: 2, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  44.226 s
+[INFO] Finished at: 2026-11-25T10:16:34+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project siyollvm: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /home/urunsiyabend/development/SiyoLLVM-native/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+BOUNDED accepted=False evidence=/home/urunsiyabend/.hermes/automation/siyollvm/bounded-runs/20261125-101549-0efeddc288874348b7d9a4695f7305bf

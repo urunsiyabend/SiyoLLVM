@@ -1,0 +1,7 @@
+// len of an any holding an int, uncaught.
+fn main() {
+    imut a: any = 7
+    println(len("ab"))
+    println(len(a))
+    println("unreached")
+}
