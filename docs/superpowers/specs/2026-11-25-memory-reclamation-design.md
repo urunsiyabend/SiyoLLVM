@@ -97,7 +97,9 @@ requires that realistic long-running data-processing loops reclaim memory, witho
   siyo-rt: collections=<c> heap_peak_kb=<h> rss_peak_kb=<r>
   ```
 
-  `rss_peak_kb` comes from `getrusage`. Tests use this to measure memory without external tools.
+  `rss_peak_kb` is the process's own peak resident set, `VmHWM` from `/proc/self/status`; `getrusage` is
+  only a fallback, because under a JVM-launched test `ru_maxrss` carries the parent's peak across exec.
+  Tests use this to measure memory without external tools.
 
 ### Unchanged
 
