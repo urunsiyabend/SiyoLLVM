@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wctype.h>
@@ -1382,10 +1383,49 @@ _Noreturn void siyo_rt_stack_overflow(void) {
     siyo_rt_fail("java.lang.StackOverflowError\n");
 }
 
+/* Bytes requested from siyo_rt_alloc so far. Nothing is freed yet, so this
+   is also the heap's peak. Only the program thread allocates. */
+static uint64_t siyo_rt_allocated;
+
 void *siyo_rt_alloc(size_t size) {
     void *p = malloc(size == 0 ? 1 : size);
     if (p == NULL) siyo_rt_fail("java.lang.OutOfMemoryError\n");
+    siyo_rt_allocated += size;
     return p;
+}
+
+/* Peak resident set of this process in KiB: VmHWM from /proc/self/status,
+   which belongs to this program's address space alone. getrusage's ru_maxrss
+   is the fallback only: Linux carries it across fork and execve, so a
+   program started by a large process (a JVM test harness) would report that
+   process's resident set instead of its own. */
+static long siyo_rt_rss_peak_kb(void) {
+    FILE *status = fopen("/proc/self/status", "r");
+    if (status != NULL) {
+        char line[256];
+        long kb = -1;
+        while (fgets(line, sizeof line, status) != NULL) {
+            if (strncmp(line, "VmHWM:", 6) == 0) {
+                kb = strtol(line + 6, NULL, 10);
+                break;
+            }
+        }
+        fclose(status);
+        if (kb >= 0) return kb;
+    }
+    struct rusage usage;
+    return getrusage(RUSAGE_SELF, &usage) == 0 ? usage.ru_maxrss : -1;
+}
+
+/* SIYO_RT_STATS=1: at exit, by whatever path, after stdout is flushed and
+   after anything else the program wrote to stderr, one line of memory
+   statistics. There is no collector yet, so collections is always 0. */
+static void siyo_rt_print_stats(void) {
+    fflush(stdout);
+    long rss_kb = siyo_rt_rss_peak_kb();
+    fprintf(stderr, "siyo-rt: collections=0 heap_peak_kb=%llu rss_peak_kb=%ld\n",
+            (unsigned long long)(siyo_rt_allocated / 1024), rss_kb);
+    fflush(stderr);
 }
 
 /* First on the program thread: limit = here - stack size + headroom. */
@@ -1402,6 +1442,10 @@ static void *siyo_rt_program_thread(void *unused) {
 int main(int argc, char **argv) {
     siyo_rt_argc = argc;
     siyo_rt_argv = argv;
+    const char *stats = getenv("SIYO_RT_STATS");
+    if (stats != NULL && strcmp(stats, "1") == 0 && atexit(siyo_rt_print_stats) != 0) {
+        siyo_rt_fail("SiyoLLVM runtime: cannot register SIYO_RT_STATS\n");
+    }
     pthread_attr_t attr;
     pthread_t thread;
     int failed = pthread_attr_init(&attr);

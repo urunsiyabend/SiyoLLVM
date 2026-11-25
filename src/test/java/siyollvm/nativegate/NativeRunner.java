@@ -125,7 +125,10 @@ final class NativeRunner {
         return runDir;
     }
 
-    /** Runs a command with a clean locale ({@code LANG}/{@code LC_*} removed, then {@code extraEnv} added). */
+    /**
+     * Runs a command with a clean locale ({@code LANG}/{@code LC_*} and {@code SIYO_RT_STATS} removed, then
+     * {@code extraEnv} added).
+     */
     static Run run(List<String> command, Path directory, Map<String, String> extraEnv) throws Exception {
         return run(command, directory, directory, extraEnv);
     }
@@ -134,7 +137,9 @@ final class NativeRunner {
     static Run run(List<String> command, Path directory, Path outputDirectory, Map<String, String> extraEnv)
             throws Exception {
         ProcessBuilder builder = new ProcessBuilder(command).directory(directory.toFile());
-        builder.environment().keySet().removeIf(k -> k.equals("LANG") || k.startsWith("LC_"));
+        // SIYO_RT_STATS adds a line to stderr: only a test that asks for it gets it.
+        builder.environment().keySet().removeIf(k -> k.equals("LANG") || k.startsWith("LC_")
+                || k.equals("SIYO_RT_STATS"));
         builder.environment().putAll(extraEnv);
         Path out = Files.createTempFile(outputDirectory, "stdout", ".bin");
         Path err = Files.createTempFile(outputDirectory, "stderr", ".txt");

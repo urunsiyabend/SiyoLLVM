@@ -131,7 +131,13 @@ returning one from a function returning `any` (the reference fails with
   strings grows accordingly. `substring` and the other index-based builtins
   scan non-ASCII strings from the start on every call (ASCII strings are
   indexed directly), so a per-character loop over a long non-ASCII string is
-  quadratic.
+  quadratic. With `SIYO_RT_STATS=1` in the environment, the program writes
+  `siyo-rt: collections=<c> heap_peak_kb=<h> rss_peak_kb=<r>` to stderr at
+  exit, whichever way it exits, as the last stderr line (`collections` is 0
+  and `heap_peak_kb` is every byte the runtime allocated, as nothing is
+  freed; `rss_peak_kb` is the process's peak resident set, `VmHWM` from
+  `/proc/self/status`, else `getrusage`'s `ru_maxrss`, which Linux carries
+  over from the parent across `fork` and `execve`).
 - Arrays are never freed either. An array's items are one block that
   doubles when full (at least 4), so `push` is amortised constant time; an
   array literal starts with room for exactly its elements. Boxing an int in
