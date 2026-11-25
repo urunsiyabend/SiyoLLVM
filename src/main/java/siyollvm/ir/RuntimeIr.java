@@ -98,6 +98,8 @@ final class RuntimeIr {
                 declare i32 @siyo_rt_map_size(ptr)
                 declare i32 @siyo_rt_map_len(ptr)
                 declare ptr @siyo_rt_map_keys(ptr)
+                declare i32 @siyo_rt_any_len(ptr)
+                declare ptr @siyo_rt_iterable(ptr)
                 declare ptr @siyo_rt_cast_map(ptr)
                 declare i32 @siyo_rt_unbox_int_map_get(ptr)
                 declare i32 @siyo_rt_unbox_int_map_get_str(ptr)
@@ -154,6 +156,7 @@ final class RuntimeIr {
             "@siyo_rt_unbox_int_field", "@siyo_rt_unbox_bool_field",
             "@siyo_rt_map_get", "@siyo_rt_map_put", "@siyo_rt_map_has", "@siyo_rt_map_remove", "@siyo_rt_map_size",
             "@siyo_rt_map_keys", "@siyo_rt_cast_map", "@siyo_rt_unbox_int_map_get", "@siyo_rt_unbox_int_map_get_str",
+            "@siyo_rt_any_len", "@siyo_rt_iterable",
             "@siyo_rt_unbox_bool_map_get", "@siyo_rt_unbox_bool_map_get_str",
             "@siyo_rt_io_read_file", "@siyo_rt_io_read_lines", "@siyo_rt_io_write_file", "@siyo_rt_io_append_file",
             "@siyo_rt_io_exists", "@siyo_rt_io_is_file", "@siyo_rt_io_is_dir", "@siyo_rt_io_mkdir",

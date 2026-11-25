@@ -142,3 +142,17 @@ null, and the long operand NPE `because "value" is null`. The helpful NPEs
 | `xmod_lt` | VerifyError | — | — | rejects `operator LessThan on any and string` |
 | `xmod_parseInt` | runs: `42` | — | — | rejects `arguments of type any to parseInt()` |
 | `xmod_plus` | runs: `zx` | — | — | accepts, matches |
+
+## Task 2 supplementary probes
+
+`probes/task2/`: run on the reference and on SiyoLLVM after Task 2, each
+through `bounded.py` (`*.oracle-stdout`, `*.siyollvm-stdout`, first stderr
+lines). `extra.siyo` establishes the uniform JVM paths the matrix did not
+probe: `%`, `<=`, `>=` with an int beside an any, `>`, `<=`, `%` with a long,
+and `endsWith`, `replace`, `toLower`, `ord` of an any (all run; wrong types
+raise the same ClassCastException). `toInt(a)` binds as `toInt(float)` and
+fails with `VerifyError` (d2i), so it stays rejected. `edge.siyo` checks
+evaluation order (each side is unboxed right after it is evaluated), `len`
+and `for` over an any holding a struct, and the null-field NPE `because the
+return value of "java.util.Map.get(Object)" is null`. Both match byte for
+byte, stdout and first stderr line.

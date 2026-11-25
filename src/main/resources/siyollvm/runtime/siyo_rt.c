@@ -2255,6 +2255,29 @@ SiyoArray *siyo_rt_map_keys(SiyoMap *map) {
     return keys;
 }
 
+int32_t siyo_rt_any_len(const void *value) {
+    if (value == NULL) return 0;
+    switch (siyo_rt_tag_of(value)) {
+    case SIYO_TAG_STR: return (int32_t)siyo_rt_str_utf16_len(value);
+    case SIYO_TAG_ARRAY: return ((const SiyoArray *)value)->len;
+    case SIYO_TAG_MAP: return ((const SiyoMap *)value)->size;
+    /* A SiyoObject is a LinkedHashMap of its fields. */
+    case SIYO_TAG_STRUCT: return ((const SiyoStruct *)value)->count;
+    default: break;
+    }
+    /* An Integer, Long or Boolean: SiyoThrow with the class's simple name. */
+    const char *java_class = siyo_rt_java_class_of(value);
+    char text[64];
+    int n = snprintf(text, sizeof text, "len is not defined for %s", strrchr(java_class, '.') + 1);
+    siyo_rt_throw(siyo_rt_str_from_bytes(text, n, n));
+    return 0;
+}
+
+void *siyo_rt_iterable(void *value) {
+    if (value != NULL && siyo_rt_tag_of(value) == SIYO_TAG_MAP) return siyo_rt_map_keys(value);
+    return value;
+}
+
 /* --- std/io and std/os ------------------------------------------------------ */
 
 /* A growable byte buffer for building file contents, paths and names:

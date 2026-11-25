@@ -63,9 +63,18 @@ import java.util.Set;
  * gives them a meaning SiyoLLVM reproduces: stored, passed, returned, printed,
  * joined to a string, compared with {@code ==}/{@code !=} (Objects.equals),
  * and narrowed back to a declared type with a checked cast. The binder also
- * lets an any reach arithmetic, ordering, logic, conditions and the string
- * builtins, where the JVM backend unboxes it to the other operand's type; those
- * are rejected.
+ * lets an any reach other use sites, where the JVM backend checks it as a
+ * declaration would; those it runs are accepted with the same check: an
+ * operand of int or long arithmetic ({@code + - * / %}) or ordering
+ * ({@code < <= > >=}) beside an int or long, unboxed to that type (a long
+ * through {@code unboxLong}, which takes an Integer too); a string parameter
+ * of a string builtin, checkcast to String; {@code len}, through
+ * {@code SiyoRuntime.lengthOf}; and {@code for … in} (below). The rest are
+ * rejected: ordering against a string and {@code +=} on an any variable fail
+ * verification on the reference, as do {@code parseLong} of an any (no
+ * checkcast) and {@code toInt} of one (taken as a float); bitwise operators,
+ * logic, conditions and int or long parameters of builtins are not
+ * established on it.
  *
  * <p>{@code try}/{@code catch} statements, {@code throw} and {@code error()}
  * are accepted with values of the types above. The lowerer leaves a try
@@ -101,8 +110,10 @@ import java.util.Set;
  * {@code _idxN < len(_colN)} whose body reads {@code _colN[_idxN]}. Over an
  * array or a string that is only len and indexing, so it needs nothing of its
  * own; over a map the binder wraps the map in {@code $mapKeys}, a fresh key
- * array, which is accepted; over a set or an any it wraps the collection in
- * a helper call, which is rejected.
+ * array, which is accepted; over an any in {@code $iterable} (a map's keys,
+ * else the value itself, then measured by lengthOf and checkcast to List
+ * when indexed), which is accepted too; over a set in a helper call, which
+ * is rejected.
  *
  * <p>Structs ({@code SiyoStruct}) are values of every kind above too. A
  * struct declaration binds to a placeholder literal statement; literals,
@@ -181,8 +192,27 @@ public final class SubsetValidator {
 
     /** What the binder's for-in desugaring calls over values that are neither arrays nor maps. */
     private static final Map<FunctionSymbol, String> FOR_IN_HELPERS = new IdentityHashMap<>(Map.of(
-            BuiltinFunctions.ITERABLE, "for … in over any values is",
             BuiltinFunctions.SET_VALUES, "for … in over sets is"));
+
+    /**
+     * String builtins whose JVM code reads an any argument for a string
+     * parameter through checkcast String. parseLong pushes it unchecked and
+     * fails verification, so it is not here.
+     */
+    private static final Set<FunctionSymbol> CASTS_STRING_ARGUMENTS = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    static {
+        CASTS_STRING_ARGUMENTS.addAll(List.of(
+                BuiltinFunctions.SUBSTRING, BuiltinFunctions.CONTAINS, BuiltinFunctions.INDEX_OF,
+                BuiltinFunctions.STARTS_WITH, BuiltinFunctions.ENDS_WITH, BuiltinFunctions.REPLACE,
+                BuiltinFunctions.TRIM, BuiltinFunctions.TO_UPPER, BuiltinFunctions.TO_LOWER, BuiltinFunctions.ORD,
+                BuiltinFunctions.PARSE_INT, BuiltinFunctions.TO_INT_STR, BuiltinFunctions.SPLIT));
+    }
+
+    /** Orderings an any operand beside an int or long is unboxed for. */
+    private static final Set<BoundBinaryOperatorType> ORDERING = EnumSet.of(
+            BoundBinaryOperatorType.LessThan, BoundBinaryOperatorType.LessOrEqualsThan,
+            BoundBinaryOperatorType.GreaterThan, BoundBinaryOperatorType.GreaterOrEqualsThen);
 
     /**
      * The SiyoMap methods in the subset: name, then the parameter count and
@@ -501,8 +531,12 @@ public final class SubsetValidator {
             if (operandsClean && requireValueType(left, "values")) requireValueType(right, "values");
             return;
         } else if (left == Object.class || right == Object.class) {
-            // Objects.equals; anything else would unbox to the other side's type.
-            supported = op == BoundBinaryOperatorType.Equals || op == BoundBinaryOperatorType.NotEquals;
+            // Objects.equals; arithmetic and ordering unbox the any to the
+            // other side's int or long. Ordering against a string unboxes it
+            // to int and fails verification on the reference.
+            Class<?> known = left == Object.class ? right : left;
+            supported = op == BoundBinaryOperatorType.Equals || op == BoundBinaryOperatorType.NotEquals
+                    || (isInteger(known) && (ARITHMETIC.contains(op) || ORDERING.contains(op)));
         } else if (left == String.class || right == String.class) {
             // == and != compare values; < <= > >= follow compareTo.
             supported = left == right && COMPARISON.contains(op);
@@ -555,11 +589,12 @@ public final class SubsetValidator {
             return;
         }
         if (function == BuiltinFunctions.LEN) {
-            // len(x) takes any value; strings, arrays and maps are in the subset.
+            // len(x) takes any value; strings, arrays and maps are in the
+            // subset, and an any is measured by SiyoRuntime.lengthOf.
             BoundExpression argument = call.getArguments().get(0);
             Class<?> type = argument.getClassType();
-            if (validatesCleanly(argument) && requireValueType(type, "values")
-                    && type != String.class && type != SiyoArray.class && type != SiyoMap.class) {
+            if (validatesCleanly(argument) && requireValueType(type, "values") && type != String.class
+                    && type != SiyoArray.class && type != SiyoMap.class && type != Object.class) {
                 report("len() on " + typeName(type) + " is");
             }
             return;
@@ -596,6 +631,14 @@ public final class SubsetValidator {
             }
             return;
         }
+        if (function == BuiltinFunctions.ITERABLE) {
+            // for … in over an any: the binder only wraps an any.
+            BoundExpression argument = call.getArguments().get(0);
+            if (validatesCleanly(argument) && argument.getClassType() != Object.class) {
+                report("for … in over values of type " + typeName(argument.getClassType()) + " is");
+            }
+            return;
+        }
         if (FOR_IN_HELPERS.containsKey(function)) {
             report(FOR_IN_HELPERS.get(function));
             return;
@@ -605,10 +648,15 @@ public final class SubsetValidator {
             return;
         }
         _emptyStack = firstOnEmptyStack;
-        for (BoundExpression argument : call.getArguments()) {
-            // A builtin would cast an any argument; only user functions take one.
+        List<BoundExpression> arguments = call.getArguments();
+        for (int i = 0; i < arguments.size(); i++) {
+            BoundExpression argument = arguments.get(i);
+            // A builtin casts an any argument for a string parameter; an int
+            // or long one would unbox it, which is not established.
             if (validatesCleanly(argument) && STRING_BUILTINS.contains(function)
-                    && argument.getClassType() == Object.class) {
+                    && argument.getClassType() == Object.class
+                    && !(CASTS_STRING_ARGUMENTS.contains(function) && i < function.getParameters().size()
+                            && function.getParameters().get(i).getType() == String.class)) {
                 report("arguments of type any to " + function.getName() + "() are");
             }
         }

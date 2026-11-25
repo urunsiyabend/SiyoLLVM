@@ -246,15 +246,19 @@ class SubsetValidatorTest {
     @ParameterizedTest(name = "{1}")
     @CsvSource(delimiter = '|', textBlock = """
             fn main() { mut x: any = 1.5 println(x) }                          | float values are
-            fn main() { mut a: any = 1 println(a + 1) }                        | operator Addition on any and int is
-            fn main() { mut a: any = 1 println(a < 2) }                        | operator LessThan on any and int is
+            fn main() { mut a: any = "s" println(a < "b") }                    | operator LessThan on any and string is
+            fn main() { mut a: any = "s" println("a" >= a) }                   | operator GreaterOrEqualsThen on string and any is
+            fn main() { mut a: any = 1 a += 1 println(a) }                     | assignments of int to any are
+            fn main() { mut a: any = 1 println(a & 1) }                        | operator BitwiseAnd on any and int is
+            fn main() { mut a: any = 1 println(2 << a) }                       | operator LeftShift on int and any is
             fn main() { mut a: any = true println(a && true) }                 | operator LogicalAnd on any and bool is
             fn main() { mut a: any = true println(!a) }                        | unary operator LogicalNegation on any is
             fn main() { mut a: any = true if a { println(1) } }                | conditions of type any are
             fn main() { mut a: any = true while a { println(1) } }             | conditions of type any are
-            fn main() { mut a: any = "s" println(len(a)) }                     | len() on any is
-            fn main() { mut a: any = "s" println(trim(a)) }                    | arguments of type any to trim() are
             fn main() { mut a: any = 1 println(toLong(a)) }                    | arguments of type any to toLong() are
+            fn main() { mut a: any = "1" println(parseLong(a)) }               | arguments of type any to parseLong() are
+            fn main() { mut a: any = 1 println(substring("ab", a, 2)) }        | arguments of type any to substring() are
+            fn main() { mut a: any = 65 println(chr(a)) }                      | arguments of type any to chr() are
             fn main() { mut a: any = 1 a = 2 println(a) }                      | assignments of int to any are
             fn main() { mut a: any = 1 a = true println(a) }                   | assignments of bool to any are
             fn f() -> any { return 7 } fn main() { println(f()) }              | returning int from a function returning any is
@@ -262,6 +266,38 @@ class SubsetValidatorTest {
             """)
     void unsupportedUsesOfAnyAreRejected(String source, String construct) {
         assertRejected(source, construct);
+    }
+
+    // The checks the JVM backend makes where an any is used (checkcast,
+    // unboxing, SiyoRuntime.lengthOf and iterable), as the reference runs them.
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            fn main() { mut a: any = 1 println(a + 1) println(2 - a) println(a * 3) println(4 / a) println(a % 2) }
+            fn main() { mut a: any = 1 println(a < 2) println(2 <= a) println(a > 0) println(a >= 1) }
+            fn main() { mut a: any = 1L println(a + 1L) println(2L * a) println(a < 3L) mut n = 1L n += a println(n) }
+            fn main() { mut a: any = 1 mut n = 0 n += a n -= a println(n) imut b: any = a + 1 println(b) }
+            fn main() { mut a: any = "s" println(len(a)) println(trim(a)) println(contains("abc", a)) println(parseInt(a)) }
+            fn main() { mut a: any = "s" println(substring(a, 0, 1) + replace(a, "s", "t") + toLower(a)) println(ord(a)) }
+            fn main() { imut a: any = [1] for x in a { println(x) } imut m: any = {"k": 1} for k in m { println(k) } }
+            fn main() { for c in "ab" { println(len(c)) println(ord(c)) } }
+            fn main() { imut n = {"a": 1} println(n["a"] + 1) }
+            struct P { x: int } fn f(a: any) { imut p: P = a p.x += 1 println(p.x * 2) } fn main() { f(P { x: 1 }) }
+            fn f(a: any) -> int { return len(a) } fn main() { println(f(null)) }
+            """)
+    void checkedUsesOfAnyAreSupported(String source) {
+        assertEquals(List.of(), validate(source));
+    }
+
+    /** Uses of an any the reference rejects when binding (any op any, a["k"]) never reach the validator. */
+    @ParameterizedTest(name = "{1}")
+    @CsvSource(delimiter = '|', quoteCharacter = '`', textBlock = """
+            struct P { x: int, y: int } fn f(a: any) { imut p: P = a println(p.x * p.y) } fn main() { f(P { x: 1, y: 2 }) } | Binary operator '*' is not defined
+            fn main() { imut a: any = {"k": 1} println(a["k"]) }                                                               | Cannot convert type
+            """)
+    void erasedUsesTheReferenceCannotBindAreBindErrors(String source, String message) {
+        FrontendResult result = Frontend.analyze("p.siyo", source);
+        assertEquals(null, result.program());
+        assertTrue(result.diagnostics().get(0).message().contains(message), result.diagnostics().toString());
     }
 
     @ParameterizedTest(name = "{0}")
@@ -296,15 +332,11 @@ class SubsetValidatorTest {
             fn main() { mut xs = [3, 1] println(filter(xs, fn(a: int) -> bool { return a > 1 })) }   | the builtin filter() is
             fn main() { mut xs = [3, 1] println(reduce(xs, fn(a: int, b: int) -> int { return a + b }, 0)) } | the builtin reduce() is
             fn main() { mut xs = [3, 1] forEach(xs, fn(a: int) { println(a) }) }                     | the builtin forEach() is
-            fn main() { imut a: any = [1] for x in a { println(x) } }                               | for … in over any values is
             fn main() { mut xs = [1] println(xs[0] + len(xs[0])) }                                  | len() on int is
-            fn main() { for c in "ab" { println(len(c)) } }   | len() on any is
-            fn main() { for c in "ab" { println(ord(c)) } }   | arguments of type any to ord() are
             fn main() { mut f = [1.5] println(len(f)) }                                             | float values are
             fn main() { mut xs: float[] = [] push(xs, 1.5) }                                        | float values are
             fn main() { mut xs: float[] = [] println(pop(xs)) }                                     | float values are
             fn main() { mut xs: float[] = [] println(xs[0]) }                                       | float values are
-            fn main() { mut a: any = [1] println(len(a)) }                                          | len() on any is
             """)
     void unsupportedArrayConstructsAreRejected(String source, String construct) {
         assertRejected(source, construct);
@@ -338,7 +370,6 @@ class SubsetValidatorTest {
     @ParameterizedTest(name = "{1}")
     @CsvSource(delimiter = '|', textBlock = """
             fn main() { imut s = set() for v in s { println(v) } }                    | for … in over sets is
-            fn main() { imut a: any = "ab" for c in a { println(c) } }                | for … in over any values is
             fn main() { imut ch = channel() for m in ch { println(m) } }              | the builtin channel() is
             """)
     void forInOverOtherCollectionsIsRejected(String source, String construct) {
@@ -501,7 +532,6 @@ class SubsetValidatorTest {
             fn main() { imut s = set() for v in s { println(v) } }              | for … in over sets is
             fn main() { imut a: any = {"a": 1} a[0] = 2 }                       | index assignment on any values is
             fn main() { imut n = {"xs": [1, 2]} push(n["xs"], 3) }              | push() on any values is
-            fn main() { imut n = {"a": 1} println(n["a"] + 1) }                 | operator Addition on any and int is
             """)
     void unsupportedMapConstructsAreRejected(String source, String construct) {
         assertRejected(source, construct);

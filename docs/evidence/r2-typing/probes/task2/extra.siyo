@@ -1,0 +1,24 @@
+fn probe(a: any, s: any, l: any) {
+    println(a % 3)
+    println(10 % a)
+    println(a <= 5)
+    println(a >= 6)
+    println(l > 2L)
+    println(l <= 2L)
+    println(l % 2L)
+    println(endsWith(s, "c"))
+    println(replace(s, "b", "x"))
+    println(toLower(s))
+    println(ord(s))
+}
+fn wrong(a: any) {
+    try { println(a % 3) } catch e { println("%: " + e) }
+    try { println(a <= 3) } catch e { println("<=: " + e) }
+    try { println(endsWith(a, "c")) } catch e { println("endsWith: " + e) }
+    try { println(toLower(a)) } catch e { println("toLower: " + e) }
+}
+fn main() {
+    probe(5, "ABC", 3L)
+    wrong("x")
+    wrong(5L)
+}

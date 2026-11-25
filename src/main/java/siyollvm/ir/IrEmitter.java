@@ -65,6 +65,12 @@ import java.util.Map;
  * by the runtime. Where the binder lets an {@code any} meet a declared type
  * (declaration, assignment, argument, return) the value is boxed, or unboxed
  * and cast with the runtime's check, as the JVM backend's checkcast does.
+ * The same checks run where an any is used: an operand of int or long
+ * arithmetic or ordering is unboxed to the other operand's type right after
+ * it is evaluated (a long through {@code unboxLong}, which takes an Integer
+ * too), a string builtin's argument is cast to a string, {@code len} of an
+ * any is {@code SiyoRuntime.lengthOf} and {@code for … in} over one walks
+ * {@code SiyoRuntime.iterable}.
  *
  * <p>An array is a {@code ptr} to the runtime's {@code SiyoArray}, whose items
  * are any values, as the JVM backend's arrays are lists of objects: an
@@ -682,6 +688,8 @@ public final class IrEmitter {
         if (type == Boolean.class) {
             return new Value(raisingCall("call zeroext i1 @siyo_rt_unbox_bool_field(ptr " + item.ref() + ")"), Boolean.class);
         }
+        // An erased read keeps its origin for a later unbox (p.x + 1).
+        if (type == Object.class) return new Value(item.ref(), Object.class, "field");
         return coerce(item, type);
     }
 
@@ -730,6 +738,15 @@ public final class IrEmitter {
         BoundBinaryOperatorType op = binary.getOperator().getType();
         if (op == BoundBinaryOperatorType.LogicalAnd || op == BoundBinaryOperatorType.LogicalOr) {
             return shortCircuit(binary, op == BoundBinaryOperatorType.LogicalAnd);
+        }
+        Class<?> erasedAs = erasedOperandType(binary);
+        if (erasedAs != null) {
+            // Each side is unboxed right after it is evaluated, as the JVM backend does.
+            Value left = expression(binary.getLeft());
+            if (left.type() == Object.class) left = coerce(left, erasedAs);
+            Value right = expression(binary.getRight());
+            if (right.type() == Object.class) right = coerce(right, erasedAs);
+            return numeric(op, left, right);
         }
         Value left = expression(binary.getLeft());
         Value right = expression(binary.getRight());
@@ -782,8 +799,26 @@ public final class IrEmitter {
             };
             return new Value(instruction(instruction + " i1 " + left.ref() + ", " + right.ref()), Boolean.class);
         }
+        return numeric(op, left, right);
+    }
 
-        // int and long; a mixed pair widens to long.
+    /**
+     * The type an any operand of int or long arithmetic or ordering is
+     * unboxed to: the other operand's, as the binder binds the operator for
+     * it (int: checkcast Integer; long: SiyoRuntime.unboxLong, which also
+     * takes an Integer); null when the expression has no such operand.
+     */
+    private static Class<?> erasedOperandType(BoundBinaryExpression binary) {
+        Class<?> left = binary.getLeft().getClassType();
+        Class<?> right = binary.getRight().getClassType();
+        BoundBinaryOperatorType op = binary.getOperator().getType();
+        if (op == BoundBinaryOperatorType.Equals || op == BoundBinaryOperatorType.NotEquals) return null;
+        Class<?> known = left == Object.class ? right : right == Object.class ? left : null;
+        return known == Integer.class || known == Long.class ? known : null;
+    }
+
+    /** int and long arithmetic and comparison; a mixed pair widens to long. */
+    private Value numeric(BoundBinaryOperatorType op, Value left, Value right) {
         Class<?> type = left.type() == Long.class || right.type() == Long.class ? Long.class : Integer.class;
         left = coerce(left, type);
         right = coerce(right, type);
@@ -933,6 +968,18 @@ public final class IrEmitter {
             // len(m) is 0 for a null map, as SiyoRuntime.lengthOf is.
             Value map = requireType(expression(call.getArguments().get(0)), SiyoMap.class);
             return new Value(instruction("call i32 @siyo_rt_map_len(ptr " + map.ref() + ")"), Integer.class);
+        }
+        if (function == BuiltinFunctions.LEN && call.getArguments().size() == 1
+                && call.getArguments().get(0).getClassType() == Object.class) {
+            // SiyoRuntime.lengthOf: 0 for null, SiyoThrow for a value with no length.
+            Value value = requireType(expression(call.getArguments().get(0)), Object.class);
+            return new Value(raisingCall("call i32 @siyo_rt_any_len(ptr " + value.ref() + ")"), Integer.class);
+        }
+        if (function == BuiltinFunctions.ITERABLE) {
+            // for … in over an any walks SiyoRuntime.iterable(value): a map's keys, else the value.
+            if (call.getArguments().size() != 1) throw unsupported("$iterable arity");
+            Value value = coerce(expression(call.getArguments().get(0)), Object.class);
+            return new Value(raisingCall("call ptr @siyo_rt_iterable(ptr " + value.ref() + ")"), Object.class);
         }
         Value arrayResult = arrayBuiltin(call);
         if (arrayResult != null) return arrayResult;

@@ -345,6 +345,13 @@ int32_t siyo_rt_map_size(SiyoMap *map);
 int32_t siyo_rt_map_len(SiyoMap *map);
 /* SiyoMap.keys: a new array of the keys in insertion order. */
 SiyoArray *siyo_rt_map_keys(SiyoMap *map);
+/* SiyoRuntime.lengthOf, len of an any: 0 for null; a string's UTF-16 length,
+   an array's, a map's or a struct's (field count) size; for an int, long or
+   bool raises SiyoThrow("len is not defined for Integer" / Long / Boolean). */
+int32_t siyo_rt_any_len(const void *value);
+/* SiyoRuntime.iterable, what for … in walks over an any: a map's keys (a new
+   array), else the value itself (len and indexing then check it). */
+void *siyo_rt_iterable(void *value);
 
 /*
  * Exceptions. A raise records a pending exception and returns; the raising
